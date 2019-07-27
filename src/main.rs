@@ -23,13 +23,18 @@ fn get_get_transaction_receipt_json(tx_hash: String) -> serde_json::Value {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Response {
+struct GetBlockResponse {
     result: Block
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Block {
-    transactions: Vec<Transaction>
+    transactions: Vec<String>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct GetReceiptResponse {
+    result: Receipt
 }
 
 #[allow(non_snake_case)]
