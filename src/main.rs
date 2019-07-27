@@ -4,12 +4,21 @@ extern crate reqwest;
 extern crate serde_json;
 use serde::{Deserialize, Serialize};
 
-fn get_json(block_hash: String) -> serde_json::Value {
+fn get_get_block_by_block_hash_json(block_hash: String) -> serde_json::Value {
     json!({
         "id": "1",
         "jsonrpc": "2.0",
         "method": "eth_getBlockByHash",
-        "params": [ block_hash, true ],
+        "params": [ block_hash, false ],
+    })
+}
+
+fn get_get_transaction_receipt_json(tx_hash: String) -> serde_json::Value {
+    json!({
+        "id": "1",
+        "jsonrpc": "2.0",
+        "method": "eth_getTransactionReceipt",
+        "params": [ tx_hash ],
     })
 }
 
