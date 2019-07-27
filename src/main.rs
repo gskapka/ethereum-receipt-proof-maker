@@ -39,11 +39,36 @@ struct GetReceiptResponse {
 
 #[allow(non_snake_case)]
 #[derive(Debug, Serialize, Deserialize)]
-struct Transaction {
-    blockHash: String
+struct Receipt {
+    to: String,
+    from: String,
+    logs: Vec<Log>,
+    status: String,
+    gasUsed: String,
+    blockHash: String,
+    logsBloom: String,
+    blockNumber: String,
+    root: serde_json::Value, // because it's null in this case!
+    transactionHash: String,
+    transactionIndex: String,
+    cumulativeGasUsed: String,
+    contractAddress: serde_json::Value, // because it's null in this case!
 }
 
-fn main() {
+#[allow(non_snake_case)]
+#[derive(Debug, Serialize, Deserialize)]
+struct Log {
+    data: String,
+    removed: bool,
+    r#type: String,
+    address: String,
+    logIndex: String,
+    blockHash: String,
+    blockNumber: String,
+    topics: Vec<String>,
+    transactionHash: String,
+    transactionIndex: String,
+}
 
     let client = reqwest::Client::new();
 
