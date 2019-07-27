@@ -70,17 +70,31 @@ struct Log {
     transactionIndex: String,
 }
 
+fn main() {
     let client = reqwest::Client::new();
 
     let block_hash = "0x1ddd540f36ea0ed23e732c1709a46c31ba047b98f1d99e623f1644154311fe10";
 
     let mut res = client.post("https://rpc.slock.it/mainnet")
-        .json(&get_json(block_hash.to_string()))
+        .json(&get_get_block_by_block_hash_json(block_hash.to_string()))
         .send()
         .unwrap();
 
     let result = res.text().unwrap();
 
-    let r: Response = serde_json::from_str(&result).unwrap();
-    println!("{:?}", r.result.transactions)
+    let r: GetBlockResponse = serde_json::from_str(&result).unwrap();
+    println!("{:?}", r.result.transactions);
+    println!("Length: {:?}", r.result.transactions.len());
+
+    let tx_hash = &r.result.transactions[0];
+    let mut res = client.post("https://rpc.slock.it/mainnet")
+        .json(&get_get_transaction_receipt_json(tx_hash.to_string()))
+        .send()
+        .unwrap();
+
+    let result = res.text().unwrap();
+    println!("{:?}", result);
+    let rec: GetReceiptResponse = serde_json::from_str(&result).unwrap();
+
+    println!("{:?}", rec.result.logs[0].data);
 }
