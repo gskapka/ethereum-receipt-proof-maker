@@ -20,7 +20,6 @@ pub fn delete_env_file() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use std::path::Path;
 
     fn restore_original_config_file(data: String) -> Result<()> {
