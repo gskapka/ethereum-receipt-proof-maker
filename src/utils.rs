@@ -3,6 +3,7 @@ use std::result;
 use crate::errors::AppError;
 use ethereum_types::{U256, H256, Address};
 
+type Bytes = Vec<u8>; // TODO: Types module?
 type Result<T> = result::Result<T, AppError>;
 
 use crate::constants::{
@@ -13,6 +14,10 @@ use crate::constants::{
 
 fn left_pad_with_zero(string: &str) -> Result<String> {
     Ok(format!("0{}", string))
+}
+
+pub fn hex_to_bytes(hex: String) -> Result<Bytes> {
+    Ok(hex::decode(strip_hex_prefix(&hex.to_string())?)?)
 }
 
 pub fn strip_hex_prefix(prefixed_hex : &str) -> Result<String> {
@@ -62,6 +67,22 @@ pub fn decode_prefixed_hex(hex_to_decode: String) -> Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn should_convert_unprefixed_hex_to_bytes_correctly() {
+        let hex = "c0ffee".to_string();
+        let expected_result = [ 192, 255, 238 ];
+        let result = hex_to_bytes(hex).unwrap();
+        assert!(result == expected_result)
+    }
+
+    #[test]
+    fn should_convert_prefixed_hex_to_bytes_correctly() {
+        let hex = "0xc0ffee".to_string();
+        let expected_result = [ 192, 255, 238 ];
+        let result = hex_to_bytes(hex).unwrap();
+        assert!(result == expected_result)
+    }
 
     #[test]
     fn should_decode_none_fixed_hex_correctly() {
