@@ -1,5 +1,4 @@
 use dotenv;
-use std::path::Path;
 use crate::state::State;
 use crate::types::Result;
 use crate::errors::AppError;
@@ -146,7 +145,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn should_get__endpoint_from_env_file_if_extant_correctly() {
+    fn should_get_endpoint_from_env_file_if_extant_correctly() {
         if dot_env_file_exists() {
             let file = read_env_file().unwrap();
             let result = get_endpoint_from_env_vars().unwrap();

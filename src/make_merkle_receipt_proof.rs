@@ -1,6 +1,5 @@
 use crate::state::State;
 use crate::types::Result;
-use crate::errors::AppError;
 use crate::cli_arg_struct::CliArgs;
 use crate::get_endpoint::get_endpoint_and_set_in_state;
 use crate::check_tx_hash::check_tx_hash_add_set_in_state;

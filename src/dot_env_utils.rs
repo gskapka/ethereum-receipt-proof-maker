@@ -1,7 +1,6 @@
 use std::fs;
 use std::path::Path;
 use crate::types::Result;
-use crate::errors::AppError;
 use crate::constants::{
     DOT_ENV_PATH,
     DEFAULT_ENDPOINT

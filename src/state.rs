@@ -32,7 +32,7 @@ impl State {
     pub fn set_block_in_state(mut self, block: Block) -> Result<State> {
         match self.block {
             Some(_) => Err(AppError::Custom(get_no_overwrite_state_err("block"))),
-            _ => {
+            None => {
                 self.block = Some(block);
                 Ok(self)
             }
@@ -42,7 +42,7 @@ impl State {
     pub fn set_endpoint_in_state(mut self, endpoint: String) -> Result<State> {
         match self.endpoint {
             Some(_) => Err(AppError::Custom(get_no_overwrite_state_err("endpoint"))),
-            _ => {
+            None => {
                 self.endpoint = Some(endpoint);
                 Ok(self)
             }
@@ -52,7 +52,7 @@ impl State {
     pub fn set_tx_hash_in_state(mut self, tx_hash: H256)-> Result<State> {
         match self.tx_hash{
             Some(_) => Err(AppError::Custom(get_no_overwrite_state_err("transaction hash"))),
-            _ => {
+            None => {
                 self.tx_hash= Some(tx_hash);
                 Ok(self)
             }
@@ -62,21 +62,21 @@ impl State {
     pub fn get_block_from_state(self) -> Result<Block> { // TODO: Should these return a tuple of state + thing?
         match self.block {
             Some(block) => Ok(block),
-            _ => Err(AppError::Custom(get_not_in_state_err("block")))
+            None => Err(AppError::Custom(get_not_in_state_err("block")))
         }
     }
 
     pub fn get_endpoint_from_state(self) -> Result<String> { // TODO: Ibid. So as not to "consume" the state?
         match self.endpoint {
             Some(endpoint) => Ok(endpoint),
-            _ => Err(AppError::Custom(get_not_in_state_err("endpoint")))
+            None => Err(AppError::Custom(get_not_in_state_err("endpoint")))
         }
     }
 
     pub fn get_tx_hash_from_state(self) -> Result<H256> {
         match self.tx_hash {
             Some(tx_hash) => Ok(tx_hash),
-            _ => Err(AppError::Custom(get_not_in_state_err("transaction hash")))
+            None => Err(AppError::Custom(get_not_in_state_err("transaction hash")))
         }
     }
 }
@@ -105,49 +105,40 @@ mod tests {
 
     #[test]
     fn should_get_empty_state_successfully() {
-        let state = State::get_initial_state()
+        State::get_initial_state()
             .unwrap();
     }
 
     #[test]
     fn empty_state_should_have_no_block() {
+        let expected_err = get_not_in_state_err("block");
         let state = State::get_initial_state()
             .unwrap();
         match State::get_block_from_state(state) {
-            Err(AppError::Custom(e)) => {
-                let expected_err = get_not_in_state_err("block");
-                assert!(e == expected_err);
-            },
-            Ok(_) => panic!("Block should not be initialised in state!"),
-            Err(e) => panic!("Wrong error type received!")
+            Err(AppError::Custom(e)) => assert!(e == expected_err) ,
+            _ => panic!("Block should not be initialised in state!"),
         }
     }
 
     #[test]
     fn empty_state_should_have_no_endpoint() {
+        let expected_err = get_not_in_state_err("endpoint");
         let state = State::get_initial_state()
             .unwrap();
         match State::get_endpoint_from_state(state) {
-            Err(AppError::Custom(e)) => {
-                let expected_err = get_not_in_state_err("endpoint");
-                assert!(e == expected_err);
-            },
-            Ok(_) => panic!("Endpoint should not be initialised in state!"),
-            Err(e) => panic!("Wrong error type received!")
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            _ => panic!("Endpoint should not be initialised in state!"),
         }
     }
 
     #[test]
     fn empty_state_should_have_no_tx_hash() {
+        let expected_err = get_not_in_state_err("transaction hash");
         let state = State::get_initial_state()
             .unwrap();
         match State::get_tx_hash_from_state(state) {
-            Err(AppError::Custom(e)) => {
-                let expected_err = get_not_in_state_err("transaction hash");
-                assert!(e == expected_err);
-            },
-            Ok(_) => panic!("Endpoint should not be initialised in state!"),
-            Err(e) => panic!("Wrong error type received!")
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            _ => panic!("Endpoint should not be initialised in state!"),
         }
     }
 
@@ -198,14 +189,7 @@ mod tests {
             dummy_endpoint.clone()
         ) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
-            Ok(_) => panic!("Overwriting state should not have succeeded!"),
-            Err(e) => panic!(
-                format!(
-                    "Expected error:\n{}\nGot error:\n{}",
-                    expected_err,
-                    e
-                )
-            )
+            _ => panic!("Overwriting state should not have succeeded!"),
         }
     }
 
@@ -243,14 +227,7 @@ mod tests {
             dummy_tx_hash.clone()
         ) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
-            Ok(_) => panic!("Overwriting state should not have succeeded!"),
-            Err(e) => panic!(
-                format!(
-                    "Expected error:\n{}\nGot error:\n{}",
-                    expected_err,
-                    e
-                )
-            )
+            _ => panic!("Overwriting state should not have succeeded!"),
         }
     }
 }

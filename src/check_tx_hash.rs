@@ -55,15 +55,8 @@ mod tests {
         let expected_err = "✘ Passed in transaction hash has no hex prefix!";
         let unprefixed_hex = "c0ffee".to_string();
         match check_tx_hash_prefix(unprefixed_hex.clone()) {
-            Ok(_) => panic!("Should error when checking unprefixed hex!"),
             Err(AppError::Custom(e)) => assert!(e == expected_err),
-            Err(e) => panic!(
-                format!(
-                    "Expected this error:\n{}\nBut got:\n{}",
-                    expected_err,
-                    e
-                )
-            )
+            _ => panic!("Should error when checking unprefixed hex!")
         }
     }
 
@@ -83,15 +76,8 @@ mod tests {
         assert!(short_hash.len() < expected_len);
         let expected_err = "✘ Passed in transaction hash is wrong length!".to_string();
         match check_tx_hash_length(short_hash.clone()) {
-            Ok(_) => panic!("Should error when checking unprefixed hex!"),
             Err(AppError::Custom(e)) => assert!(e == expected_err),
-            Err(e) => panic!(
-                format!(
-                    "Expected this error:\n{}\nBut got:\n{}",
-                    expected_err,
-                    e
-                )
-            )
+            _ => panic!("Should error when checking unprefixed hex!"),
         }
     }
 
@@ -102,32 +88,22 @@ mod tests {
         assert!(long_hash.len() > expected_len);
         let expected_err = "✘ Passed in transaction hash is wrong length!".to_string();
         match check_tx_hash_length(long_hash.clone()) {
-            Ok(_) => panic!("Should error when checking unprefixed hex!"),
             Err(AppError::Custom(e)) => assert!(e == expected_err),
-            Err(e) => panic!(
-                format!(
-                    "Expected this error:\n{}\nBut got:\n{}",
-                    expected_err,
-                    e
-                )
-            )
+            _ => panic!("Should error when checking unprefixed hex!")
         }
     }
 
     #[test]
     fn should_check_tx_hash_and_set_in_state() {
+        let expected_err = "✘ No transaction hash in state!";
         let valid_hash = "0x8aa208025cf2b43ac4b1fada62f707f82a6e2159ebd2e3aad3c94f4907e92c94".to_string();
         let valid_hash_h256 = convert_hex_to_h256(valid_hash.clone())
             .unwrap();
         let state = State::get_initial_state()
             .unwrap();
         match State::get_tx_hash_from_state(state.clone()) {
-            Err(AppError::Custom(e)) =>
-                assert!( e == "✘ No transaction hash in state!"),
-            Err(e) =>
-                panic!("Wrong error when accessing state!"),
-            Ok(_) =>
-                panic!("State should not have tx hash set yet!")
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            _ => panic!("State should not have tx hash set yet!")
         }
         let resultant_state = check_tx_hash_add_set_in_state(state, valid_hash)
             .unwrap();
