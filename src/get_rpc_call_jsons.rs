@@ -1,8 +1,5 @@
-use std::result;
 use serde_json::Value;
-use crate::errors::AppError;
-
-type Result<T> = result::Result<T, AppError>;
+use crate::types::Result;
 
 pub fn get_block_by_block_hash_json(block_hash: String) -> Result<Value> {
     Ok(

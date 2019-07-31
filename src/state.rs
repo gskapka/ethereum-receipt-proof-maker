@@ -1,9 +1,7 @@
-use std::result;
 use crate::types::Block;
 use ethereum_types::H256;
+use crate::types::Result;
 use crate::errors::AppError;
-
-type Result<T> = result::Result<T, AppError>;
 
 #[derive(Clone)]
 pub struct State {

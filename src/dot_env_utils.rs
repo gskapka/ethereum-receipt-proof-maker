@@ -1,12 +1,12 @@
+use std::fs;
 use std::path::Path;
-use std::{fs, result};
+use crate::types::Result;
 use crate::errors::AppError;
 use crate::constants::{
     DOT_ENV_PATH,
     DEFAULT_ENDPOINT
 };
 
-type Result<T> = result::Result<T, AppError>;
 
 pub fn read_env_file() -> Result<String> {
     Ok(fs::read_to_string(&DOT_ENV_PATH)?)

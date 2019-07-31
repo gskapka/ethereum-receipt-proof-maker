@@ -1,10 +1,16 @@
 use hex;
-use std::result;
 use crate::errors::AppError;
-use ethereum_types::{U256, H256, Address};
 
-type Bytes = Vec<u8>; // TODO: Types module?
-type Result<T> = result::Result<T, AppError>;
+use ethereum_types::{
+    U256,
+    H256,
+    Address
+};
+
+use crate::types::{
+    Bytes,
+    Result,
+};
 
 use crate::constants::{
     HASH_LENGTH,

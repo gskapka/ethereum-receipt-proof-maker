@@ -1,3 +1,9 @@
+use dotenv;
+use std::path::Path;
+use crate::state::State;
+use crate::types::Result;
+use crate::errors::AppError;
+
 use crate::constants::{
     DOT_ENV_PATH,
     DEFAULT_ENDPOINT,
@@ -11,13 +17,6 @@ use crate::dot_env_utils::{
     dot_env_file_exists,
 };
 
-use dotenv;
-use std::result;
-use std::path::Path;
-use crate::state::State;
-use crate::errors::AppError;
-
-type Result<T> = result::Result<T, AppError>;
 
 fn maybe_run_dot_env() -> Result<()> {
     match dot_env_file_exists() {
