@@ -117,8 +117,8 @@ mod tests {
             .unwrap();
         match State::get_block_from_state(state) {
             Err(AppError::Custom(e)) => {
-                let expectedErr = get_not_in_state_err("block");
-                assert!(e == expectedErr);
+                let expected_err = get_not_in_state_err("block");
+                assert!(e == expected_err);
             },
             Ok(_) => panic!("Block should not be initialised in state!"),
             Err(e) => panic!("Wrong error type received!")
@@ -131,8 +131,8 @@ mod tests {
             .unwrap();
         match State::get_endpoint_from_state(state) {
             Err(AppError::Custom(e)) => {
-                let expectedErr = get_not_in_state_err("endpoint");
-                assert!(e == expectedErr);
+                let expected_err = get_not_in_state_err("endpoint");
+                assert!(e == expected_err);
             },
             Ok(_) => panic!("Endpoint should not be initialised in state!"),
             Err(e) => panic!("Wrong error type received!")
@@ -145,8 +145,8 @@ mod tests {
             .unwrap();
         match State::get_tx_hash_from_state(state) {
             Err(AppError::Custom(e)) => {
-                let expectedErr = get_not_in_state_err("transaction hash");
-                assert!(e == expectedErr);
+                let expected_err = get_not_in_state_err("transaction hash");
+                assert!(e == expected_err);
             },
             Ok(_) => panic!("Endpoint should not be initialised in state!"),
             Err(e) => panic!("Wrong error type received!")
@@ -155,7 +155,7 @@ mod tests {
 
     /*
     #[test]
-    fn should_add_block_to_state() { // TODO: Implement! (Need an empty block getter! | sample one!)
+    fn should_add_block_to_state() { // TODO: Implement! (Need an empty block getter! | sample one! | default block struct)
         let expected_result = "expected endpoint".to_string();
         let state = State::get_initial_state()
             .unwrap();
