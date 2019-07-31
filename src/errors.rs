@@ -7,6 +7,7 @@ pub enum AppError {
     Custom(String),
     IOError(std::io::Error),
     HexError(hex::FromHexError),
+    NoneError(std::option::NoneError),
 }
 
 impl fmt::Display for AppError {
@@ -18,6 +19,8 @@ impl fmt::Display for AppError {
                 format!("\n✘ Hex Error!\n✘ {}\n", e),
             AppError::IOError(ref e) =>
                 format!("\n✘ I/O Error!\n✘ {}\n", e),
+            AppError::NoneError(ref e) =>
+                format!("\n✘ Nothing to unwrap!\n✘ {:?}\n", e),
         };
         f.write_fmt(format_args!("{}", msg))
     }
@@ -38,5 +41,11 @@ impl From<hex::FromHexError> for AppError {
 impl From<std::io::Error> for AppError {
     fn from(e: std::io::Error) -> AppError {
         AppError::IOError(e)
+    }
+}
+
+impl From<std::option::NoneError> for AppError {
+    fn from(e: std::option::NoneError) -> AppError {
+        AppError::NoneError(e)
     }
 }
