@@ -180,14 +180,79 @@ mod tests {
     }
 
     #[test]
-    fn should_add_tx_hash_to_state() {
-        let expected_result = H256::zero();
+    fn should_err_when_attempting_to_overwrite_endpoint_in_state() {
+        let expected_err = "✘ Cannot overwrite endpoint in state!";
+        let dummy_endpoint = "dummy endpoint".to_string();
+        let initial_state = State::get_initial_state()
+            .unwrap();
+        let state_with_endpoint = State::set_endpoint_in_state(
+            initial_state,
+            dummy_endpoint.clone()
+        )
+            .unwrap();
+        let endpoint_from_state = State::get_endpoint_from_state(
+            state_with_endpoint.clone()
+        )
+            .unwrap();
+        assert!(endpoint_from_state == dummy_endpoint);
+        match State::set_endpoint_in_state(
+            state_with_endpoint,
+            dummy_endpoint.clone()
+        ) {
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            Ok(_) => panic!("Overwriting state should not have succeeded!"),
+            Err(e) => panic!(
+                format!(
+                    "Expected error:\n{}\nGot error:\n{}",
+                    expected_err,
+                    e
+                )
+            )
+        }
+    }
+
+    #[test]
+    fn should_set_tx_hash_to_state() {
+        let dummy_tx_hash = H256::zero();
         let state = State::get_initial_state()
             .unwrap();
-        let new_state = State::add_tx_hash_to_state(state, expected_result.clone())
+        let new_state = State::set_tx_hash_in_state(state, dummy_tx_hash.clone())
             .unwrap();
         let result = State::get_tx_hash_from_state(new_state)
             .unwrap();
-        assert!(result == expected_result);
+        assert!(result == dummy_tx_hash);
+    }
+
+    #[test]
+    fn should_err_when_attempting_to_overwrite_tx_hash_in_state() {
+        let expected_err = "✘ Cannot overwrite transaction hash in state!";
+        let dummy_tx_hash = H256::zero();
+        let initial_state = State::get_initial_state()
+            .unwrap();
+        let state_with_tx_hash = State::set_tx_hash_in_state(
+            initial_state,
+            dummy_tx_hash.clone()
+        )
+            .unwrap();
+
+        let tx_hash_from_state = State::get_tx_hash_from_state(
+            state_with_tx_hash.clone()
+        )
+            .unwrap();
+        assert!(tx_hash_from_state == dummy_tx_hash);
+        match State::set_tx_hash_in_state(
+            state_with_tx_hash,
+            dummy_tx_hash.clone()
+        ) {
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            Ok(_) => panic!("Overwriting state should not have succeeded!"),
+            Err(e) => panic!(
+                format!(
+                    "Expected error:\n{}\nGot error:\n{}",
+                    expected_err,
+                    e
+                )
+            )
+        }
     }
 }
