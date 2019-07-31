@@ -1,7 +1,10 @@
 use std::path::Path;
 use std::{fs, result};
 use crate::errors::AppError;
-use crate::constants::DOT_ENV_PATH;
+use crate::constants::{
+    DOT_ENV_PATH,
+    DEFAULT_ENDPOINT
+};
 
 type Result<T> = result::Result<T, AppError>;
 
@@ -10,7 +13,7 @@ pub fn read_env_file() -> Result<String> {
 }
 
 pub fn write_env_file() -> Result<()> {
-    let data = "ENDPOINT=\"https://rpc.slock.it/mainnet\"";
+    let data = format!("ENDPOINT=\"{}\"", DEFAULT_ENDPOINT);
     Ok(fs::write(&DOT_ENV_PATH, data)?)
 }
 
@@ -31,6 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[serial]
     fn should_return_true_if_dot_env_file_exists() {
         if Path::new(&DOT_ENV_PATH).exists() {
             assert!(dot_env_file_exists());
@@ -43,6 +47,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn should_return_false_if_dot_env_file_does_not_exist() {
         if Path::new(&DOT_ENV_PATH).exists() {
             let file = read_env_file().unwrap();
@@ -58,6 +63,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn should_delete_env_file_correctly_if_it_exists() {
         if dot_env_file_exists() {
             let original_file = read_env_file().unwrap();
@@ -76,6 +82,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn should_read_existing_env_file_correctly() {
         if dot_env_file_exists() {
             let file = read_env_file().unwrap();
@@ -85,6 +92,7 @@ mod tests {
 
 
     #[test]
+    #[serial]
     fn should_delete_env_file_correctly_if_it_does_not_exist() {
         if !dot_env_file_exists() {
             write_env_file().unwrap();
@@ -95,6 +103,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn should_write_env_file_correctly_if_it_exists() {
         if dot_env_file_exists() {
             let original_file = read_env_file().unwrap();
@@ -110,6 +119,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn should_write_env_file_correctly_if_it_does_not_exist() {
         if !dot_env_file_exists() {
             write_env_file().unwrap();
@@ -120,6 +130,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn should_restore_env_file_correctly_if_it_exists() {
         if dot_env_file_exists() {
             let original_file = read_env_file().unwrap();
@@ -133,6 +144,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn should_restore_env_file_correctly_if_it_does_not_exist() {
         if !dot_env_file_exists() {
             write_env_file().unwrap();
