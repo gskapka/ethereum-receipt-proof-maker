@@ -16,7 +16,7 @@ fn left_pad_with_zero(string: &str) -> Result<String> {
     Ok(format!("0{}", string))
 }
 
-pub fn hex_to_bytes(hex: String) -> Result<Bytes> {
+pub fn convert_hex_to_bytes(hex: String) -> Result<Bytes> {
     Ok(hex::decode(strip_hex_prefix(&hex.to_string())?)?)
 }
 
@@ -72,7 +72,7 @@ mod tests {
     fn should_convert_unprefixed_hex_to_bytes_correctly() {
         let hex = "c0ffee".to_string();
         let expected_result = [ 192, 255, 238 ];
-        let result = hex_to_bytes(hex).unwrap();
+        let result = convert_hex_to_bytes(hex).unwrap();
         assert!(result == expected_result)
     }
 
@@ -80,7 +80,7 @@ mod tests {
     fn should_convert_prefixed_hex_to_bytes_correctly() {
         let hex = "0xc0ffee".to_string();
         let expected_result = [ 192, 255, 238 ];
-        let result = hex_to_bytes(hex).unwrap();
+        let result = convert_hex_to_bytes(hex).unwrap();
         assert!(result == expected_result)
     }
 
