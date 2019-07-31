@@ -1,5 +1,7 @@
+use crate::state::State;
 use crate::types::Result;
 use crate::errors::AppError;
+use crate::utils::convert_hex_to_h256;
 
 use crate::constants::{
     HEX_PREFIX_LENGTH,
@@ -29,9 +31,11 @@ fn check_tx_hash_length(tx_hash: String) -> Result<String> {
     }
 }
 
-pub fn check_tx_hash_cli_arg(tx_hash: String) -> Result<String> {
+pub fn check_tx_hash_add_set_in_state(state: State, tx_hash: String) -> Result<State> {
     check_tx_hash_prefix(tx_hash)
         .and_then(check_tx_hash_length)
+        .and_then(convert_hex_to_h256)
+        .and_then(|hash| State::set_tx_hash_in_state(state, hash))
 }
 
 #[cfg(test)]
@@ -65,11 +69,11 @@ mod tests {
 
     #[test]
     fn should_return_hash_if_correct_length() {
-        let dummy_hash = "0x8aa208025cf2b43ac4b1fada62f707f82a6e2159ebd2e3aad3c94f4907e92c94".to_string();
-        assert!(dummy_hash.len() == HEX_PREFIX_LENGTH + HASH_HEX_CHARS);
-        let result = check_tx_hash_length(dummy_hash.clone())
+        let valid_hash = "0x8aa208025cf2b43ac4b1fada62f707f82a6e2159ebd2e3aad3c94f4907e92c94".to_string();
+        assert!(valid_hash.len() == HEX_PREFIX_LENGTH + HASH_HEX_CHARS);
+        let result = check_tx_hash_length(valid_hash.clone())
             .unwrap();
-        assert!(result == dummy_hash)
+        assert!(result == valid_hash)
     }
 
     #[test]
@@ -108,5 +112,28 @@ mod tests {
                 )
             )
         }
+    }
+
+    #[test]
+    fn should_check_tx_hash_and_set_in_state() {
+        let valid_hash = "0x8aa208025cf2b43ac4b1fada62f707f82a6e2159ebd2e3aad3c94f4907e92c94".to_string();
+        let valid_hash_h256 = convert_hex_to_h256(valid_hash.clone())
+            .unwrap();
+        let state = State::get_initial_state()
+            .unwrap();
+        match State::get_tx_hash_from_state(state.clone()) {
+            Err(AppError::Custom(e)) =>
+                assert!( e == "✘ No transaction hash in state!"),
+            Err(e) =>
+                panic!("Wrong error when accessing state!"),
+            Ok(_) =>
+                panic!("State should not have tx hash set yet!")
+        }
+        let resultant_state = check_tx_hash_add_set_in_state(state, valid_hash)
+            .unwrap();
+        let tx_hash_from_state = State::get_tx_hash_from_state(resultant_state)
+            .unwrap();
+        assert!(tx_hash_from_state == valid_hash_h256);
+
     }
 }
