@@ -52,6 +52,8 @@ pub fn get_endpoint_and_set_in_state(state: State) -> Result<State> {
 mod tests {
     use std::fs;
     use super::*;
+    use crate::constants::DOT_ENV_PATH;
+    use crate::test_utils::get_dummy_initial_state;
 
     #[test]
     #[serial]
@@ -158,7 +160,8 @@ mod tests {
     fn should_get_default_endpoint_and_set_in_state_if_no_env_file() {
         if !dot_env_file_exists() {
             let expected_err = "No endpoint in state";
-            let initial_state = State::get_initial_state().unwrap();
+            let initial_state = get_dummy_initial_state()
+                .unwrap();
             match State::get_endpoint_from_state(initial_state.clone()) {
                 Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
                 _ => panic!("State should not have endpoint yet!")
@@ -177,7 +180,8 @@ mod tests {
     fn should_get_custom_endpoint_and_set_in_state_if_env_file() {
         if dot_env_file_exists() {
             let expected_err = "No endpoint in state";
-            let initial_state = State::get_initial_state().unwrap();
+            let initial_state = get_dummy_initial_state()
+                .unwrap();
             match State::get_endpoint_from_state(initial_state.clone()) {
                 Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
                 _ => panic!("State should not have endpoint yet!")
