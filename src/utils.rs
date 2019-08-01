@@ -1,22 +1,16 @@
 use hex;
 use crate::errors::AppError;
-
+use crate::constants::HASH_LENGTH;
 use ethereum_types::{
     U256,
     H256,
     Address
 };
-
 use crate::types::{
     Bytes,
     Result,
 };
 
-use crate::constants::{
-    HASH_LENGTH,
-    HASH_HEX_CHARS,
-    HEX_PREFIX_LENGTH,
-};
 
 fn left_pad_with_zero(string: &str) -> Result<String> {
     Ok(format!("0{}", string))
@@ -70,9 +64,21 @@ pub fn decode_prefixed_hex(hex_to_decode: String) -> Result<Vec<u8>> {
         .and_then(decode_hex)
 }
 
+pub fn get_not_in_state_err(substring: &str) -> String {
+    format!("✘ No {} in state!" , substring)
+}
+
+pub fn get_no_overwrite_state_err(substring: &str) -> String {
+    format!("✘ Cannot overwrite {} in state!" , substring)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{
+        HASH_HEX_CHARS,
+        HEX_PREFIX_LENGTH
+    };
 
     #[test]
     fn should_convert_unprefixed_hex_to_bytes_correctly() {
@@ -207,4 +213,18 @@ mod tests {
         assert!(result.as_u128() == expected_result)
     }
 
+    fn should_get_no_state_err_string() {
+        let thing = "thing".to_string();
+        let expected_result = "✘ No thing in state!";
+        let result = get_not_in_state_err(&thing);
+        assert!(result == expected_result)
+    }
+
+    #[test]
+    fn should_get_no_overwrite_err_string() {
+        let thing = "thing".to_string();
+        let expected_result = "✘ Cannot overwrite thing in state!";
+        let result = get_no_overwrite_state_err(&thing);
+        assert!(result == expected_result)
+    }
 }
