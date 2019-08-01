@@ -1,10 +1,8 @@
 pub static USAGE_INFO: &'static str = "
 ❍ Rusty Receipt Proof Maker ❍
 
-
     Copyright Provable 2019
     Questions: greg@oraclize.it
-
 
 ❍ Info ❍
 
@@ -13,7 +11,7 @@ This tool generates a merkle receipt proof of the receipt pertaining to the give
 ***
 
 Usage:  rusty-receipt-proof-maker [-h | --help]
-        rusty-receipt-proof-maker <tx-hash> [-v | --verbose]
+        rusty-receipt-proof-maker <txhash> [-v | --verbose]
 
 Options:
 
@@ -21,7 +19,7 @@ Options:
 
     -b, --verbose       ❍ Enable verbose mode for additional output.
 
-    <tx-hash>           ❍ A transaction hash of an Ethereum transaction
+    <txhash>            ❍ A transaction hash of an Ethereum transaction
                         ➔ Format: A 32-byte long, prefixed hex string.
 
 ";
