@@ -1,8 +1,5 @@
-use crate::state::State;
 use crate::types::Result;
-use ethereum_types::H256;
 use crate::errors::AppError;
-use crate::utils::convert_hex_to_h256;
 
 use crate::constants::{
     HEX_PREFIX_LENGTH,

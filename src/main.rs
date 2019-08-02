@@ -26,7 +26,6 @@ mod initialize_state_from_cli_args;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate serial_test_derive;
 
-use crate::state::State;
 use crate::parse_cli_args::parse_cli_args;
 use crate::connect_to_node::connect_to_node;
 use crate::validate_cli_args::validate_cli_args;

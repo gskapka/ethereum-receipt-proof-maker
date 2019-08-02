@@ -67,7 +67,6 @@ mod tests {
     use super::*;
 
     use crate::test_utils::{
-        get_valid_dummy_hash_hex,
         get_valid_dummy_hash_h256,
         get_dummy_initial_state,
     };

@@ -18,18 +18,8 @@ pub fn connect_to_node(state: State) -> Result<State> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
     use super::*;
-    use crate::errors::AppError;
-    use crate::constants::DOT_ENV_PATH;
     use crate::test_utils::get_dummy_initial_state;
-    use crate::dot_env_utils::{
-        read_env_file,
-        write_env_file,
-        delete_env_file,
-        restore_env_file,
-        dot_env_file_exists,
-    };
 
     #[test]
     fn should_connect_to_node_and_return_state_when_endpoint_works() {
@@ -39,7 +29,7 @@ mod tests {
             working_endpoint
         ).unwrap();
         match connect_to_node(state) {
-            Ok(returned_state) => assert!(true),
+            Ok(returned_state) => assert!(returned_state.verbose),
             Err(_) => panic!("Should connect to node w/ working endpoint!")
         }
     }

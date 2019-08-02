@@ -6,27 +6,30 @@ use crate::constants::{
     DEFAULT_ENDPOINT
 };
 
+pub fn dot_env_file_exists() -> bool {
+    Path::new(&DOT_ENV_PATH).exists()
+}
 
+#[cfg(test)]
 pub fn read_env_file() -> Result<String> {
     Ok(fs::read_to_string(&DOT_ENV_PATH)?)
 }
 
+#[cfg(test)]
 pub fn write_env_file(endpoint_url: Option<&str>) -> Result<()> {
     let url = endpoint_url.unwrap_or(DEFAULT_ENDPOINT);
     let data = format!("ENDPOINT=\"{}\"", url);
     Ok(fs::write(&DOT_ENV_PATH, data)?)
 }
 
+#[cfg(test)]
 pub fn delete_env_file() -> Result<()> {
     Ok(fs::remove_file(&DOT_ENV_PATH)?)
 }
 
+#[cfg(test)]
 pub fn restore_env_file(data: String) -> Result<()> {
     Ok(fs::write(&DOT_ENV_PATH, data)?)
-}
-
-pub fn dot_env_file_exists() -> bool {
-    Path::new(&DOT_ENV_PATH).exists()
 }
 
 #[cfg(test)]

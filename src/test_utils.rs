@@ -3,14 +3,17 @@ use crate::types::Result;
 use ethereum_types::H256;
 use crate::utils::convert_hex_to_h256;
 
+#[cfg(test)]
 pub fn get_valid_dummy_hash_hex() -> String {
      "0x8aa208025cf2b43ac4b1fada62f707f82a6e2159ebd2e3aad3c94f4907e92c94".to_string()
 }
 
+#[cfg(test)]
 pub fn get_valid_dummy_hash_h256() -> Result<H256> {
      convert_hex_to_h256(get_valid_dummy_hash_hex())
 }
 
+#[cfg(test)]
 pub fn get_dummy_initial_state() -> Result<State> {
     State::get_initial_state(
         get_valid_dummy_hash_h256()?,
@@ -22,6 +25,7 @@ pub fn get_dummy_initial_state() -> Result<State> {
 mod tests {
     use hex;
     use super::*;
+    use crate::state::State;
     use crate::errors::AppError;
     use crate::utils::get_not_in_state_err;
     use crate::validate_tx_hash::validate_tx_hash;
@@ -31,7 +35,7 @@ mod tests {
         let result = get_valid_dummy_hash_hex();
         match validate_tx_hash(result) {
             Ok(_) => assert!(true),
-            Err(e) => panic!("Hex tx hash should be valid!")
+            Err(_) => panic!("Hex tx hash should be valid!")
         }
     }
 
