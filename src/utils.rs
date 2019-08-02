@@ -55,6 +55,15 @@ pub fn convert_hex_to_h256(hex: String) -> Result<H256> {
         })
 }
 
+pub fn convert_hex_strings_to_h256s(hex_strings: Vec<String>) -> Result<Vec<H256>> {
+    let hashes: Result<Vec<H256>> = hex_strings
+        .into_iter()
+        .map(|hex_string| convert_hex_to_h256(hex_string.to_string()))
+        .collect();
+    Ok(hashes?)
+}
+
+
 pub fn decode_hex(hex_to_decode: String) -> Result<Vec<u8>> {
     Ok(hex::decode(hex_to_decode)?)
 }
@@ -105,6 +114,7 @@ mod tests {
             .unwrap();
         assert!(result == expected_result)
     }
+
     #[test]
     fn should_decode_prefixed_hex_correctly() {
         let prefixed_hex = "0xc0ffee";
@@ -226,5 +236,18 @@ mod tests {
         let expected_result = "✘ Cannot overwrite thing in state!";
         let result = get_no_overwrite_state_err(&thing);
         assert!(result == expected_result)
+    }
+
+    #[test]
+    fn should_convert_hex_strings_to_h256s() {
+        let str1 = "0xebfa2e7610ea186fa3fa97bbaa5db80cce033dfff7e546c6ee05493dbcbfda7a".to_string();
+        let str2 = "0x08075826de57b85238fe1728a37b366ab755b95c65c59faec7b0f1054fca1654".to_string();
+        let expected_result1 = convert_hex_to_h256(str1.clone()).unwrap();
+        let expected_result2 = convert_hex_to_h256(str2.clone()).unwrap();
+        let hex_strings: Vec<String> = vec!(str1, str2);
+        let results: Vec<H256> = convert_hex_strings_to_h256s(hex_strings)
+            .unwrap();
+        assert!(results[0] == expected_result1);
+        assert!(results[1] == expected_result2);
     }
 }
