@@ -170,13 +170,13 @@ mod tests {
             let expected_err = "No endpoint in state";
             let initial_state = get_dummy_initial_state()
                 .unwrap();
-            match State::get_endpoint_from_state(initial_state.clone()) {
+            match State::get_endpoint_from_state(&initial_state) {
                 Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
                 _ => panic!("State should not have endpoint yet!")
             }
             let result_state = get_endpoint_and_set_in_state(initial_state)
                 .unwrap();
-            match State::get_endpoint_from_state(result_state) {
+            match State::get_endpoint_from_state(&result_state) {
                 Ok(endpoint) => assert!(endpoint == DEFAULT_ENDPOINT),
                 _ => panic!("Default endpoint should be set in state!")
             }
@@ -190,7 +190,7 @@ mod tests {
             let expected_err = "No endpoint in state";
             let initial_state = get_dummy_initial_state()
                 .unwrap();
-            match State::get_endpoint_from_state(initial_state.clone()) {
+            match State::get_endpoint_from_state(&initial_state) {
                 Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
                 _ => panic!("State should not have endpoint yet!")
             }
@@ -198,7 +198,7 @@ mod tests {
                 .unwrap();
             let result_state = get_endpoint_and_set_in_state(initial_state)
                 .unwrap();
-            match State::get_endpoint_from_state(result_state) {
+            match State::get_endpoint_from_state(&result_state) {
                 Ok(endpoint) => assert!(file.contains(&endpoint)),
                 _ => panic!("Custom endpoint should be set in state!")
             }

@@ -47,15 +47,15 @@ impl State {
         }
     }
 
-    pub fn get_block_from_state(self) -> Result<Block> { // TODO: Should these return a tuple of state + thing?
+    pub fn get_block_from_state(self) -> Result<Block> {
         match self.block {
             Some(block) => Ok(block),
             None => Err(AppError::Custom(get_not_in_state_err("block")))
         }
     }
 
-    pub fn get_endpoint_from_state(self) -> Result<String> { // TODO: Ibid. So as not to "consume" the state?
-        match self.endpoint {
+    pub fn get_endpoint_from_state(&self) -> Result<&str> {
+        match &self.endpoint {
             Some(endpoint) => Ok(endpoint),
             None => Err(AppError::Custom(get_not_in_state_err("endpoint")))
         }
@@ -99,7 +99,7 @@ mod tests {
         let expected_err = get_not_in_state_err("endpoint");
         let state = get_dummy_initial_state()
             .unwrap();
-        match State::get_endpoint_from_state(state) {
+        match State::get_endpoint_from_state(&state) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Endpoint should not be initialised in state!"),
         }
@@ -130,7 +130,7 @@ mod tests {
             .unwrap();
         let new_state = State::set_endpoint_in_state(state, expected_result.clone())
             .unwrap();
-        let result = State::get_endpoint_from_state(new_state)
+        let result = State::get_endpoint_from_state(&new_state)
             .unwrap();
         assert!(result == expected_result);
     }
@@ -143,7 +143,7 @@ mod tests {
             .unwrap();
         let new_state = State::set_endpoint_in_state(state, expected_result.clone())
             .unwrap();
-        let result = State::get_endpoint_from_state(new_state)
+        let result = State::get_endpoint_from_state(&new_state)
             .unwrap();
         assert!(result == expected_result);
     }
@@ -160,7 +160,7 @@ mod tests {
         )
             .unwrap();
         let endpoint_from_state = State::get_endpoint_from_state(
-            state_with_endpoint.clone()
+            &state_with_endpoint
         )
             .unwrap();
         assert!(endpoint_from_state == dummy_endpoint);

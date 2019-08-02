@@ -54,7 +54,7 @@ mod tests {
             .unwrap();
         assert!(result.tx_hash == expected_tx_hash);
         assert!(result.verbose == expected_verbosity);
-        match State::get_endpoint_from_state(result.clone()) {
+        match State::get_endpoint_from_state(&result) {
             Err(AppError::Custom(e)) =>
                 assert!(e == get_not_in_state_err("endpoint")),
             _ => panic!("Intial state should not have endpoint set!")
