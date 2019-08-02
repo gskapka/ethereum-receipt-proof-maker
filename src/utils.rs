@@ -11,9 +11,12 @@ use crate::types::{
     Result,
 };
 
-
 fn left_pad_with_zero(string: &str) -> Result<String> {
     Ok(format!("0{}", string))
+}
+
+pub fn convert_num_to_prefixed_hex(num: usize) -> Result<String> {
+    Ok(format!("0x{:x}", num))
 }
 
 pub fn convert_hex_to_bytes(hex: String) -> Result<Bytes> {
@@ -249,5 +252,14 @@ mod tests {
             .unwrap();
         assert!(results[0] == expected_result1);
         assert!(results[1] == expected_result2);
+    }
+
+    #[test]
+    fn should_convert_number_to_hex_correctly() {
+        let num = 1337;
+        let result = convert_num_to_prefixed_hex(num)
+            .unwrap();
+        let expected_result = "0x539";
+        assert!(result == expected_result)
     }
 }
