@@ -16,19 +16,25 @@ pub enum AppError {
 
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let sign_off = "✔ Exiting, goodbye!\n";
         let msg = match *self {
             AppError::Custom(ref msg) =>
-                format!("\n{}\n", msg),
+                format!("\n{}\n{}", msg, sign_off),
             AppError::HexError(ref e) =>
-                format!("\n✘ Hex Error!\n✘ {}\n", e),
+                format!("\n✘ Hex Error!\n✘ {}\n{}", e, sign_off),
             AppError::IOError(ref e) =>
-                format!("\n✘ I/O Error!\n✘ {}\n", e),
-            AppError::ReqwestError(ref e) =>
-                format!("\n✘ HTTP Reqwest Error!\n✘ {}\n", e),
+                format!("\n✘ I/O Error!\n✘ {}\n{}", e, sign_off),
             AppError::SerdeJsonError(ref e) =>
-                format!("\n✘ Serde-Json Error!\n✘ {}\n", e),
+                format!("\n✘ Serde-Json Error!\n✘ {}\n{}", e, sign_off),
             AppError::NoneError(ref e) =>
-                format!("\n✘ Nothing to unwrap!\n✘ {:?}\n", e),
+                format!("\n✘ Nothing to unwrap!\n✘ {:?}\n{}", e, sign_off),
+            AppError::ReqwestError(ref e) =>
+                format!(
+                    "\n✘ HTTP Reqwest Error!\n✘ {}\n{}\n{}",
+                    e,
+                    "✘ Please check your node & port settings and retry.",
+                    sign_off
+                ),
         };
         f.write_fmt(format_args!("{}", msg))
     }
