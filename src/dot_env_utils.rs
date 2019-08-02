@@ -11,8 +11,9 @@ pub fn read_env_file() -> Result<String> {
     Ok(fs::read_to_string(&DOT_ENV_PATH)?)
 }
 
-pub fn write_env_file() -> Result<()> {
-    let data = format!("ENDPOINT=\"{}\"", DEFAULT_ENDPOINT);
+pub fn write_env_file(endpoint_url: Option<&str>) -> Result<()> {
+    let url = endpoint_url.unwrap_or(DEFAULT_ENDPOINT);
+    let data = format!("ENDPOINT=\"{}\"", url);
     Ok(fs::write(&DOT_ENV_PATH, data)?)
 }
 
@@ -38,7 +39,7 @@ mod tests {
         if Path::new(&DOT_ENV_PATH).exists() {
             assert!(dot_env_file_exists());
         } else {
-            write_env_file().unwrap();
+            write_env_file(None).unwrap();
             assert!(dot_env_file_exists());
             delete_env_file().unwrap();
             assert!(!dot_env_file_exists());
@@ -73,7 +74,7 @@ mod tests {
             let file = read_env_file().unwrap();
             assert!(file == original_file);
         } else {
-            write_env_file().unwrap();
+            write_env_file(None).unwrap();
             assert!(dot_env_file_exists());
             delete_env_file().unwrap();
             assert!(!dot_env_file_exists());
@@ -94,7 +95,7 @@ mod tests {
     #[serial]
     fn should_delete_env_file_correctly_if_it_does_not_exist() {
         if !dot_env_file_exists() {
-            write_env_file().unwrap();
+            write_env_file(None).unwrap();
             assert!(dot_env_file_exists());
             delete_env_file().unwrap();
             assert!(!dot_env_file_exists());
@@ -108,7 +109,7 @@ mod tests {
             let original_file = read_env_file().unwrap();
             delete_env_file().unwrap();
             assert!(!dot_env_file_exists());
-            write_env_file().unwrap();
+            write_env_file(None).unwrap();
             assert!(dot_env_file_exists());
             delete_env_file().unwrap();
             restore_env_file(original_file.clone()).unwrap();
@@ -121,7 +122,7 @@ mod tests {
     #[serial]
     fn should_write_env_file_correctly_if_it_does_not_exist() {
         if !dot_env_file_exists() {
-            write_env_file().unwrap();
+            write_env_file(None).unwrap();
             assert!(dot_env_file_exists());
             delete_env_file().unwrap();
             assert!(!dot_env_file_exists());
@@ -146,7 +147,7 @@ mod tests {
     #[serial]
     fn should_restore_env_file_correctly_if_it_does_not_exist() {
         if !dot_env_file_exists() {
-            write_env_file().unwrap();
+            write_env_file(None).unwrap();
             assert!(dot_env_file_exists());
             let file = read_env_file().unwrap();
             delete_env_file().unwrap();

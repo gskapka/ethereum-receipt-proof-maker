@@ -3,15 +3,15 @@ use crate::types::Result;
 use ethereum_types::H256;
 use crate::utils::convert_hex_to_h256;
 
-pub fn get_valid_dummy_hash_hex() -> String { // FIXME: Test!
+pub fn get_valid_dummy_hash_hex() -> String {
      "0x8aa208025cf2b43ac4b1fada62f707f82a6e2159ebd2e3aad3c94f4907e92c94".to_string()
 }
 
-pub fn get_valid_dummy_hash_h256() -> Result<H256> { // FIXME: Test!
+pub fn get_valid_dummy_hash_h256() -> Result<H256> {
      convert_hex_to_h256(get_valid_dummy_hash_hex())
 }
 
-pub fn get_dummy_initial_state() -> Result<State> { // FIXME: Test!
+pub fn get_dummy_initial_state() -> Result<State> {
     State::get_initial_state(
         get_valid_dummy_hash_h256()?,
         true

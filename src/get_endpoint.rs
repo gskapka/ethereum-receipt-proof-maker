@@ -88,7 +88,7 @@ mod tests {
             let file = read_env_file().unwrap();
             assert!(file == original_file)
         } else {
-            write_env_file().unwrap();
+            write_env_file(None).unwrap();
             assert!(dot_env_file_exists());
             maybe_run_dot_env().unwrap();
             delete_env_file().unwrap();
