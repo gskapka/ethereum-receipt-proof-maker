@@ -15,6 +15,17 @@ fn left_pad_with_zero(string: &str) -> Result<String> {
     Ok(format!("0{}", string))
 }
 
+pub fn convert_num_string_to_usize(num_str: &str) -> Result<usize> {
+    match num_str.parse::<usize>() {
+        Ok(res) => Ok(res),
+        Err(_) => Err(
+            AppError::Custom(
+                format!("✘ Cannot convert {} to integer!", num_str)
+            )
+        )
+    }
+}
+
 pub fn convert_num_to_prefixed_hex(num: usize) -> Result<String> {
     Ok(format!("0x{:x}", num))
 }
@@ -76,6 +87,11 @@ pub fn decode_prefixed_hex(hex_to_decode: String) -> Result<Vec<u8>> {
         .and_then(decode_hex)
 }
 
+// TODO: Test
+pub fn convert_h256_to_prefixed_hex(hash: H256) -> Result <String> {
+    Ok(format!("0x{}", hex::encode(hash)))
+}
+
 pub fn get_not_in_state_err(substring: &str) -> String {
     format!("✘ No {} in state!" , substring)
 }
@@ -91,6 +107,24 @@ mod tests {
         HASH_HEX_CHARS,
         HEX_PREFIX_LENGTH
     };
+
+    fn get_sample_block_hash() -> &'static str {
+        "0x1ddd540f36ea0ed23e732c1709a46c31ba047b98f1d99e623f1644154311fe10"
+    }
+
+    fn get_sample_h256() -> H256 {
+        convert_hex_to_h256(get_sample_block_hash().to_string())
+            .unwrap()
+    }
+
+    #[test]
+    fn should_convert_h256_to_prefixed_hex_correctly() {
+        let expected_result = get_sample_block_hash();
+        let hash = get_sample_h256();
+        let result = convert_h256_to_prefixed_hex(hash)
+            .unwrap();
+        assert!(result == expected_result);
+    }
 
     #[test]
     fn should_convert_unprefixed_hex_to_bytes_correctly() {
@@ -261,5 +295,25 @@ mod tests {
             .unwrap();
         let expected_result = "0x539";
         assert!(result == expected_result)
+    }
+
+    #[test]
+    fn should_convert_num_string_to_usize_correctly() {
+        let num_string = "1337";
+        let expected_result:usize = 1337;
+        let result = convert_num_string_to_usize(num_string)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_err_when_converting_invalid_num_string_to_usize() {
+        let expected_err = "✘ Cannot convert";
+        let invalid_num_str = "invalid num string";
+        match convert_num_string_to_usize(invalid_num_str) {
+            Ok(_) => panic!("Should fail to convert to int!"),
+            Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
+            Err(_) => panic!("Wrong error type received!")
+        }
     }
 }
