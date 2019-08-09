@@ -1,5 +1,6 @@
 use serde_json::Value;
 use crate::types::Result;
+use serde_json::Value as Json;
 
 pub fn get_block_by_block_hash_json(block_hash: String) -> Result<Value> {
     Ok(
@@ -23,7 +24,7 @@ pub fn get_block_by_block_number_json(block_number: String) -> Result<Value> {
     )
 }
 
-pub fn get_transaction_receipt_json(tx_hash: String) -> Result<Value> {
+pub fn get_transaction_receipt_json(tx_hash: &str) -> Result<Value> {
     Ok(
         json!({
             "id": "1",
@@ -67,8 +68,8 @@ mod tests {
     #[test]
     fn should_get_transaction_receipt_json_correctly() {
         let dummy_hash = "0xc0ffee".to_string();
-        let expected_result = format!("\"{}\"", dummy_hash.clone());
-        let result = get_transaction_receipt_json(dummy_hash)
+        let expected_result = format!("\"{}\"", &dummy_hash);
+        let result = get_transaction_receipt_json(&dummy_hash)
             .unwrap();
         assert!("\"1\"" == result["id"].to_string());
         assert!("\"2.0\"" == result["jsonrpc"].to_string());

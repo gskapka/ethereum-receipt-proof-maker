@@ -38,7 +38,7 @@ pub fn validate_tx_hash(tx_hash: String) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::get_valid_dummy_hash_hex;
+    use crate::test_utils::get_valid_tx_hash_hex;
 
     #[test]
     fn should_return_hash_when_checking_prefixed_hash() {
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn should_return_hash_if_correct_length() {
-        let valid_hash = get_valid_dummy_hash_hex();
+        let valid_hash = get_valid_tx_hash_hex();
         assert!(valid_hash.len() == HEX_PREFIX_LENGTH + HASH_HEX_CHARS);
         let result = check_tx_hash_length(valid_hash.clone())
             .unwrap();

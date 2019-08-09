@@ -49,7 +49,7 @@ mod tests {
     use std::fs;
     use super::*;
     use crate::constants::DOT_ENV_PATH;
-    use crate::test_utils::get_dummy_initial_state;
+    use crate::test_utils::get_valid_initial_state;
     use crate::dot_env_utils::{
         read_env_file,
         write_env_file,
@@ -162,7 +162,7 @@ mod tests {
     fn should_get_default_endpoint_and_set_in_state_if_no_env_file() {
         if !dot_env_file_exists() {
             let expected_err = "No endpoint in state";
-            let initial_state = get_dummy_initial_state()
+            let initial_state = get_valid_initial_state()
                 .unwrap();
             match State::get_endpoint_from_state(&initial_state) {
                 Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
@@ -182,7 +182,7 @@ mod tests {
     fn should_get_custom_endpoint_and_set_in_state_if_env_file() {
         if dot_env_file_exists() {
             let expected_err = "No endpoint in state";
-            let initial_state = get_dummy_initial_state()
+            let initial_state = get_valid_initial_state()
                 .unwrap();
             match State::get_endpoint_from_state(&initial_state) {
                 Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
