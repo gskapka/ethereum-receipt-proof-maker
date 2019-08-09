@@ -20,6 +20,8 @@ use crate::types::{
     Receipt,
 };
 
+pub const TX_INDEX: usize = 96;
+
 pub const WORKING_ENDPOINT: &str = "https://rpc.slock.it/mainnet";
 
 pub const SAMPLE_BLOCK_JSON_PATH: &str = "./test_utils/sample_block_json";
