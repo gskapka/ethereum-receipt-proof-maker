@@ -1,16 +1,18 @@
 use std::result;
-use crate::errors::AppError;
-
-pub type Bytes = Vec<u8>;
-pub type Result<T> = result::Result<T, AppError>;
-
 use serde::Deserialize;
+use crate::errors::AppError;
 use ethereum_types::{
     U256,
     H256,
     Bloom,
     Address,
 };
+
+pub type Bytes = Vec<u8>;
+pub type Result<T> = result::Result<T, AppError>;
+
+#[derive(Debug, Deserialize)]
+pub struct ReceiptRpcResponse { result: ReceiptJson }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Block {
@@ -39,7 +41,7 @@ pub struct Block {
 }
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Receipt {
     pub to: Address,
     pub from: Address,
@@ -56,7 +58,7 @@ pub struct Receipt {
     pub logs_bloom: Bloom,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Log {
     pub address: Address,
     pub topics: Vec<H256>,
@@ -118,7 +120,7 @@ pub struct ReceiptJson {
 }
 
 #[allow(non_snake_case)]
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct LogJson {
     pub data: String,
     pub removed: bool,
