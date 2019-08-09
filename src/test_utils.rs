@@ -47,7 +47,7 @@ pub fn get_valid_tx_hash_h256() -> Result<H256> {
 }
 
 pub fn get_valid_initial_state() -> Result<State> {
-    State::get_initial_state(
+    State::init(
         get_valid_tx_hash_h256()?,
         get_valid_tx_hash_hex(),
         true
