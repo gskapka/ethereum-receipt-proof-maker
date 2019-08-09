@@ -12,7 +12,6 @@ mod get_log;
 mod constants;
 mod get_block;
 mod usage_info;
-mod get_config;
 mod test_utils;
 mod get_receipt;
 mod get_endpoint;
