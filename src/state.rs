@@ -20,7 +20,7 @@ pub struct State {
 }
 
 impl State {
-    pub fn get_initial_state( // TODO: Rename to init()!
+    pub fn init(
         tx_hash: H256,
         tx_hash_string: String,
         verbosity: bool
@@ -48,17 +48,6 @@ impl State {
         }
     }
 
-    pub fn set_receipt_in_state(mut self, receipt: Receipt) -> Result<State> {
-        match self.receipt{
-            Some(_) =>
-                Err(AppError::Custom(get_no_overwrite_state_err("receipt"))),
-            None => {
-                self.receipt = Some(receipt);
-                Ok(self)
-            }
-        }
-    }
-
     pub fn set_endpoint_in_state(mut self, endpoint: String) -> Result<State> {
         match self.endpoint {
             Some(_) =>
@@ -81,14 +70,6 @@ impl State {
         match &self.endpoint {
             Some(endpoint) => Ok(endpoint),
             None => Err(AppError::Custom(get_not_in_state_err("endpoint")))
-        }
-    }
-
-    // TODO: Test
-    pub fn get_receipt_from_state(&self) -> Result<&Receipt> {
-        match &self.receipt{
-            Some(receipt) => Ok(receipt),
-            None => Err(AppError::Custom(get_not_in_state_err("receipt")))
         }
     }
 }

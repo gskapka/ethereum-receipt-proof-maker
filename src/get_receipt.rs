@@ -1,4 +1,3 @@
-use crate::state::State;
 use crate::get_rpc_call_jsons::get_transaction_receipt_json;
 use crate::make_rpc_call::{
     make_rpc_call,
@@ -68,10 +67,6 @@ pub fn get_receipt_from_tx_hash(
         .and_then(|res| deserialize_receipt_json_to_receipt_struct(res.result))
 }
 
-fn add_receipt_to_state(state: State, receipt: Receipt) -> Result<State> {
-    Ok(State::set_receipt_in_state(state, receipt)?)
-}
-
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -80,8 +75,6 @@ mod tests {
     use crate::test_utils::{
         SAMPLE_TX_HASH,
         WORKING_ENDPOINT,
-        get_expected_receipt,
-        get_valid_initial_state,
         SAMPLE_RECEIPT_JSON_PATH,
         assert_receipt_is_correct,
     };
@@ -93,15 +86,6 @@ mod tests {
             SAMPLE_TX_HASH,
         ).unwrap();
         assert_receipt_is_correct(result)
-    }
-
-    #[test]
-    fn should_add_receipt_to_state_correctly() {
-        let receipt = get_expected_receipt();
-        let state = get_valid_initial_state().unwrap();
-        let resultant_state = add_receipt_to_state(state, receipt).unwrap();
-        let result = State::get_receipt_from_state(&resultant_state).unwrap();
-        assert_receipt_is_correct(result.clone());
     }
 
     #[test]
