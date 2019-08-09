@@ -14,6 +14,7 @@ pub struct State {
     pub verbose: bool,
     pub tx_hash: H256,
     pub block: Option<Block>,
+    pub index: Option<usize>,
     pub tx_hash_string: String,
     pub endpoint: Option<String>,
     pub receipts: Option<Vec<Receipt>>,
@@ -29,6 +30,7 @@ impl State {
             State {
                 tx_hash,
                 block: None,
+                index: None,
                 endpoint: None,
                 receipts: None,
                 tx_hash_string,
@@ -43,6 +45,17 @@ impl State {
                 Err(AppError::Custom(get_no_overwrite_state_err("block"))),
             None => {
                 self.block = Some(block);
+                Ok(self)
+            }
+        }
+    }
+
+    pub fn set_index_in_state(mut self, index: usize) -> Result<State> {
+        match self.index {
+            Some(_) =>
+                Err(AppError::Custom(get_no_overwrite_state_err("index"))),
+            None => {
+                self.index = Some(index);
                 Ok(self)
             }
         }
@@ -85,9 +98,16 @@ impl State {
     }
 
     pub fn get_receipts_from_state(&self) -> Result<&Vec<Receipt>> {
-        match &self.receipts{
+        match &self.receipts {
             Some(receipts) => Ok(receipts),
             None => Err(AppError::Custom(get_not_in_state_err("receipts")))
+        }
+    }
+
+    pub fn get_index_from_state(&self) -> Result<&usize> {
+        match &self.index {
+            Some(index) => Ok(index),
+            None => Err(AppError::Custom(get_not_in_state_err("index")))
         }
     }
 }
@@ -246,27 +266,6 @@ mod tests {
    }
 
    #[test]
-   fn should_get_receipts_into_state() {
-       let receipt = get_expected_receipt();
-       let mut vec_of_receipts = Vec::new();
-       vec_of_receipts.push(receipt.clone());
-       vec_of_receipts.push(receipt);
-       let state = get_valid_initial_state()
-           .unwrap();
-       let state_with_receipts = State::set_receipts_in_state(
-           state,
-           vec_of_receipts
-       ).unwrap();
-       let receipts_from_state = State::get_receipts_from_state(
-           &state_with_receipts
-       ).unwrap();
-       let _result: Vec<_> = receipts_from_state
-            .iter()
-            .map(|receipt| assert_receipt_is_correct(receipt.clone()))
-            .collect();
-   }
-
-   #[test]
    fn should_err_when_attempting_to_overwrite_receipts_in_state() {
        let expected_err = "✘ Cannot overwrite receipts in state!";
        let receipt = get_expected_receipt();
@@ -287,4 +286,39 @@ mod tests {
            _ => panic!("Expected error not received!")
        }
    }
+
+    #[test]
+    fn should_set_index_to_state() {
+        let expected_index: usize = 1337;
+        let state = get_valid_initial_state()
+            .unwrap();
+        let new_state = State::set_index_in_state(state, expected_index)
+            .unwrap();
+        let result = State::get_index_from_state(&new_state)
+            .unwrap();
+        assert!(result == &expected_index);
+    }
+
+    #[test]
+    fn should_err_when_attempting_to_overwrite_index_in_state() {
+        let expected_index: usize = 1337;
+        let expected_err = "✘ Cannot overwrite index in state!";
+        let initial_state = get_valid_initial_state()
+            .unwrap();
+        let state_with_index = State::set_index_in_state(
+            initial_state,
+            expected_index,
+        ).unwrap();
+        let index_from_state = State::get_index_from_state(
+            &state_with_index
+        ).unwrap();
+        assert!(index_from_state == &expected_index);
+        match State::set_index_in_state(
+            state_with_index,
+            expected_index.clone()
+        ) {
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            _ => panic!("Overwriting state should not have succeeded!"),
+        }
+    }
 }
