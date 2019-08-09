@@ -127,3 +127,4 @@ __:radioactive: CAUTION:__ Some tests rely on access to a full node at __`http:/
  - [x] Allow configurable endpoint.
  - [x] Have flag to suppress logging.
  - [x] Have timeout error on reqwests.
+ - [ ] Spinners for when it's doing the bits that take a while...?
