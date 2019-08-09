@@ -15,8 +15,8 @@ pub struct State {
     pub tx_hash: H256,
     pub block: Option<Block>,
     pub tx_hash_string: String,
-    pub receipt: Option<Receipt>,
     pub endpoint: Option<String>,
+    pub receipts: Option<Vec<Receipt>>,
 }
 
 impl State {
@@ -29,8 +29,8 @@ impl State {
             State {
                 tx_hash,
                 block: None,
-                receipt: None,
                 endpoint: None,
+                receipts: None,
                 tx_hash_string,
                 verbose: verbosity,
             }
@@ -59,6 +59,17 @@ impl State {
         }
     }
 
+    pub fn set_receipts_in_state(mut self, receipts: Vec<Receipt>) -> Result<State> {
+        match self.receipts{
+            Some(_) =>
+                Err(AppError::Custom(get_no_overwrite_state_err("receipts"))),
+            None => {
+                self.receipts= Some(receipts);
+                Ok(self)
+            }
+        }
+    }
+
     pub fn get_block_from_state(&self) -> Result<&Block> {
         match &self.block {
             Some(block) => Ok(&block),
@@ -72,6 +83,13 @@ impl State {
             None => Err(AppError::Custom(get_not_in_state_err("endpoint")))
         }
     }
+
+    pub fn get_receipts_from_state(&self) -> Result<&Vec<Receipt>> {
+        match &self.receipts{
+            Some(receipts) => Ok(receipts),
+            None => Err(AppError::Custom(get_not_in_state_err("receipts")))
+        }
+    }
 }
 
 #[cfg(test)]
@@ -80,9 +98,11 @@ mod tests {
 
     use crate::test_utils::{
         get_expected_block,
+        get_expected_receipt,
         get_valid_tx_hash_h256,
         get_valid_initial_state,
         assert_block_is_correct,
+        assert_receipt_is_correct,
     };
 
     #[test]
@@ -203,4 +223,68 @@ mod tests {
             _ => panic!("Overwriting state should not have succeeded!"),
         }
     }
+
+   #[test]
+   fn should_set_receipts_into_state() {
+       let receipt = get_expected_receipt();
+       let mut vec_of_receipts = Vec::new();
+       vec_of_receipts.push(receipt.clone());
+       vec_of_receipts.push(receipt);
+       let state = get_valid_initial_state()
+           .unwrap();
+       let state_with_receipts = State::set_receipts_in_state(
+           state,
+           vec_of_receipts
+       ).unwrap();
+       let receipts_from_state = State::get_receipts_from_state(
+           &state_with_receipts
+       ).unwrap();
+       let _result: Vec<_> = receipts_from_state
+            .iter()
+            .map(|receipt| assert_receipt_is_correct(receipt.clone()))
+            .collect();
+   }
+
+   #[test]
+   fn should_get_receipts_into_state() {
+       let receipt = get_expected_receipt();
+       let mut vec_of_receipts = Vec::new();
+       vec_of_receipts.push(receipt.clone());
+       vec_of_receipts.push(receipt);
+       let state = get_valid_initial_state()
+           .unwrap();
+       let state_with_receipts = State::set_receipts_in_state(
+           state,
+           vec_of_receipts
+       ).unwrap();
+       let receipts_from_state = State::get_receipts_from_state(
+           &state_with_receipts
+       ).unwrap();
+       let _result: Vec<_> = receipts_from_state
+            .iter()
+            .map(|receipt| assert_receipt_is_correct(receipt.clone()))
+            .collect();
+   }
+
+   #[test]
+   fn should_err_when_attempting_to_overwrite_receipts_in_state() {
+       let expected_err = "✘ Cannot overwrite receipts in state!";
+       let receipt = get_expected_receipt();
+       let mut vec_of_receipts = Vec::new();
+       vec_of_receipts.push(receipt.clone());
+       vec_of_receipts.push(receipt);
+       let state = get_valid_initial_state()
+           .unwrap();
+       let state_with_receipts = State::set_receipts_in_state(
+           state,
+           vec_of_receipts.clone(),
+       ).unwrap();
+       match State::set_receipts_in_state(
+           state_with_receipts,
+           vec_of_receipts,
+       ) {
+           Err(AppError::Custom(e)) => assert!(e == expected_err),
+           _ => panic!("Expected error not received!")
+       }
+   }
 }
