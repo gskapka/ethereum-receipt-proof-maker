@@ -81,12 +81,12 @@ mod tests {
             .unwrap();
         let result = get_response_text(reqwest_response)
             .unwrap();
-        let expected_result = str::replace(
-            &fs::read_to_string(SAMPLE_BLOCK_JSON_PATH).unwrap(),
-            "\n",
-            ""
-        );
-        assert!(result == expected_result);
+        let rpc_result_struct = deserialize_to_block_rpc_response(result)
+            .unwrap();
+        let result_as_block = deserialize_block_json_to_block_struct(
+            rpc_result_struct.result
+        ).unwrap();
+        assert_block_is_correct(result_as_block)
     }
 
     #[test]
