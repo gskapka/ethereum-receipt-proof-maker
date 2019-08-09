@@ -32,8 +32,9 @@ use crate::parse_cli_args::parse_cli_args;
 use crate::connect_to_node::connect_to_node;
 use crate::validate_cli_args::validate_cli_args;
 use crate::get_endpoint::get_endpoint_and_set_in_state;
-use crate::get_block::get_block_from_tx_hash_in_state_and_add_to_state;
+use crate::get_block::get_block_from_tx_hash_in_state_and_set_in_state;
 use crate::initialize_state_from_cli_args::initialize_state_from_cli_args;
+use crate::get_receipt::get_all_receipts_from_block_in_state_and_set_in_state;
 
 fn main() {
     match parse_cli_args()
@@ -41,7 +42,8 @@ fn main() {
         .and_then(initialize_state_from_cli_args)
         .and_then(get_endpoint_and_set_in_state)
         .and_then(connect_to_node)
-        .and_then(get_block_from_tx_hash_in_state_and_add_to_state) {
+        .and_then(get_block_from_tx_hash_in_state_and_set_in_state)
+        .and_then(get_all_receipts_from_block_in_state_and_set_in_state) {
             Ok(_proof) => println!("\n✔ Fin!"),
             Err(e) => println!("{}", e)
         }
