@@ -106,7 +106,7 @@ fn add_block_to_state(state: State, block: Block) -> Result<State> {
     Ok(State::set_block_in_state(state, block)?)
 }
 
-pub fn get_block_from_tx_hash_in_state_and_add_to_state(
+pub fn get_block_from_tx_hash_in_state_and_set_in_state(
     state: State
 ) -> Result<State> {
     let endpoint = &State::get_endpoint_from_state(&state)?;
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn should_get_block_from_tx_hash_in_state() {
         let initial_state = get_valid_state_with_endpoint().unwrap();
-        let resultant_state = get_block_from_tx_hash_in_state_and_add_to_state(
+        let resultant_state = get_block_from_tx_hash_in_state_and_set_in_state(
             initial_state
         ).unwrap();
         let result = State::get_block_from_state(&resultant_state).unwrap();
