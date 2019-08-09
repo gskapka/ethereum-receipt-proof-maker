@@ -5,7 +5,8 @@ use crate::utils::convert_hex_to_h256;
 
 pub fn initialize_state_from_cli_args(cli_args: CliArgs) -> Result<State> {
     State::get_initial_state(
-        convert_hex_to_h256(cli_args.arg_txhash)?,
+        convert_hex_to_h256(cli_args.arg_txhash.clone())?,
+        cli_args.arg_txhash,
         cli_args.flag_verbose
     )
 }
@@ -13,12 +14,12 @@ pub fn initialize_state_from_cli_args(cli_args: CliArgs) -> Result<State> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::get_valid_dummy_hash_hex;
+    use crate::test_utils::get_valid_tx_hash_hex;
 
     #[test]
     fn should_create_state_from_cli_args() {
         let expected_verbosity = true;
-        let tx_hash = get_valid_dummy_hash_hex();
+        let tx_hash = get_valid_tx_hash_hex();
         let expected_tx_hash = convert_hex_to_h256(tx_hash.clone())
             .unwrap();
         let cli_args = CliArgs {

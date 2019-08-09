@@ -2,8 +2,8 @@ use dotenv;
 use crate::state::State;
 use crate::types::Result;
 use crate::errors::AppError;
+use crate::utils::dot_env_file_exists;
 use crate::constants::DEFAULT_ENDPOINT;
-use crate::dot_env_utils::dot_env_file_exists;
 
 fn maybe_run_dot_env() -> Result<()> {
     match dot_env_file_exists() {
@@ -49,12 +49,12 @@ mod tests {
     use std::fs;
     use super::*;
     use crate::constants::DOT_ENV_PATH;
-    use crate::test_utils::get_valid_initial_state;
-    use crate::dot_env_utils::{
+    use crate::test_utils::{
         read_env_file,
         write_env_file,
         delete_env_file,
         restore_env_file,
+        get_valid_initial_state,
     };
 
     #[test]

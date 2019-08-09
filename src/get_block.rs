@@ -1,12 +1,7 @@
-use reqwest;
-use serde::Deserialize;
 use crate::state::State;
-use crate::errors::AppError;
 use serde_json::Value as Json;
-use crate::constants::REQWEST_TIMEOUT_TIME;
 use crate::get_receipt::get_receipt_from_tx_hash;
 use ethereum_types::{
-    U256,
     H256,
     Bloom,
 };
@@ -129,7 +124,6 @@ mod tests {
         SAMPLE_TX_HASH,
         WORKING_ENDPOINT,
         SAMPLE_BLOCK_HASH,
-        get_expected_block,
         SAMPLE_BLOCK_JSON_PATH,
         assert_block_is_correct,
         get_valid_block_hash_h256,

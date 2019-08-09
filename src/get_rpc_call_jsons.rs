@@ -1,6 +1,5 @@
 use serde_json::Value;
 use crate::types::Result;
-use serde_json::Value as Json;
 
 pub fn get_block_by_block_hash_json(block_hash: String) -> Result<Value> {
     Ok(

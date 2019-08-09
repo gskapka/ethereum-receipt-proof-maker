@@ -106,10 +106,12 @@ mod tests {
 
     #[test]
     fn should_deserialize_receipt_json_to_receipt_struct_correctly() {
-        let receipt_json = fs::read_to_string(SAMPLE_RECEIPT_JSON_PATH).unwrap();
-        let receipt_rpc = deserialize_to_receipt_rpc_response(receipt_json).unwrap();
+        let receipt_string = fs::read_to_string(SAMPLE_RECEIPT_JSON_PATH)
+            .unwrap();
+        let receipt_json = deserialize_to_receipt_rpc_response(receipt_string)
+            .unwrap();
         let result = deserialize_receipt_json_to_receipt_struct(
-            receipt_rpc.result
+            receipt_json.result
         ).unwrap();
         assert_receipt_is_correct(result)
     }
