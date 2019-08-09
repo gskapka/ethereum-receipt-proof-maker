@@ -12,7 +12,10 @@ pub type Bytes = Vec<u8>;
 pub type Result<T> = result::Result<T, AppError>;
 
 #[derive(Debug, Deserialize)]
-pub struct ReceiptRpcResponse { result: ReceiptJson }
+pub struct BlockRpcResponse { pub result: BlockJson }
+
+#[derive(Debug, Deserialize)]
+pub struct ReceiptRpcResponse { pub result: ReceiptJson }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Block {
