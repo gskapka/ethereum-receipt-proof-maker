@@ -4,7 +4,9 @@
 use std::fs;
 use crate::state::State;
 use ethereum_types::H256;
+use crate::constants::DOT_ENV_PATH;
 use crate::utils::convert_hex_to_h256;
+use crate::constants::DEFAULT_ENDPOINT;
 use crate::get_block::deserialize_block_json_to_block_struct;
 use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
 use crate::make_rpc_call::{
@@ -126,11 +128,31 @@ pub fn assert_receipt_is_correct(receipt: Receipt) {
     assert!(receipt.logs.len() == sample_receipt.logs.len());
 }
 
+pub fn read_env_file() -> Result<String> {
+    Ok(fs::read_to_string(&DOT_ENV_PATH)?)
+}
+
+pub fn write_env_file(endpoint_url: Option<&str>) -> Result<()> {
+    let url = endpoint_url.unwrap_or(DEFAULT_ENDPOINT);
+    let data = format!("ENDPOINT=\"{}\"", url);
+    Ok(fs::write(&DOT_ENV_PATH, data)?)
+}
+
+pub fn delete_env_file() -> Result<()> {
+    Ok(fs::remove_file(&DOT_ENV_PATH)?)
+}
+
+pub fn restore_env_file(data: String) -> Result<()> {
+    Ok(fs::write(&DOT_ENV_PATH, data)?)
+}
+
 mod tests {
     use hex;
+    use std::fs;
     use super::*;
     use crate::state::State;
     use crate::errors::AppError;
+    use crate::utils::dot_env_file_exists;
     use crate::utils::get_not_in_state_err;
     use crate::validate_tx_hash::validate_tx_hash;
 
@@ -229,6 +251,105 @@ mod tests {
             Err(AppError::Custom(e)) =>
                 assert!(e == get_not_in_state_err("block")),
             _ => panic!("Intial state should not have endpoint set!")
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_delete_env_file_correctly_if_it_exists() {
+        if dot_env_file_exists() {
+            let original_file = read_env_file().unwrap();
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+            restore_env_file(original_file.clone()).unwrap();
+            assert!(dot_env_file_exists());
+            let file = read_env_file().unwrap();
+            assert!(file == original_file);
+        } else {
+            write_env_file(None).unwrap();
+            assert!(dot_env_file_exists());
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_read_existing_env_file_correctly() {
+        if dot_env_file_exists() {
+            let file = read_env_file().unwrap();
+            assert!(file.contains("ENDPOINT"))
+        }
+    }
+
+
+    #[test]
+    #[serial]
+    fn should_delete_env_file_correctly_if_it_does_not_exist() {
+        if !dot_env_file_exists() {
+            write_env_file(None).unwrap();
+            assert!(dot_env_file_exists());
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_write_env_file_correctly_if_it_exists() {
+        if dot_env_file_exists() {
+            let original_file = read_env_file().unwrap();
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+            write_env_file(None).unwrap();
+            assert!(dot_env_file_exists());
+            delete_env_file().unwrap();
+            restore_env_file(original_file.clone()).unwrap();
+            let file = read_env_file().unwrap();
+            assert!(file == original_file)
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_write_env_file_correctly_if_it_does_not_exist() {
+        if !dot_env_file_exists() {
+            write_env_file(None).unwrap();
+            assert!(dot_env_file_exists());
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_restore_env_file_correctly_if_it_exists() {
+        if dot_env_file_exists() {
+            let original_file = read_env_file().unwrap();
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+            restore_env_file(original_file.clone()).unwrap();
+            assert!(dot_env_file_exists());
+            let result = read_env_file().unwrap();
+            assert!(result == original_file)
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_restore_env_file_correctly_if_it_does_not_exist() {
+        if !dot_env_file_exists() {
+            write_env_file(None).unwrap();
+            assert!(dot_env_file_exists());
+            let file = read_env_file().unwrap();
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+            restore_env_file(file.clone()).unwrap();
+            assert!(dot_env_file_exists());
+            let result = read_env_file().unwrap();
+            assert!(result == file);
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
         }
     }
 }

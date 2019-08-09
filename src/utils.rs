@@ -1,6 +1,8 @@
 use hex;
+use std::path::Path;
 use crate::errors::AppError;
 use crate::constants::HASH_LENGTH;
+use crate::constants::DOT_ENV_PATH;
 use ethereum_types::{
     U256,
     H256,
@@ -13,6 +15,10 @@ use crate::types::{
 
 fn left_pad_with_zero(string: &str) -> Result<String> {
     Ok(format!("0{}", string))
+}
+
+pub fn dot_env_file_exists() -> bool {
+    Path::new(&DOT_ENV_PATH).exists()
 }
 
 pub fn convert_num_string_to_usize(num_str: &str) -> Result<usize> {
@@ -106,6 +112,12 @@ mod tests {
     use crate::constants::{
         HASH_HEX_CHARS,
         HEX_PREFIX_LENGTH
+    };
+    use crate::test_utils::{
+        read_env_file,
+        write_env_file,
+        delete_env_file,
+        restore_env_file,
     };
 
     fn get_sample_block_hash() -> &'static str {
@@ -260,6 +272,7 @@ mod tests {
         assert!(result.as_u128() == expected_result)
     }
 
+    #[test]
     fn should_get_no_state_err_string() {
         let thing = "thing".to_string();
         let expected_result = "✘ No thing in state!";
@@ -314,6 +327,35 @@ mod tests {
             Ok(_) => panic!("Should fail to convert to int!"),
             Err(AppError::Custom(e)) => assert!(e.contains(expected_err)),
             Err(_) => panic!("Wrong error type received!")
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_return_true_if_dot_env_file_exists() {
+        if Path::new(&DOT_ENV_PATH).exists() {
+            assert!(dot_env_file_exists());
+        } else {
+            write_env_file(None).unwrap();
+            assert!(dot_env_file_exists());
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn should_return_false_if_dot_env_file_does_not_exist() {
+        if Path::new(&DOT_ENV_PATH).exists() {
+            let file = read_env_file().unwrap();
+            delete_env_file().unwrap();
+            assert!(!dot_env_file_exists());
+            restore_env_file(file.clone()).unwrap();
+            assert!(dot_env_file_exists());
+            let result = read_env_file().unwrap();
+            assert!(result == file);
+        } else {
+            assert!(!dot_env_file_exists())
         }
     }
 }
