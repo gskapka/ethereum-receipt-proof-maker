@@ -10,7 +10,7 @@ use crate::types::{
 };
 
 #[cfg(test)]
-pub const SAMPLE_BLOCK_JSON_PATH: &str = "./block_json_sample";
+pub const SAMPLE_BLOCK_JSON_PATH: &str = "./test_utils/sample_block_json";
 
 #[cfg(test)]
 pub const WORKING_ENDPOINT: &str = "https://rpc.slock.it/mainnet";
