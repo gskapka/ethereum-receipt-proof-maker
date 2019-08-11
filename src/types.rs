@@ -1,6 +1,10 @@
 use std::result;
 use serde::Deserialize;
 use crate::errors::AppError;
+use rlp::{
+    RlpStream,
+    Encodable
+};
 use ethereum_types::{
     U256,
     H256,
@@ -61,6 +65,17 @@ pub struct Receipt {
     pub logs_bloom: Bloom,
 }
 
+impl Encodable for Receipt {
+    fn rlp_append(&self, rlp_stream: &mut RlpStream) {
+        rlp_stream
+            .begin_list(3)
+            .append(&self.status)
+            .append(&self.cumulative_gas_used)
+            .append(&self.logs_bloom)
+            .append_list(&self.logs);
+    }
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct Log {
     pub address: Address,
@@ -75,6 +90,16 @@ pub struct Log {
     transactionHash: String,
     transactionIndex: String,
     */
+}
+
+impl Encodable for Log {
+    fn rlp_append(&self, rlp_stream: &mut RlpStream) {
+        rlp_stream
+            .begin_list(3)
+            .append(&self.address)
+            .append_list(&self.topics)
+            .append(&self.data);
+    }
 }
 
 #[allow(non_snake_case)]
