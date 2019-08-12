@@ -68,7 +68,7 @@ pub struct Receipt {
 impl Encodable for Receipt {
     fn rlp_append(&self, rlp_stream: &mut RlpStream) {
         rlp_stream
-            .begin_list(3)
+            .begin_list(4)
             .append(&self.status)
             .append(&self.cumulative_gas_used)
             .append(&self.logs_bloom)
