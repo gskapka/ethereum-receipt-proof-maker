@@ -1,5 +1,6 @@
 use ethereum_types::H256;
 use crate::errors::AppError;
+use crate::get_database::get_new_database;
 use crate::utils::{
     get_not_in_state_err,
     get_no_overwrite_state_err,
@@ -8,11 +9,13 @@ use crate::types::{
     Block,
     Result,
     Receipt,
+    Database,
 };
 
 pub struct State {
     pub verbose: bool,
     pub tx_hash: H256,
+    pub database: Database,
     pub block: Option<Block>,
     pub index: Option<usize>,
     pub tx_hash_string: String,
@@ -26,17 +29,21 @@ impl State {
         tx_hash_string: String,
         verbosity: bool
     ) -> Result<State> {
-        Ok(
-            State {
-                tx_hash,
-                block: None,
-                index: None,
-                endpoint: None,
-                receipts: None,
-                tx_hash_string,
-                verbose: verbosity,
-            }
-        )
+        get_new_database()
+            .and_then(|database|
+                Ok(
+                    State {
+                        tx_hash,
+                        database,
+                        block: None,
+                        index: None,
+                        endpoint: None,
+                        receipts: None,
+                        tx_hash_string,
+                        verbose: verbosity,
+                    }
+                )
+            )
     }
 
     pub fn set_block_in_state(mut self, block: Block) -> Result<State> {
@@ -110,12 +117,21 @@ impl State {
             None => Err(AppError::Custom(get_not_in_state_err("index")))
         }
     }
+
+    pub fn update_database_in_state(
+        mut self,
+        updated_database: Database
+    ) -> Result<Self> {
+        self.database = updated_database;
+        Ok(self)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use hash_db::HashDB;
+    use crate::constants::EMPTY_NODE;
     use crate::test_utils::{
         get_expected_block,
         get_expected_receipt,
@@ -123,6 +139,8 @@ mod tests {
         get_valid_initial_state,
         assert_block_is_correct,
         assert_receipt_is_correct,
+        get_database_with_thing_in_it,
+        get_expected_key_of_thing_in_database,
     };
 
     #[test]
@@ -165,6 +183,15 @@ mod tests {
         let state = get_valid_initial_state()
             .unwrap();
         assert!(state.tx_hash == expected_tx_hash);
+    }
+
+    #[test]
+    fn initial_state_should_have_database_set_correctly() {
+        let expected_database = get_new_database()
+            .unwrap();
+        let state = get_valid_initial_state()
+            .unwrap();
+        assert!(state.database == expected_database);
     }
 
     #[test]
@@ -320,5 +347,26 @@ mod tests {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Overwriting state should not have succeeded!"),
         }
+    }
+
+    #[test]
+    fn should_update_database_in_state() {
+        let expected_key = get_expected_key_of_thing_in_database();
+        let state = get_valid_initial_state()
+            .unwrap();
+        assert!(!state
+            .database
+            .contains(expected_key.as_fixed_bytes(), EMPTY_NODE)
+        );
+        let database_with_thing_in_it = get_database_with_thing_in_it()
+            .unwrap();
+        let returned_state = State::update_database_in_state(
+            state,
+            database_with_thing_in_it
+        ).unwrap();
+        assert!(returned_state
+            .database
+            .contains(expected_key.as_fixed_bytes(), EMPTY_NODE)
+        );
     }
 }
