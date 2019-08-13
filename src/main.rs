@@ -1,9 +1,6 @@
 #![feature(try_trait)]
 #![feature(exclusive_range_pattern)]
 
-extern crate serde;
-extern crate reqwest;
-
 mod utils;
 mod state;
 mod types;
@@ -13,11 +10,14 @@ mod constants;
 mod get_block;
 mod usage_info;
 mod test_utils;
+mod rlp_encode;
 mod get_receipt;
+mod get_database;
 mod get_tx_index;
 mod get_endpoint;
 mod make_rpc_call;
 mod parse_cli_args;
+mod get_keccak_hash;
 mod connect_to_node;
 mod validate_tx_hash;
 mod validate_cli_args;
