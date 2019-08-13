@@ -10,42 +10,6 @@ A Maker of Merkle-Proofs for Transaction Receipts in Ethereum using Rust.
 
 &nbsp;
 
-### :nut_and_bolt: Setup:
-
-The tool requires access to a full ethereum node on whichever network you wish to generate receipt proofs for.
-
-You can configure an endpoint for that node by creating a __`.env`__ file in the root of the repo thusly:
-
-```
-
-# At path: ./rusty-receipt-proof-maker/.env
-
-ENDPOINT="<your-endpoint-here>"
-
-```
-
-This allows you to use for example an __[Infura](https://infura.io/)__ endpoint without risking exposing your API key. Another optional endpoint if you are not running your own node is __[Slock.It](http://rpc.slock.it/)__.
-
-If you do not provide an endpoint, the tool will default to __`https://localhost:8545`__, and fail to run at all if it can't connect to a node at that location:
-
-```
-
-✔ Getting RPC endpoint from environment variables...
-✔ Endpoint retrieved: http://localhost:8545/
-
-✔ Connecting to node...
-✘ HTTP Reqwest Error!
-✘ http://localhost:8545/ timed out
-✘ Please check your node & port settings and retry.
-
-```
-
-&nbsp;
-
-***
-
-&nbsp;
-
 ### :point_right: Usage:
 
 __>__ To generate a proof for a given transaction hash:
@@ -108,11 +72,49 @@ Options:
 
 &nbsp;
 
+### :nut_and_bolt: Setup:
+
+The tool requires access to a full ethereum node on whichever network you wish to generate receipt proofs for.
+
+You can configure an endpoint for that node by creating a __`.env`__ file in the root of the repo thusly:
+
+```
+
+# At path: ./rusty-receipt-proof-maker/.env
+
+ENDPOINT="<your-endpoint-here>"
+
+```
+
+This allows you to use for example an __[Infura](https://infura.io/)__ endpoint without risking exposing your API key. Another optional endpoint if you are not running your own node is __[Slock.It](http://rpc.slock.it/)__.
+
+If you do not provide an endpoint, the tool will default to __`https://localhost:8545`__, and fail to run at all if it can't connect to a node at that location:
+
+```
+
+✔ Getting RPC endpoint from environment variables...
+✔ Endpoint retrieved: http://localhost:8545/
+
+✔ Connecting to node...
+✘ HTTP Reqwest Error!
+✘ http://localhost:8545/ timed out
+✘ Please check your node & port settings and retry.
+
+```
+
+&nbsp;
+
+***
+
+&nbsp;
+
 ### :guardsman: Tests:
 
 To run the tests:
 
 __`❍ cargo +nightly test`__
+
+__Note:__ Some expensive tests are ignored by default. To run all test, including those ignored, add the __`--ignored`__ flag.
 
 __:radioactive: CAUTION:__ Some tests rely on access to a full node at __`http://localhost:8545`__. If one can't be reached at that endpoint, many of the tests will fail.
 
