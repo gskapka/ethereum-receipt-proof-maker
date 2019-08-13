@@ -4,20 +4,29 @@
 use std::fs;
 use crate::state::State;
 use ethereum_types::H256;
-use crate::constants::DOT_ENV_PATH;
 use crate::utils::convert_hex_to_h256;
-use crate::constants::DEFAULT_ENDPOINT;
 use crate::get_block::deserialize_block_json_to_block_struct;
 use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
 use crate::make_rpc_call::{
     deserialize_to_block_rpc_response,
     deserialize_to_receipt_rpc_response,
 };
+use crate::constants::{
+    EMPTY_NODE,
+    DOT_ENV_PATH,
+    DEFAULT_ENDPOINT,
+};
+use crate::get_database::{
+    get_new_database,
+    put_thing_in_database
+};
 use crate::types::{
     Log,
     Block,
+    Bytes,
     Result,
     Receipt,
+    Database,
 };
 
 pub const TX_INDEX: usize = 96;
@@ -31,6 +40,16 @@ pub const SAMPLE_RECEIPT_JSON_PATH: &str = "./test_utils/sample_receipt_json";
 pub const SAMPLE_TX_HASH: &str = "0xd6f577a93332e015438fcca4e73f538b1829acbd7eb0cf9ee5a0a73ff2752cc6";
 
 pub const SAMPLE_BLOCK_HASH: &str = "0x1ddd540f36ea0ed23e732c1709a46c31ba047b98f1d99e623f1644154311fe10";
+
+pub fn get_thing_to_put_in_database() -> Bytes {
+    "Provable".as_bytes().to_owned()
+}
+
+pub fn get_expected_key_of_thing_in_database() -> H256 {
+    let key = "0xe8041be01740ddde83a929cc2f65b09df69f7978cd27506323c4aa9dd4d9ac75";
+    convert_hex_to_h256(key.to_string())
+        .unwrap()
+}
 
 pub fn get_valid_tx_hash_hex() -> String {
     SAMPLE_TX_HASH.to_string()
@@ -148,15 +167,30 @@ pub fn restore_env_file(data: String) -> Result<()> {
     Ok(fs::write(&DOT_ENV_PATH, data)?)
 }
 
+pub fn get_database_with_thing_in_it() -> Result<Database> {
+    get_new_database()
+        .and_then(|database|
+            put_thing_in_database(
+                database,
+                EMPTY_NODE,
+                "Provable".as_bytes().to_owned()
+            )
+        )
+        .and_then(|(_, database)| Ok(database))
+}
+
 mod tests {
     use hex;
     use std::fs;
     use super::*;
+    use hash_db::HashDB;
     use crate::state::State;
     use crate::errors::AppError;
-    use crate::utils::dot_env_file_exists;
-    use crate::utils::get_not_in_state_err;
     use crate::validate_tx_hash::validate_tx_hash;
+    use crate::utils::{
+        dot_env_file_exists,
+        get_not_in_state_err,
+    };
 
     #[test]
     fn should_get_expected_block_correctly() {
@@ -353,5 +387,13 @@ mod tests {
             delete_env_file().unwrap();
             assert!(!dot_env_file_exists());
         }
+    }
+
+    #[test]
+    fn should_get_database_with_thing_in_it() {
+        let expected_key = get_expected_key_of_thing_in_database();
+        let database = get_database_with_thing_in_it()
+            .unwrap();
+        assert!(database.contains(expected_key.as_fixed_bytes(), EMPTY_NODE));
     }
 }
