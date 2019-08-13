@@ -1,5 +1,6 @@
 use std::result;
 use serde::Deserialize;
+use keccak_hasher::KeccakHasher;
 use crate::errors::AppError;
 use rlp::{
     RlpStream,
@@ -11,9 +12,15 @@ use ethereum_types::{
     Bloom,
     Address,
 };
+use memory_db::{
+    MemoryDB,
+    HashKey,
+};
 
 pub type Bytes = Vec<u8>;
+pub type Node<'a> = (&'a[u8], Option<u8>);
 pub type Result<T> = result::Result<T, AppError>;
+pub type Database = MemoryDB<KeccakHasher, HashKey<KeccakHasher>, Bytes>;
 
 #[derive(Debug, Deserialize)]
 pub struct BlockRpcResponse { pub result: BlockJson }
