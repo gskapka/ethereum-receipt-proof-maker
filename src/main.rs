@@ -12,6 +12,7 @@ mod usage_info;
 mod test_utils;
 mod rlp_encode;
 mod get_receipt;
+mod nibble_utils;
 mod get_database;
 mod get_tx_index;
 mod get_endpoint;
