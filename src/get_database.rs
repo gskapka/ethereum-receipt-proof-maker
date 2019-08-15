@@ -18,7 +18,7 @@ pub fn get_new_database() -> Result<Database> {
     Ok(MemoryDB::<KeccakHasher, HashKey<_>, Bytes>::default())
 }
 
-pub fn put_thing_in_database(
+pub fn put_node_in_database(
     mut database: Database,
     node: Node,
     thing: Bytes
@@ -27,7 +27,7 @@ pub fn put_thing_in_database(
     Ok((key, database))
 }
 
-pub fn remove_thing_from_database(
+pub fn remove_node_from_database(
     mut database: Database,
     node: Node,
     key: H256,
@@ -42,7 +42,7 @@ pub fn put_thing_in_database_in_state(
     node: Node,
     thing: Bytes
 ) -> Result<State> {
-    put_thing_in_database(state.database.clone(), node, thing)
+    put_node_in_database(state.database.clone(), node, thing)
         .and_then(|(_, database)| State::update_database_in_state(state, database))
 }
 
@@ -52,7 +52,7 @@ pub fn remove_thing_from_database_in_state(
     node: Node,
     key: H256
 ) -> Result<State> {
-    remove_thing_from_database(state.database.clone(), node, key)
+    remove_node_from_database(state.database.clone(), node, key)
         .and_then(|database| State::update_database_in_state(state, database))
 }
 
@@ -62,7 +62,8 @@ mod tests {
     use crate::test_utils::{
         get_valid_initial_state,
         get_thing_to_put_in_database,
-        get_expected_key_of_thing_in_database,
+        get_database_with_node_in_it,
+        get_expected_key_of_node_in_database,
     };
 
     #[test]
@@ -75,7 +76,7 @@ mod tests {
         let database = get_new_database()
             .unwrap();
         let expected_result = get_thing_to_put_in_database();
-        let (key, returned_database) = put_thing_in_database(
+        let (key, returned_database) = put_node_in_database(
             database,
             EMPTY_NODE,
             expected_result.clone()
@@ -90,7 +91,7 @@ mod tests {
 
     #[test]
     fn should_insert_thing_in_database_in_state() {
-        let expected_key = get_expected_key_of_thing_in_database();
+        let expected_key = get_expected_key_of_node_in_database();
         let state = get_valid_initial_state()
             .unwrap();
         let expected_result = get_thing_to_put_in_database();
@@ -123,13 +124,13 @@ mod tests {
         let database = get_new_database()
             .unwrap();
         let expected_result = get_thing_to_put_in_database();
-        let (key, returned_database) = put_thing_in_database(
+        let (key, returned_database) = put_node_in_database(
             database,
             EMPTY_NODE,
             expected_result.clone()
         ).unwrap();
         assert!(returned_database.contains(key.as_fixed_bytes(), EMPTY_NODE));
-        let final_database = remove_thing_from_database(
+        let final_database = remove_node_from_database(
             returned_database,
             EMPTY_NODE,
             key
@@ -139,7 +140,7 @@ mod tests {
 
     #[test]
     fn should_remove_thing_from_database_in_state() {
-        let expected_key = get_expected_key_of_thing_in_database();
+        let expected_key = get_expected_key_of_node_in_database();
         let state = get_valid_initial_state()
             .unwrap();
         let expected_result = get_thing_to_put_in_database();

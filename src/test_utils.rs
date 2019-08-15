@@ -18,7 +18,7 @@ use crate::constants::{
 };
 use crate::get_database::{
     get_new_database,
-    put_thing_in_database
+    put_node_in_database
 };
 use crate::types::{
     Log,
@@ -45,7 +45,7 @@ pub fn get_thing_to_put_in_database() -> Bytes {
     "Provable".as_bytes().to_owned()
 }
 
-pub fn get_expected_key_of_thing_in_database() -> H256 {
+pub fn get_expected_key_of_node_in_database() -> H256 {
     let key = "0xe8041be01740ddde83a929cc2f65b09df69f7978cd27506323c4aa9dd4d9ac75";
     convert_hex_to_h256(key.to_string())
         .unwrap()
@@ -167,10 +167,10 @@ pub fn restore_env_file(data: String) -> Result<()> {
     Ok(fs::write(&DOT_ENV_PATH, data)?)
 }
 
-pub fn get_database_with_thing_in_it() -> Result<Database> {
+pub fn get_database_with_node_in_it() -> Result<Database> {
     get_new_database()
         .and_then(|database|
-            put_thing_in_database(
+            put_node_in_database(
                 database,
                 EMPTY_NODE,
                 "Provable".as_bytes().to_owned()
@@ -391,8 +391,8 @@ mod tests {
 
     #[test]
     fn should_get_database_with_thing_in_it() {
-        let expected_key = get_expected_key_of_thing_in_database();
-        let database = get_database_with_thing_in_it()
+        let expected_key = get_expected_key_of_node_in_database();
+        let database = get_database_with_node_in_it()
             .unwrap();
         assert!(database.contains(expected_key.as_fixed_bytes(), EMPTY_NODE));
     }

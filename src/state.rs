@@ -139,8 +139,8 @@ mod tests {
         get_valid_initial_state,
         assert_block_is_correct,
         assert_receipt_is_correct,
-        get_database_with_thing_in_it,
-        get_expected_key_of_thing_in_database,
+        get_database_with_node_in_it,
+        get_expected_key_of_node_in_database,
     };
 
     #[test]
@@ -351,14 +351,14 @@ mod tests {
 
     #[test]
     fn should_update_database_in_state() {
-        let expected_key = get_expected_key_of_thing_in_database();
+        let expected_key = get_expected_key_of_node_in_database();
         let state = get_valid_initial_state()
             .unwrap();
         assert!(!state
             .database
             .contains(expected_key.as_fixed_bytes(), EMPTY_NODE)
         );
-        let database_with_thing_in_it = get_database_with_thing_in_it()
+        let database_with_thing_in_it = get_database_with_node_in_it()
             .unwrap();
         let returned_state = State::update_database_in_state(
             state,
