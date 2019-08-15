@@ -17,6 +17,7 @@ use memory_db::{
     HashKey,
 };
 
+pub type Byte = u8;
 pub type Bytes = Vec<u8>;
 pub type Node<'a> = (&'a[u8], Option<u8>);
 pub type Result<T> = result::Result<T, AppError>;
