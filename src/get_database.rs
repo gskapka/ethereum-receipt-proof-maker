@@ -1,59 +1,49 @@
-use hash_db::HashDB;
-use crate::state::State;
 use ethereum_types::H256;
-use keccak_hasher::KeccakHasher;
+use crate::errors::AppError;
+use crate::utils::convert_h256_to_prefixed_hex;
 use crate::types::{
     Bytes,
     Node,
     Result,
     Database,
 };
-use crate::constants::EMPTY_NODE;
-use memory_db::{
-    MemoryDB,
-    HashKey,
+use crate::state::{
+    State,
+    update_database_in_state,
 };
 
 pub fn get_new_database() -> Result<Database> {
-    Ok(MemoryDB::<KeccakHasher, HashKey<_>, Bytes>::default())
+    Ok(std::collections::HashMap::new())
 }
 
-pub fn put_node_in_database(
+pub fn put_thing_in_database(
     mut database: Database,
-    node: Node,
-    thing: Bytes
-) -> Result<(H256, Database)> {
-    let key = H256(database.insert(node, &thing));
-    Ok((key, database))
-}
-
-pub fn remove_node_from_database(
-    mut database: Database,
-    node: Node,
     key: H256,
+    value: Bytes
 ) -> Result<Database> {
-    database.remove(key.as_fixed_bytes(), node);
+    database.insert(key, value);
     Ok(database)
 }
 
-// TODO: Make state getter for DB so we don't have to clone it? Less pure but faster?
-pub fn put_thing_in_database_in_state(
-    state: State,
-    node: Node,
-    thing: Bytes
-) -> Result<State> {
-    put_node_in_database(state.database.clone(), node, thing)
-        .and_then(|(_, database)| State::update_database_in_state(state, database))
+pub fn get_thing_from_database(
+    database: &Database,
+    key: H256,
+) -> Result<Bytes> {
+    match database.get(&key) {
+        Some(thing) => Ok(thing.to_vec()),
+        None => Err(AppError::Custom(
+            format!("✘ Error! Nothing in database under key: {}", key)
+        )),
+    }
 }
 
-// TODO: Ibid!
-pub fn remove_thing_from_database_in_state(
+pub fn put_thing_in_database_in_state(
     state: State,
-    node: Node,
-    key: H256
-) -> Result<State> {
-    remove_node_from_database(state.database.clone(), node, key)
-        .and_then(|database| State::update_database_in_state(state, database))
+    key: H256,
+    thing: Bytes,
+) -> Result <State> {
+    put_thing_in_database(state.database.clone(), key, thing)
+        .and_then(|database| update_database_in_state(state, database))
 }
 
 #[cfg(test)]
@@ -62,111 +52,51 @@ mod tests {
     use crate::test_utils::{
         get_valid_initial_state,
         get_thing_to_put_in_database,
-        get_database_with_node_in_it,
-        get_expected_key_of_node_in_database,
+        get_database_with_thing_in_it,
+        get_expected_key_of_thing_in_database,
     };
-
-    #[test]
-    fn should_get_memory_database_instance() {
-        get_new_database().unwrap();
-    }
 
     #[test]
     fn should_insert_thing_in_database() {
         let database = get_new_database()
             .unwrap();
         let expected_result = get_thing_to_put_in_database();
-        let (key, returned_database) = put_node_in_database(
+        put_thing_in_database(
             database,
-            EMPTY_NODE,
+            get_expected_key_of_thing_in_database(),
             expected_result.clone()
         ).unwrap();
-        assert!(returned_database.contains(key.as_fixed_bytes(), EMPTY_NODE));
-        let result = returned_database.get(key.as_fixed_bytes(), EMPTY_NODE);
-        match result {
-            None => panic!("Should be a result from database get fxn!"),
-            Some(bytes) => assert!(bytes == expected_result)
-        }
+    }
+
+    #[test]
+    fn should_get_thing_from_database() {
+        let expected_thing = get_thing_to_put_in_database();
+        let database = get_database_with_thing_in_it()
+            .unwrap();
+        let key = get_expected_key_of_thing_in_database();
+        let result = get_thing_from_database(&database, key)
+            .unwrap();
+        assert!(result == expected_thing);
     }
 
     #[test]
     fn should_insert_thing_in_database_in_state() {
-        let expected_key = get_expected_key_of_node_in_database();
+        let expected_key = get_expected_key_of_thing_in_database();
         let state = get_valid_initial_state()
             .unwrap();
-        let expected_result = get_thing_to_put_in_database();
-        let returned_state = put_thing_in_database_in_state(
-            state,
-            EMPTY_NODE,
-            expected_result.clone()
-        ).unwrap();
-        assert!(returned_state
-            .database
-            .contains(
-                expected_key.as_fixed_bytes(),
-                EMPTY_NODE
-            )
-        );
-        let result = returned_state
-            .database
-            .get(
-                expected_key.as_fixed_bytes(),
-                EMPTY_NODE
-            );
-        match result {
-            None => panic!("Should be a result from database get fxn!"),
-            Some(bytes) => assert!(bytes == expected_result)
+        let expected_thing = get_thing_to_put_in_database();
+        match get_thing_from_database(&state.database, expected_key) {
+            Ok(_) => panic!("Thing should not be in database!"),
+            _ => assert!(true)
         }
-    }
-
-    #[test]
-    fn should_remove_thing_from_database() {
-        let database = get_new_database()
-            .unwrap();
-        let expected_result = get_thing_to_put_in_database();
-        let (key, returned_database) = put_node_in_database(
-            database,
-            EMPTY_NODE,
-            expected_result.clone()
-        ).unwrap();
-        assert!(returned_database.contains(key.as_fixed_bytes(), EMPTY_NODE));
-        let final_database = remove_node_from_database(
-            returned_database,
-            EMPTY_NODE,
-            key
-        ).unwrap();
-        assert!(!final_database.contains(key.as_fixed_bytes(), EMPTY_NODE))
-    }
-
-    #[test]
-    fn should_remove_thing_from_database_in_state() {
-        let expected_key = get_expected_key_of_node_in_database();
-        let state = get_valid_initial_state()
-            .unwrap();
-        let expected_result = get_thing_to_put_in_database();
         let returned_state = put_thing_in_database_in_state(
             state,
-            EMPTY_NODE,
-            expected_result.clone()
+            expected_key,
+            expected_thing.clone()
         ).unwrap();
-        assert!(returned_state
-            .database
-            .contains(
-                expected_key.as_fixed_bytes(),
-                EMPTY_NODE
-            )
-        );
-        let final_state = remove_thing_from_database_in_state(
-            returned_state,
-            EMPTY_NODE,
-            expected_key
-        ).unwrap();
-        assert!(!final_state
-            .database
-            .contains(
-                expected_key.as_fixed_bytes(),
-                EMPTY_NODE
-            )
-        );
+        match get_thing_from_database(&returned_state.database, expected_key) {
+            Ok(thing) => assert!(thing == expected_thing),
+            _ => panic!("Thing should be in database!")
+        }
     }
 }
