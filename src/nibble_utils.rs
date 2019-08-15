@@ -19,7 +19,10 @@ pub struct NibbleSlice<'a> {
 impl<'a> fmt::Debug for NibbleSlice<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for i in 0..get_length_in_nibbles(&self) {
-            write!(f, "0x{:01x} ", get_nibble_at_index(&self, i).unwrap());
+            match get_nibble_at_index(&self, i) {
+                Ok(nibble) => write!(f, "0x{:01x} ", nibble),
+                Err(_) => write!(f, "Error getting nibble!"),
+            };
         }
         Ok(())
     }
