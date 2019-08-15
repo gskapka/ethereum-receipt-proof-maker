@@ -7,7 +7,7 @@ use crate::types::{
 use crate::constants::{
     BITS_IN_NIBBLE,
     NIBBLES_IN_BYTE,
-    HIGHER_NIBBLE_BIT_MASK,
+    HIGH_NIBBLE_MASK,
 };
 
 #[derive(Copy, Clone)]
@@ -36,6 +36,39 @@ pub fn get_nibble_slice_from_offset_slice(data: & [u8]) -> NibbleSlice {
     NibbleSlice { data, first_nibble_index: 1 }
 }
 
+pub fn replace_high_nibble_in_byte(
+    byte: Byte,
+    replacement_nibble: NibbleSlice,
+) -> Byte {
+    match replacement_nibble.first_nibble_index {
+        0 => merge_nibbles_from_bytes(byte, replacement_nibble.data[0]),
+        _ => merge_nibbles_from_bytes(
+            byte,
+            shift_nibble_left(replacement_nibble.data[0])
+        )
+    }
+}
+
+pub fn replace_low_nibble_in_byte(
+    byte: Byte,
+    replacement_nibble: NibbleSlice,
+) -> Byte {
+    match replacement_nibble.first_nibble_index {
+        0 => merge_nibbles_from_bytes(
+            shift_nibble_right(replacement_nibble.data[0]),
+            byte
+        ),
+        _ => merge_nibbles_from_bytes(replacement_nibble.data[0], byte),
+    }
+}
+
+pub fn merge_nibbles_from_bytes(
+    low_nibble_byte: Byte,
+    high_nibble_byte: Byte,
+) -> Byte {
+    high_nibble_byte ^ ((high_nibble_byte ^ low_nibble_byte) & HIGH_NIBBLE_MASK)
+}
+
 pub fn get_length_in_nibbles(nibble_slice: &NibbleSlice) -> usize {
     nibble_slice.data.len() * 2 - nibble_slice.first_nibble_index
 }
@@ -58,25 +91,32 @@ pub fn get_nibble_at_index(nibble_slice: &NibbleSlice, i: usize) -> Result<Byte>
     }
 }
 
-fn get_byte_from_slice_at_nibble_i(byte_slice: &[u8], i: &usize) -> Result<Byte> {
+fn get_byte_containing_nibble_at_i(
+    byte_slice: &[u8],
+    i: &usize
+) -> Result<Byte> {
     Ok(byte_slice[i / NIBBLES_IN_BYTE])
 }
 
 fn mask_higher_nibble(byte: Byte) -> Byte {
-    byte & HIGHER_NIBBLE_BIT_MASK
+    byte & HIGH_NIBBLE_MASK
 }
 
 fn shift_nibble_right(byte: Byte) -> Byte {
     byte >> BITS_IN_NIBBLE
 }
 
+fn shift_nibble_left(byte: Byte) -> Byte {
+    byte << BITS_IN_NIBBLE
+}
+
 fn get_low_nibble_from_byte(byte_slice: &[u8], i: &usize) -> Result<Byte> {
-    get_byte_from_slice_at_nibble_i(byte_slice, i)
+    get_byte_containing_nibble_at_i(byte_slice, i)
         .map(mask_higher_nibble)
 }
 
 fn get_high_nibble_from_byte(byte_slice: &[u8], i: &usize) -> Result<Byte> {
-    get_byte_from_slice_at_nibble_i(byte_slice, i)
+    get_byte_containing_nibble_at_i(byte_slice, i)
         .map(shift_nibble_right)
 }
 
@@ -163,5 +203,125 @@ mod tests {
         let slice = &get_slice_with_nibbles_from_index_one();
         let nibble_slice = get_nibble_slice_from_offset_slice(slice);
         println!("{:?}", nibble_slice);
+    }
+
+    #[test]
+    fn should_merge_nibbles_from_bytes_correctly() {
+        let low_nibble_byte = 14u8;   // [00001110]
+        let high_nibble_byte = 160u8; // [10100000]
+        let expected_result = 174u8;  // [10101110]
+        let result = merge_nibbles_from_bytes(
+            low_nibble_byte,
+            high_nibble_byte,
+        );
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_shift_nibble_right_correctly() {
+        let test_byte = 160u8;      // [10100000]
+        let expected_result = 10u8; // [00001010]
+        let result = shift_nibble_right(test_byte);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_shift_nibble_left_correctly() {
+        let test_byte = 10u8;        // [00001010]
+        let expected_result = 160u8; // [10100000]
+        let result = shift_nibble_left(test_byte);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_mask_higher_nibble_correctly() {
+        let test_byte = 174u8;      // [10101110]
+        let expected_result = 14u8; // [00001110]
+        let result = mask_higher_nibble(test_byte);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_low_nibble_from_byte_correctly() {
+        let index_of_byte = 0;
+        let test_byte = [174u8];    // [10101110]
+        let expected_result = 14u8; // [00001110]
+        let result = get_low_nibble_from_byte(
+            &test_byte,
+            &index_of_byte
+        ).unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_high_nibble_from_byte_correctly() {
+        let index_of_byte = 0;
+        let test_byte = [174u8];    // [10101110]
+        let expected_result = 10u8; // [00001010]
+        let result = get_high_nibble_from_byte(
+            &test_byte,
+            &index_of_byte
+        ).unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_byte_containing_nibble_at_i_correctly() {
+        let index_of_nibble = 2;
+        let byte_array = [0u8, 1u8, 2u8, 3u8, 4u8, 5u8];
+        let expected_result = 1u8;
+        let result = get_byte_containing_nibble_at_i(
+            &byte_array,
+            &index_of_nibble,
+        ).unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_replace_high_nibble_in_byte_correctly() {
+        let test_byte = 170u8;          // [10101010]
+        let replacement_nibble = 240u8; // [11110000]
+        let expected_result = 250u8;    // [11111010]
+        let result = replace_high_nibble_in_byte(
+            test_byte,
+            get_nibble_slice_from_slice(&[replacement_nibble])
+        );
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_replace_high_offset_nibble_in_byte_correctly() {
+        let test_byte = 170u8;         // [10101010]
+        let replacement_nibble = 15u8; // [00001111]
+        let expected_result = 250u8;   // [11111010]
+        let result = replace_high_nibble_in_byte(
+            test_byte,
+            get_nibble_slice_from_offset_slice(&[replacement_nibble])
+        );
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_replace_low_nibble_in_byte_correctly() {
+        let test_byte = 170u8;          // [10101010]
+        let replacement_nibble = 240u8; // [11110000]
+        let expected_result = 175u8;    // [10101111]
+        let result = replace_low_nibble_in_byte(
+            test_byte,
+            get_nibble_slice_from_slice(&[replacement_nibble])
+        );
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_replace_low_offset_nibble_in_byte_correctly() {
+        let test_byte = 170u8;         // [10101010]
+        let replacement_nibble = 15u8; // [00001111]
+        let expected_result = 175u8;   // [10101111]
+        let result = replace_low_nibble_in_byte(
+            test_byte,
+            get_nibble_slice_from_offset_slice(&[replacement_nibble])
+        );
+        assert!(result == expected_result);
     }
 }
