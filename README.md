@@ -124,9 +124,18 @@ __:radioactive: CAUTION:__ Some tests rely on access to a full node at __`http:/
 
 &nbsp;
 
+### :black_nib: Notes
+
+__❍__ The current memory database usage is pure in that we clone the db and return the new, updated copy back to state. Efficiency sacrificed for immutability. Depending on performance of final tool (whose bottleneck is guaranteed to be the fetching of the potentially many receipts for the transactions in a block from the RPC endpoint) this will be changed.
+
+***
+
+&nbsp;
+
 ### :clipboard: To-Do
 
  - [x] Allow configurable endpoint.
  - [x] Have flag to suppress logging.
  - [x] Have timeout error on reqwests.
  - [ ] Spinners for when it's doing the bits that take a while...?
+ - [ ] Benchmark it and maybe don't clone the db per above note?
