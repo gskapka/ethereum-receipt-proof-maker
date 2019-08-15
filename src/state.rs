@@ -1,6 +1,5 @@
 use ethereum_types::H256;
 use crate::errors::AppError;
-use crate::get_database::get_new_database;
 use crate::utils::{
     get_not_in_state_err,
     get_no_overwrite_state_err,
@@ -23,27 +22,25 @@ pub struct State {
     pub receipts: Option<Vec<Receipt>>,
 }
 
+// FIXME: Why use methods at all?
 impl State {
     pub fn init(
         tx_hash: H256,
         tx_hash_string: String,
         verbosity: bool
     ) -> Result<State> {
-        get_new_database()
-            .and_then(|database|
-                Ok(
-                    State {
-                        tx_hash,
-                        database,
-                        block: None,
-                        index: None,
-                        endpoint: None,
-                        receipts: None,
-                        tx_hash_string,
-                        verbose: verbosity,
-                    }
-                )
-            )
+        Ok(
+            State {
+                tx_hash,
+                block: None,
+                index: None,
+                endpoint: None,
+                receipts: None,
+                tx_hash_string,
+                verbose: verbosity,
+                database: std::collections::HashMap::new(),
+            }
+        )
     }
 
     pub fn set_block_in_state(mut self, block: Block) -> Result<State> {
@@ -118,20 +115,20 @@ impl State {
         }
     }
 
-    pub fn update_database_in_state(
-        mut self,
-        updated_database: Database
-    ) -> Result<Self> {
-        self.database = updated_database;
-        Ok(self)
-    }
+}
+
+pub fn update_database_in_state(
+    mut state: State,
+    updated_database: Database
+) -> Result<State> {
+    state.database = updated_database;
+    Ok(state)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hash_db::HashDB;
-    use crate::constants::EMPTY_NODE;
+    use crate::get_database::get_thing_from_database;
     use crate::test_utils::{
         get_expected_block,
         get_expected_receipt,
@@ -139,8 +136,9 @@ mod tests {
         get_valid_initial_state,
         assert_block_is_correct,
         assert_receipt_is_correct,
-        get_database_with_node_in_it,
-        get_expected_key_of_node_in_database,
+        get_thing_to_put_in_database,
+        get_database_with_thing_in_it,
+        get_expected_key_of_thing_in_database,
     };
 
     #[test]
@@ -183,15 +181,6 @@ mod tests {
         let state = get_valid_initial_state()
             .unwrap();
         assert!(state.tx_hash == expected_tx_hash);
-    }
-
-    #[test]
-    fn initial_state_should_have_database_set_correctly() {
-        let expected_database = get_new_database()
-            .unwrap();
-        let state = get_valid_initial_state()
-            .unwrap();
-        assert!(state.database == expected_database);
     }
 
     #[test]
@@ -351,22 +340,23 @@ mod tests {
 
     #[test]
     fn should_update_database_in_state() {
-        let expected_key = get_expected_key_of_node_in_database();
+        let expected_thing = get_thing_to_put_in_database();
+        let expected_key = get_expected_key_of_thing_in_database();
         let state = get_valid_initial_state()
             .unwrap();
-        assert!(!state
-            .database
-            .contains(expected_key.as_fixed_bytes(), EMPTY_NODE)
-        );
-        let database_with_thing_in_it = get_database_with_node_in_it()
+        match get_thing_from_database(&state.database, expected_key) {
+            Ok(_) => panic!("Thing should not be in database!"),
+            _ => assert!(true)
+        }
+        let database_with_thing_in_it = get_database_with_thing_in_it()
             .unwrap();
-        let returned_state = State::update_database_in_state(
+        let updated_state = update_database_in_state(
             state,
             database_with_thing_in_it
         ).unwrap();
-        assert!(returned_state
-            .database
-            .contains(expected_key.as_fixed_bytes(), EMPTY_NODE)
-        );
+        match get_thing_from_database(&updated_state.database, expected_key) {
+            Ok(thing) => assert!(thing == expected_thing),
+            _ => panic!("Thing should be in database!")
+        }
     }
 }
