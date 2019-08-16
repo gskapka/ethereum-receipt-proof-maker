@@ -6,6 +6,7 @@ use crate::types::{
     Result,
 };
 use crate::constants::{
+    ZERO_BYTE,
     BITS_IN_NIBBLE,
     NIBBLES_IN_BYTE,
     HIGH_NIBBLE_MASK,
@@ -28,6 +29,10 @@ impl fmt::Debug for NibbleVec {
         }
         Ok(())
     }
+}
+
+fn get_zero_nibble() -> NibbleVec {
+    NibbleVec { data: vec![ZERO_BYTE], first_nibble_index: 1 }
 }
 
 fn remove_first_byte_from_nibble_vec(nibbles: NibbleVec) -> Result<NibbleVec> {
@@ -735,5 +740,19 @@ mod tests {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Should be able to slice byte off 1 byte nibble!")
         }
+    }
+
+    #[test]
+    fn should_get_zero_nibble() {
+        let expected_byte = 0u8;
+        let expected_length = 1;
+        let expected_num_nibbles = 1;
+        let expected_first_nibble_index = 1;
+        let result = get_zero_nibble();
+        let num_nibbles = get_length_in_nibbles(&result);
+        assert!(result.data[0] == expected_byte);
+        assert!(num_nibbles == expected_num_nibbles);
+        assert!(result.data.len() == expected_length);
+        assert!(result.first_nibble_index == expected_first_nibble_index);
     }
 }
