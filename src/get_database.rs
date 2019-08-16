@@ -3,7 +3,6 @@ use crate::errors::AppError;
 use crate::utils::convert_h256_to_prefixed_hex;
 use crate::types::{
     Bytes,
-    Node,
     Result,
     Database,
 };
