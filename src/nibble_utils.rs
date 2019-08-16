@@ -31,6 +31,24 @@ impl fmt::Debug for NibbleVec {
     }
 }
 
+fn remove_first_nibble(nibbles: NibbleVec) -> Result<NibbleVec> {
+    match get_length_in_nibbles(&nibbles) > 1 {
+        true => match nibbles.first_nibble_index {
+            1 => remove_first_byte_from_nibble_vec(nibbles),
+            _ => replace_nibble_in_nibble_vec_at_nibble_index(
+                nibbles,
+                get_zero_nibble(),
+                0
+            ).map(set_first_index_in_nibble_vec_to_one),
+        },
+        false => replace_nibble_in_nibble_vec_at_nibble_index(
+            nibbles,
+            get_zero_nibble(),
+            0
+        )
+    }
+}
+
 fn get_zero_nibble() -> NibbleVec {
     NibbleVec { data: vec![ZERO_BYTE], first_nibble_index: 1 }
 }
@@ -754,5 +772,76 @@ mod tests {
         assert!(num_nibbles == expected_num_nibbles);
         assert!(result.data.len() == expected_length);
         assert!(result.first_nibble_index == expected_first_nibble_index);
+    }
+
+    #[test]
+    fn should_remove_first_nibble_from_nibble_vec() {
+        let nibbles = get_sample_nibble_vec();
+        let first_nibble_before = get_nibble_at_index(&nibbles, 0)
+            .unwrap();
+        let expected_first_nibble_after = get_nibble_at_index(&nibbles, 1)
+            .unwrap();
+        let nibble_len_before = get_length_in_nibbles(&nibbles);
+        let last_nibble_before = get_nibble_at_index(
+            &nibbles,
+            nibble_len_before - 1
+        ).unwrap();
+        let result = remove_first_nibble(nibbles)
+            .unwrap();
+        let nibble_len_after = get_length_in_nibbles(&result);
+        let first_nibble_after = get_nibble_at_index(&result, 0)
+            .unwrap();
+        let last_nibble_after = get_nibble_at_index(
+            &result,
+            nibble_len_after - 1
+        ).unwrap();
+        let nibble_len_after = get_length_in_nibbles(&result);
+        assert!(last_nibble_before == last_nibble_after);
+        assert!(nibble_len_after == nibble_len_before - 1);
+        assert!(first_nibble_before != first_nibble_after);
+        assert!(first_nibble_after == expected_first_nibble_after);
+    }
+
+    #[test]
+    fn should_remove_first_nibble_from_offset_nibble_vec() {
+        let nibbles = get_sample_offset_nibble_vec();
+        let first_nibble_before = get_nibble_at_index(&nibbles, 0)
+            .unwrap();
+        let expected_first_nibble_after = get_nibble_at_index(&nibbles, 1)
+            .unwrap();
+        let nibble_len_before = get_length_in_nibbles(&nibbles);
+        let last_nibble_before = get_nibble_at_index(
+            &nibbles,
+            nibble_len_before - 1
+        ).unwrap();
+        let result = remove_first_nibble(nibbles)
+            .unwrap();
+        let nibble_len_after = get_length_in_nibbles(&result);
+        let first_nibble_after = get_nibble_at_index(&result, 0)
+            .unwrap();
+        let last_nibble_after = get_nibble_at_index(
+            &result,
+            nibble_len_after - 1
+        ).unwrap();
+        let nibble_len_after = get_length_in_nibbles(&result);
+        assert!(last_nibble_before == last_nibble_after);
+        assert!(nibble_len_after == nibble_len_before - 1);
+        assert!(first_nibble_before != first_nibble_after);
+        assert!(first_nibble_after == expected_first_nibble_after);
+    }
+
+    #[test]
+    fn should_remove_first_nibble_if_only_one_nibble() {
+        let byte = 5u8;
+        let expected_length = 1;
+        let expected_byte = 0u8;
+        let expected_nibble_length = 1;
+        let nibble = get_nibble_vec_from_offset_bytes(vec![byte]);
+        let result = remove_first_nibble(nibble)
+            .unwrap();
+        let nibble_length = get_length_in_nibbles(&result);
+        assert!(result.data[0] == expected_byte);
+        assert!(result.data.len() == expected_length);
+        assert!(nibble_length == expected_nibble_length);
     }
 }
