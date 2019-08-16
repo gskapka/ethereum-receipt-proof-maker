@@ -38,6 +38,27 @@ pub fn get_nibble_vec_from_offset_bytes(nibbles: Bytes) -> NibbleVec {
     NibbleVec { data: nibbles, first_nibble_index: 1 }
 }
 
+pub fn replace_nibble_in_nibble_vec_at_nibble_index(
+    nibbles: NibbleVec,
+    replacement_nibble: NibbleVec,
+    nibble_index: usize
+) -> Result<NibbleVec> {
+    get_byte_containing_nibble_at_nibble_index(&nibbles, &nibble_index)
+        .map(|byte|
+            match (nibble_index + nibbles.first_nibble_index) % 2 {
+                0 => replace_high_nibble_in_byte(byte, replacement_nibble),
+                _ => replace_low_nibble_in_byte(byte, replacement_nibble)
+            }
+        )
+        .map(|byte| {
+            replace_byte_in_nibble_vec_at_byte_index(
+                convert_nibble_index_to_byte_index(&nibbles, &nibble_index),
+                nibbles,
+                byte
+            )
+        })
+}
+
 fn convert_nibble_index_to_byte_index(
     nibbles: &NibbleVec,
     nibble_index: &usize
@@ -46,8 +67,8 @@ fn convert_nibble_index_to_byte_index(
 }
 
 fn replace_byte_in_nibble_vec_at_byte_index(
-    nibbles: NibbleVec,
     index: usize,
+    nibbles: NibbleVec,
     byte: Byte,
 ) -> NibbleVec {
     let byte_length = nibbles.data.len();
@@ -110,7 +131,7 @@ pub fn get_nibble_at_index(nibbles: &NibbleVec, nibble_index: usize) -> Result<B
             0 => match nibble_index % 2 {
                 0 => get_high_nibble_from_byte(&nibbles, &nibble_index),
                 _ => get_low_nibble_from_byte(&nibbles, &nibble_index),
-            },
+            }
             _ => match nibble_index % 2 {
                 0 => get_low_nibble_from_byte(&nibbles, &nibble_index),
                 _ => get_high_nibble_from_byte(&nibbles, &(nibble_index + 1)),
@@ -370,8 +391,8 @@ mod tests {
         let nibbles = get_sample_nibble_vec();
         assert!(original_byte != replacement_byte);
         let updated_nibbles= replace_byte_in_nibble_vec_at_byte_index(
-            nibbles,
             byte_index,
+            nibbles,
             replacement_byte
         );
         let result = updated_nibbles.data[byte_index];
@@ -394,8 +415,8 @@ mod tests {
         let nibbles = get_sample_offset_nibble_vec();
         assert!(original_byte != replacement_byte);
         let updated_nibbles= replace_byte_in_nibble_vec_at_byte_index(
-            nibbles,
             byte_index,
+            nibbles,
             replacement_byte
         );
         let result = updated_nibbles.data[byte_index];
@@ -425,5 +446,211 @@ mod tests {
         let nibbles = get_sample_offset_nibble_vec();
         let result = convert_nibble_index_to_byte_index(&nibbles, &nibble_index);
         assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_replace_offset_nibble_at_nibble_index_in_nibble_vec_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_nibble_vec()) {
+            let nibbles_before = get_sample_nibble_vec();
+            let byte_index = convert_nibble_index_to_byte_index(
+                &nibbles_before,
+                &nibble_index
+            );
+            let byte_before = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_before,
+                &nibble_index,
+            ).unwrap();
+            let replacement_nibble = get_nibble_vec_from_offset_bytes(
+                vec![15u8] // [00001111]
+            );
+            let expected_byte = match nibble_index % 2 {
+                0 => replace_high_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                ),
+                _ => replace_low_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                )
+            };
+            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+                nibbles_before.clone(),
+                replacement_nibble.clone(),
+                nibble_index
+            ).unwrap();
+            let target_nibble_after = get_nibble_at_index(
+                &nibbles_after,
+                nibble_index,
+            ).unwrap();
+            let byte_after = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_after,
+                &nibble_index
+            ).unwrap();
+            assert!(byte_before != byte_after);
+            assert!(target_nibble_after == replacement_nibble.data[0]);
+            assert!(nibbles_before.data.len() == nibbles_after.data.len());
+            assert!(byte_after == expected_byte);
+            for i in 0..nibbles_after.data.len() {
+                match i == byte_index {
+                    true => assert!(nibbles_after.data[i] == expected_byte),
+                    _ => assert!(nibbles_after.data[i] == nibbles_before.data[i])
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn should_replace_offset_nibble_at_nibble_index_in_offset_nibble_vec_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_offset_nibble_vec()) {
+            let nibbles_before = get_sample_offset_nibble_vec();
+            let byte_index = convert_nibble_index_to_byte_index(
+                &nibbles_before,
+                &nibble_index
+            );
+            let byte_before = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_before,
+                &nibble_index,
+            ).unwrap();
+            let replacement_nibble = get_nibble_vec_from_offset_bytes(
+                vec![15u8] // [00001111]
+            );
+            let expected_byte = match nibble_index % 2 {
+                0 => replace_low_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                ),
+                _ => replace_high_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                )
+            };
+            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+                nibbles_before.clone(),
+                replacement_nibble.clone(),
+                nibble_index
+            ).unwrap();
+            let target_nibble_after = get_nibble_at_index(
+                &nibbles_after,
+                nibble_index,
+            ).unwrap();
+            let byte_after = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_after,
+                &nibble_index
+            ).unwrap();
+            assert!(byte_before != byte_after);
+            assert!(target_nibble_after == replacement_nibble.data[0]);
+            assert!(nibbles_before.data.len() == nibbles_after.data.len());
+            assert!(byte_after == expected_byte);
+            for i in 0..nibbles_after.data.len() {
+                match i == byte_index {
+                    true => assert!(nibbles_after.data[i] == expected_byte),
+                    _ => assert!(nibbles_after.data[i] == nibbles_before.data[i])
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn should_replace_nibble_at_nibble_index_in_offset_nibble_vec_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_offset_nibble_vec()) {
+            let nibbles_before = get_sample_offset_nibble_vec();
+            let byte_index = convert_nibble_index_to_byte_index(
+                &nibbles_before,
+                &nibble_index
+            );
+            let byte_before = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_before,
+                &nibble_index,
+            ).unwrap();
+            let replacement_nibble = get_nibble_vec_from_bytes(
+                vec![240u8] // [11110000]
+            );
+            let expected_byte = match nibble_index % 2 {
+                0 => replace_low_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                ),
+                _ => replace_high_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                )
+            };
+            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+                nibbles_before.clone(),
+                replacement_nibble.clone(),
+                nibble_index
+            ).unwrap();
+            let target_nibble_after = get_nibble_at_index(
+                &nibbles_after,
+                nibble_index,
+            ).unwrap();
+            let byte_after = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_after,
+                &nibble_index
+            ).unwrap();
+            assert!(byte_before != byte_after);
+            // NOTE: Shift left ∵ we're replacing w/ a non-offset nibble!
+            assert!(shift_nibble_left(target_nibble_after) == replacement_nibble.data[0]);
+            assert!(nibbles_before.data.len() == nibbles_after.data.len());
+            assert!(byte_after == expected_byte);
+            for i in 0..nibbles_after.data.len() {
+                match i == byte_index {
+                    true => assert!(nibbles_after.data[i] == expected_byte),
+                    _ => assert!(nibbles_after.data[i] == nibbles_before.data[i])
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn should_replace_nibble_at_nibble_index_in_nibble_vec_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_nibble_vec()) {
+            let nibbles_before = get_sample_nibble_vec();
+            let byte_index = convert_nibble_index_to_byte_index(
+                &nibbles_before,
+                &nibble_index
+            );
+            let byte_before = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_before,
+                &nibble_index,
+            ).unwrap();
+            let replacement_nibble = get_nibble_vec_from_bytes(
+                vec![240u8] // [11110000]
+            );
+            let expected_byte = match nibble_index % 2 {
+                0 => replace_high_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                ),
+                _ => replace_low_nibble_in_byte(
+                    byte_before.clone(),
+                    replacement_nibble.clone(),
+                )
+            };
+            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+                nibbles_before.clone(),
+                replacement_nibble.clone(),
+                nibble_index
+            ).unwrap();
+            let target_nibble_after = get_nibble_at_index(
+                &nibbles_after,
+                nibble_index,
+            ).unwrap();
+            let byte_after = get_byte_containing_nibble_at_nibble_index(
+                &nibbles_after,
+                &nibble_index
+            ).unwrap();
+            assert!(byte_before != byte_after);
+            // NOTE: Shift left ∵ we're replacing w/ a non-offset nibble!
+            assert!(shift_nibble_left(target_nibble_after) == replacement_nibble.data[0]);
+            assert!(nibbles_before.data.len() == nibbles_after.data.len());
+            assert!(byte_after == expected_byte);
+            for i in 0..nibbles_after.data.len() {
+                match i == byte_index {
+                    true => assert!(nibbles_after.data[i] == expected_byte),
+                    _ => assert!(nibbles_after.data[i] == nibbles_before.data[i])
+                }
+            }
+        }
     }
 }
