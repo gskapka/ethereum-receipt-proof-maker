@@ -38,6 +38,13 @@ pub fn get_nibble_vec_from_offset_bytes(nibbles: Bytes) -> NibbleVec {
     NibbleVec { data: nibbles, first_nibble_index: 1 }
 }
 
+fn convert_nibble_index_to_byte_index(
+    nibbles: &NibbleVec,
+    nibble_index: &usize
+) -> usize {
+    (nibbles.first_nibble_index + nibble_index) / NIBBLES_IN_BYTE
+}
+
 fn replace_byte_in_nibble_vec_at_byte_index(
     nibbles: NibbleVec,
     index: usize,
@@ -402,4 +409,21 @@ mod tests {
         };
     }
 
+    #[test]
+    fn should_convert_nibble_i_to_byte_i_in_nibble_vec_correctly() {
+        let nibble_index = 3;
+        let expected_result = 1;
+        let nibbles = get_sample_nibble_vec();
+        let result = convert_nibble_index_to_byte_index(&nibbles, &nibble_index);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_convert_nibble_i_to_byte_i_in_offset_nibble_vec_correctly() {
+        let nibble_index = 3;
+        let expected_result = 2;
+        let nibbles = get_sample_offset_nibble_vec();
+        let result = convert_nibble_index_to_byte_index(&nibbles, &nibble_index);
+        assert!(result == expected_result);
+    }
 }
