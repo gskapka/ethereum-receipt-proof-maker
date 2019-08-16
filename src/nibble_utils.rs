@@ -30,6 +30,14 @@ impl fmt::Debug for NibbleVec {
     }
 }
 
+fn set_first_index_in_nibble_vec_to_zero(nibbles: NibbleVec) -> NibbleVec {
+    NibbleVec { data: nibbles.data, first_nibble_index: 0 }
+}
+
+fn set_first_index_in_nibble_vec_to_one(nibbles: NibbleVec) -> NibbleVec {
+    NibbleVec { data: nibbles.data, first_nibble_index: 1 }
+}
+
 pub fn get_nibble_vec_from_bytes(nibbles: Bytes) -> NibbleVec {
     NibbleVec { data: nibbles, first_nibble_index: 0 }
 }
@@ -122,7 +130,10 @@ pub fn get_length_in_nibbles(nibbles: &NibbleVec) -> usize {
     nibbles.data.len() * 2 - nibbles.first_nibble_index
 }
 
-pub fn get_nibble_at_index(nibbles: &NibbleVec, nibble_index: usize) -> Result<Byte> {
+pub fn get_nibble_at_index(
+    nibbles: &NibbleVec,
+    nibble_index: usize
+) -> Result<Byte> {
     match nibble_index > get_length_in_nibbles(&nibbles) {
         true => Err(AppError::Custom(
             format!("✘ Index {} is out-of-bounds in nibble vector!", nibble_index)
@@ -652,5 +663,27 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn should_set_first_nibble_flag_in_nibble_vec_to_zero_correctly() {
+        let expected_result = 0;
+        let nibbles = get_sample_offset_nibble_vec();
+        let nibble_flag_before = nibbles.first_nibble_index;
+        assert!(nibble_flag_before != expected_result);
+        let updated_nibbles= set_first_index_in_nibble_vec_to_zero(nibbles);
+        let result = updated_nibbles.first_nibble_index;
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_set_first_nibble_flag_in_nibble_vec_to_one_correctly() {
+        let expected_result = 1;
+        let nibbles = get_sample_nibble_vec();
+        let nibble_flag_before = nibbles.first_nibble_index;
+        assert!(nibble_flag_before != expected_result);
+        let updated_nibbles= set_first_index_in_nibble_vec_to_one(nibbles);
+        let result = updated_nibbles.first_nibble_index;
+        assert!(result == expected_result);
     }
 }
