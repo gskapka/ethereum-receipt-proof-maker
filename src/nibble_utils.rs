@@ -13,12 +13,12 @@ use crate::constants::{
 };
 
 #[derive(Clone)]
-pub struct NibbleVec {
-    data: Bytes,
-    first_nibble_index: usize,
+pub struct Nibbles {
+    pub data: Bytes,
+    pub first_nibble_index: usize,
 }
 
-impl fmt::Debug for NibbleVec {
+impl fmt::Debug for Nibbles {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for i in 0..get_length_in_nibbles(&self) {
             write!(
@@ -31,7 +31,7 @@ impl fmt::Debug for NibbleVec {
     }
 }
 
-fn remove_first_nibble(nibbles: NibbleVec) -> Result<NibbleVec> {
+fn remove_first_nibble(nibbles: Nibbles) -> Result<Nibbles> {
     match get_length_in_nibbles(&nibbles) > 1 {
         true => match nibbles.first_nibble_index {
             1 => remove_first_byte_from_nibble_vec(nibbles),
@@ -49,14 +49,14 @@ fn remove_first_nibble(nibbles: NibbleVec) -> Result<NibbleVec> {
     }
 }
 
-fn get_zero_nibble() -> NibbleVec {
-    NibbleVec { data: vec![ZERO_BYTE], first_nibble_index: 1 }
+fn get_zero_nibble() -> Nibbles {
+    Nibbles { data: vec![ZERO_BYTE], first_nibble_index: 1 }
 }
 
-fn remove_first_byte_from_nibble_vec(nibbles: NibbleVec) -> Result<NibbleVec> {
+fn remove_first_byte_from_nibble_vec(nibbles: Nibbles) -> Result<Nibbles> {
     match nibbles.data.len() > 1 {
         true => Ok(
-            NibbleVec {
+            Nibbles {
                 first_nibble_index: 0,
                 data: nibbles.data[1..].to_vec()
             }
@@ -68,27 +68,27 @@ fn remove_first_byte_from_nibble_vec(nibbles: NibbleVec) -> Result<NibbleVec> {
 
 }
 
-fn set_first_index_in_nibble_vec_to_zero(nibbles: NibbleVec) -> NibbleVec {
-    NibbleVec { data: nibbles.data, first_nibble_index: 0 }
+pub fn set_first_index_in_nibble_vec_to_zero(nibbles: Nibbles) -> Nibbles {
+    Nibbles { data: nibbles.data, first_nibble_index: 0 }
 }
 
-fn set_first_index_in_nibble_vec_to_one(nibbles: NibbleVec) -> NibbleVec {
-    NibbleVec { data: nibbles.data, first_nibble_index: 1 }
+fn set_first_index_in_nibble_vec_to_one(nibbles: Nibbles) -> Nibbles {
+    Nibbles { data: nibbles.data, first_nibble_index: 1 }
 }
 
-pub fn get_nibble_vec_from_bytes(nibbles: Bytes) -> NibbleVec {
-    NibbleVec { data: nibbles, first_nibble_index: 0 }
+pub fn get_nibble_vec_from_bytes(nibbles: Bytes) -> Nibbles {
+    Nibbles { data: nibbles, first_nibble_index: 0 }
 }
 
-pub fn get_nibble_vec_from_offset_bytes(nibbles: Bytes) -> NibbleVec {
-    NibbleVec { data: nibbles, first_nibble_index: 1 }
+pub fn get_nibble_vec_from_offset_bytes(nibbles: Bytes) -> Nibbles {
+    Nibbles { data: nibbles, first_nibble_index: 1 }
 }
 
 pub fn replace_nibble_in_nibble_vec_at_nibble_index(
-    nibbles: NibbleVec,
-    replacement_nibble: NibbleVec,
+    nibbles: Nibbles,
+    replacement_nibble: Nibbles,
     nibble_index: usize
-) -> Result<NibbleVec> {
+) -> Result<Nibbles> {
     get_byte_containing_nibble_at_nibble_index(&nibbles, &nibble_index)
         .map(|byte|
             match (nibble_index + nibbles.first_nibble_index) % 2 {
@@ -106,7 +106,7 @@ pub fn replace_nibble_in_nibble_vec_at_nibble_index(
 }
 
 fn convert_nibble_index_to_byte_index(
-    nibbles: &NibbleVec,
+    nibbles: &Nibbles,
     nibble_index: &usize
 ) -> usize {
     (nibbles.first_nibble_index + nibble_index) / NIBBLES_IN_BYTE
@@ -114,9 +114,9 @@ fn convert_nibble_index_to_byte_index(
 
 fn replace_byte_in_nibble_vec_at_byte_index(
     index: usize,
-    nibbles: NibbleVec,
+    nibbles: Nibbles,
     byte: Byte,
-) -> NibbleVec {
+) -> Nibbles {
     let byte_length = nibbles.data.len();
     let mut vec = nibbles.data.clone();
     for i in 0..byte_length {
@@ -133,7 +133,7 @@ fn replace_byte_in_nibble_vec_at_byte_index(
 
 pub fn replace_high_nibble_in_byte(
     byte: Byte,
-    replacement_nibble: NibbleVec,
+    replacement_nibble: Nibbles,
 ) -> Byte {
     match replacement_nibble.first_nibble_index {
         0 => merge_nibbles_from_bytes(byte, replacement_nibble.data[0]),
@@ -146,7 +146,7 @@ pub fn replace_high_nibble_in_byte(
 
 pub fn replace_low_nibble_in_byte(
     byte: Byte,
-    replacement_nibble: NibbleVec,
+    replacement_nibble: Nibbles,
 ) -> Byte {
     match replacement_nibble.first_nibble_index {
         1 => merge_nibbles_from_bytes(replacement_nibble.data[0], byte),
@@ -164,12 +164,12 @@ pub fn merge_nibbles_from_bytes(
     high_nibble_byte ^ ((high_nibble_byte ^ low_nibble_byte) & HIGH_NIBBLE_MASK)
 }
 
-pub fn get_length_in_nibbles(nibbles: &NibbleVec) -> usize {
+pub fn get_length_in_nibbles(nibbles: &Nibbles) -> usize {
     nibbles.data.len() * 2 - nibbles.first_nibble_index
 }
 
 pub fn get_nibble_at_index(
-    nibbles: &NibbleVec,
+    nibbles: &Nibbles,
     nibble_index: usize
 ) -> Result<Byte> {
     match nibble_index > get_length_in_nibbles(&nibbles) {
@@ -190,7 +190,7 @@ pub fn get_nibble_at_index(
 }
 
 fn get_byte_containing_nibble_at_nibble_index(
-    nibbles: &NibbleVec,
+    nibbles: &Nibbles,
     nibble_index: &usize
 ) -> Result<Byte> {
     Ok(nibbles.data[convert_nibble_index_to_byte_index(nibbles, nibble_index)])
@@ -208,12 +208,12 @@ fn shift_nibble_left(byte: Byte) -> Byte {
     byte << BITS_IN_NIBBLE
 }
 
-fn get_low_nibble_from_byte(nibbles: &NibbleVec, nibble_index: &usize) -> Result<Byte> {
+fn get_low_nibble_from_byte(nibbles: &Nibbles, nibble_index: &usize) -> Result<Byte> {
     get_byte_containing_nibble_at_nibble_index(nibbles, nibble_index)
         .map(mask_higher_nibble)
 }
 
-fn get_high_nibble_from_byte(nibbles: &NibbleVec, nibble_index: &usize) -> Result<Byte> {
+fn get_high_nibble_from_byte(nibbles: &Nibbles, nibble_index: &usize) -> Result<Byte> {
     get_byte_containing_nibble_at_nibble_index(nibbles, nibble_index)
         .map(shift_nibble_right)
 }
@@ -234,11 +234,11 @@ mod tests {
         vec![0x01u8, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd]
     }
 
-    fn get_sample_nibble_vec() -> NibbleVec {
+    fn get_sample_nibble_vec() -> Nibbles {
         get_nibble_vec_from_bytes(get_bytes_with_nibbles_from_index_zero())
     }
 
-    fn get_sample_offset_nibble_vec() -> NibbleVec {
+    fn get_sample_offset_nibble_vec() -> Nibbles {
         get_nibble_vec_from_offset_bytes(get_bytes_with_nibbles_from_index_one())
     }
 
