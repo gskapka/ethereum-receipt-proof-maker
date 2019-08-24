@@ -5,6 +5,8 @@ use crate::types::{
 use crate::nibble_utils::{
     Nibbles,
     get_length_in_nibbles,
+    convert_nibble_to_bytes,
+    prefix_nibbles_with_byte,
     get_nibble_vec_from_offset_bytes,
     set_first_index_in_nibble_vec_to_zero,
     replace_nibble_in_nibble_vec_at_nibble_index,
@@ -21,30 +23,19 @@ fn get_extension_prefix_nibble() -> Nibbles {
     get_nibble_vec_from_offset_bytes(vec![1u8]) // [00000011]
 }
 
-fn encode_even_length_path_from_nibbles( // TODO: Test
-    nibbles: Nibbles,
-    mut prefixed_vec: Vec<u8>
-) -> Result<Bytes> {
-    convert_nibble_to_bytes(nibbles)
-        .and_then(|bytes| {
-            prefixed_vec.append(& mut bytes.clone());
-            Ok(prefixed_vec)
-        })
-}
-
 fn encode_even_length_extension_path_from_nibbles(
     nibbles: Nibbles
 ) -> Result<Bytes> {
-    encode_even_length_path_from_nibbles(nibbles, vec![0u8]) // [00000000]
+    prefix_nibbles_with_byte(nibbles, vec![0u8]) // [00000000]
 }
 
 fn encode_even_length_leaf_path_from_nibbles(
     nibbles: Nibbles
 ) -> Result<Bytes> {
-    encode_even_length_path_from_nibbles(nibbles, vec![32u8]) // [00100000]
+    prefix_nibbles_with_byte(nibbles, vec![32u8]) // [00100000]
 }
 
-fn encode_odd_length_path_from_nibbles( // TODO: Test
+fn encode_odd_length_path_from_nibbles(
     nibbles: Nibbles,
     prefix_nibble: Nibbles
 ) -> Result<Bytes> {
@@ -68,11 +59,7 @@ fn encode_odd_length_leaf_path_from_nibbles(
     encode_odd_length_path_from_nibbles(nibbles, get_leaf_prefix_nibble())
 }
 
-fn convert_nibble_to_bytes(nibbles: Nibbles) -> Result<Bytes> { // TODO: Test
-    Ok(nibbles.data)
-}
-
-pub fn encode_extension_path_from_nibbles( // TODO Test
+pub fn encode_extension_path_from_nibbles(
     nibbles: Nibbles
 ) -> Result<Bytes> {
     match get_length_in_nibbles(&nibbles) % 2 == 0 {
@@ -81,7 +68,7 @@ pub fn encode_extension_path_from_nibbles( // TODO Test
     }
 }
 
-pub fn encode_leaf_path_from_nibbles( // TODO: Test
+pub fn encode_leaf_path_from_nibbles(
     nibbles: Nibbles
 ) -> Result<Bytes> {
     match get_length_in_nibbles(&nibbles) % 2 == 0 {
@@ -98,19 +85,22 @@ mod tests {
         get_nibble_vec_from_bytes,
         get_nibble_vec_from_offset_bytes,
     };
+
 /*
- * From the spec @ https://github.com/ethereum/wiki/wiki/Patricia-Tree
+ * Test vectors are from the spec @:
+ * https://github.com/ethereum/wiki/wiki/Patricia-Tree
  *
- * > [ 1, 2, 3, 4, 5, ...] ext
+ * > [ 1, 2, 3, 4, 5, ...]
  * '11 23 45'
- * > [ 0, 1, 2, 3, 4, 5, ...] ext
+ * > [ 0, 1, 2, 3, 4, 5, ...]
  * '00 01 23 45'
- * > [ 0, f, 1, c, b, 8, 10] leaf
+ * > [ 0, f, 1, c, b, 8, 10]
  * '20 0f 1c b8'
- * > [ f, 1, c, b, 8, 10] leaf
+ * > [ f, 1, c, b, 8, 10]
  * '3f 1c b8'
  *
  */
+
     fn get_odd_extension_path_sample() -> (Nibbles, Bytes) {
         let nibbles = get_nibble_vec_from_offset_bytes(vec![0x01u8, 0x23, 0x45]);
         let bytes = hex::decode("112345".to_string()).unwrap();
@@ -163,6 +153,38 @@ mod tests {
     fn should_encode_even_length_leaf_path_correctly() {
         let (sample, expected_result) = get_even_leaf_path_sample();
         let result = encode_even_length_leaf_path_from_nibbles(sample)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_encode_extension_path_from_offset_nibbles_correctly() {
+        let (sample, expected_result) = get_odd_extension_path_sample();
+        let result = encode_extension_path_from_nibbles(sample)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_encode_extension_path_from_nibbles_correctly() {
+        let (sample, expected_result) = get_even_extension_path_sample();
+        let result = encode_extension_path_from_nibbles(sample)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_encode_leaf_path_from_offset_nibbles_correctly() {
+        let (sample, expected_result) = get_odd_leaf_path_sample();
+        let result = encode_leaf_path_from_nibbles(sample)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_encode_leaf_path_from_nibbles_correctly() {
+        let (sample, expected_result) = get_even_leaf_path_sample();
+        let result = encode_leaf_path_from_nibbles(sample)
             .unwrap();
         assert!(result == expected_result);
     }
