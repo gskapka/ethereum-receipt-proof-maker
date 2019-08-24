@@ -1,13 +1,16 @@
+use crate::errors::AppError;
 use crate::types::{
     Bytes,
     Result,
 };
 use crate::nibble_utils::{
     Nibbles,
+    get_nibble_at_index,
     get_length_in_nibbles,
+    get_nibbles_from_bytes,
     convert_nibble_to_bytes,
     prefix_nibbles_with_byte,
-    get_nibble_vec_from_offset_bytes,
+    get_nibbles_from_offset_bytes,
     set_first_index_in_nibble_vec_to_zero,
     replace_nibble_in_nibble_vec_at_nibble_index,
 };
@@ -15,24 +18,29 @@ use crate::nibble_utils::{
 // TODO: [x] Need utils to encode nibbles w/ starting nibbles
 // TODO: [ ] Need utils to decode nibbles w/ starting nibbles
 
+const ODD_LENGTH_LEAF_PREFIX_NIBBLE: u8 = 3u8; // [00000011]
+const EVEN_LENGTH_LEAF_PREFIX_BYTE: u8 = 32u8; // [00100000]
+const EVEN_LENGTH_EXTENSION_PREFIX_BYTE: u8 = 0u8; // [00000000]
+const ODD_LENGTH_EXTENSION_PREFIX_NIBBLE: u8 = 1u8; // [00000001]
+
 fn get_leaf_prefix_nibble() -> Nibbles {
-    get_nibble_vec_from_offset_bytes(vec![3u8]) // [00000001]
+    get_nibbles_from_offset_bytes(vec![ODD_LENGTH_LEAF_PREFIX_NIBBLE])
 }
 
 fn get_extension_prefix_nibble() -> Nibbles {
-    get_nibble_vec_from_offset_bytes(vec![1u8]) // [00000011]
+    get_nibbles_from_offset_bytes(vec![ODD_LENGTH_EXTENSION_PREFIX_NIBBLE])
 }
 
 fn encode_even_length_extension_path_from_nibbles(
     nibbles: Nibbles
 ) -> Result<Bytes> {
-    prefix_nibbles_with_byte(nibbles, vec![0u8]) // [00000000]
+    prefix_nibbles_with_byte(nibbles, vec![EVEN_LENGTH_EXTENSION_PREFIX_BYTE])
 }
 
 fn encode_even_length_leaf_path_from_nibbles(
     nibbles: Nibbles
 ) -> Result<Bytes> {
-    prefix_nibbles_with_byte(nibbles, vec![32u8]) // [00100000]
+    prefix_nibbles_with_byte(nibbles, vec![EVEN_LENGTH_LEAF_PREFIX_BYTE])
 }
 
 fn encode_odd_length_path_from_nibbles(
@@ -77,13 +85,32 @@ pub fn encode_leaf_path_from_nibbles(
     }
 }
 
+fn is_path_to_leaf_node(path: Bytes) -> Result<bool> {
+    match path[0] {
+        EVEN_LENGTH_LEAF_PREFIX_BYTE => Ok(true),
+        EVEN_LENGTH_EXTENSION_PREFIX_BYTE => Ok(false),
+        // NOTE: Nibbles are offset yes, but want the first _encoding_ nibble!
+        _ => match get_nibble_at_index(&get_nibbles_from_bytes(path), 0) {
+            Err(e) => Err(e),
+            Ok(nibble) => match nibble {
+                ODD_LENGTH_LEAF_PREFIX_NIBBLE => Ok(true),
+                ODD_LENGTH_EXTENSION_PREFIX_NIBBLE => Ok(false),
+                _ => Err(AppError::Custom(
+                    "✘ Malformed path - cannot determine node type!".to_string()
+                ))
+            }
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use hex;
     use crate::nibble_utils::{
-        get_nibble_vec_from_bytes,
-        get_nibble_vec_from_offset_bytes,
+        get_nibbles_from_bytes,
+        get_nibbles_from_offset_bytes,
     };
 
 /*
@@ -102,25 +129,25 @@ mod tests {
  */
 
     fn get_odd_extension_path_sample() -> (Nibbles, Bytes) {
-        let nibbles = get_nibble_vec_from_offset_bytes(vec![0x01u8, 0x23, 0x45]);
+        let nibbles = get_nibbles_from_offset_bytes(vec![0x01u8, 0x23, 0x45]);
         let bytes = hex::decode("112345".to_string()).unwrap();
         (nibbles, bytes)
     }
 
     fn get_even_extension_path_sample() -> (Nibbles, Bytes) {
-        let nibbles = get_nibble_vec_from_bytes(vec![0x01, 0x23, 0x45]);
+        let nibbles = get_nibbles_from_bytes(vec![0x01, 0x23, 0x45]);
         let bytes = hex::decode("00012345".to_string()).unwrap();
         (nibbles, bytes)
     }
 
     fn get_even_leaf_path_sample() -> (Nibbles, Bytes) {
-        let nibbles = get_nibble_vec_from_bytes(vec![0x0f, 0x1c, 0xb8]);
+        let nibbles = get_nibbles_from_bytes(vec![0x0f, 0x1c, 0xb8]);
         let bytes = hex::decode("200f1cb8".to_string()).unwrap();
         (nibbles, bytes)
     }
 
     fn get_odd_leaf_path_sample() -> (Nibbles, Bytes) {
-        let nibbles = get_nibble_vec_from_offset_bytes(vec![0x0fu8, 0x1c, 0xb8]);
+        let nibbles = get_nibbles_from_offset_bytes(vec![0x0fu8, 0x1c, 0xb8]);
         let bytes = hex::decode("3f1cb8".to_string()).unwrap();
         (nibbles, bytes)
     }
@@ -188,4 +215,37 @@ mod tests {
             .unwrap();
         assert!(result == expected_result);
     }
+
+    #[test]
+    fn should_check_if_even_leaf_node_is_leaf_correctly() {
+        let (_, even_leaf_path) = get_even_leaf_path_sample();
+        let result = is_path_to_leaf_node(even_leaf_path)
+            .unwrap();
+        assert!(result);
+    }
+
+    #[test]
+    fn should_check_if_odd_leaf_node_is_leaf_correctly() {
+        let (_, odd_leaf_path) = get_odd_leaf_path_sample();
+        let result = is_path_to_leaf_node(odd_leaf_path)
+            .unwrap();
+        assert!(result);
+    }
+
+    #[test]
+    fn should_check_if_even_extension_node_is_leaf_correctly() {
+        let (_, even_extension_path) = get_even_extension_path_sample();
+        let result = is_path_to_leaf_node(even_extension_path)
+            .unwrap();
+        assert!(!result);
+    }
+
+    #[test]
+    fn should_check_if_odd_extension_node_is_leaf_correctly() {
+        let (_, odd_extension_path) = get_odd_extension_path_sample();
+        let result = is_path_to_leaf_node(odd_extension_path)
+            .unwrap();
+        assert!(!result);
+    }
+
 }
