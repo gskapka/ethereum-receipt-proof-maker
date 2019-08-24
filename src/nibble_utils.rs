@@ -218,6 +218,22 @@ fn get_high_nibble_from_byte(nibbles: &Nibbles, nibble_index: &usize) -> Result<
         .map(shift_nibble_right)
 }
 
+pub fn prefix_nibbles_with_byte(
+    nibbles: Nibbles,
+    mut vec_including_prefix_byte: Vec<u8>
+) -> Result<Bytes> {
+    convert_nibble_to_bytes(nibbles)
+        .and_then(|bytes| {
+            vec_including_prefix_byte.append(& mut bytes.clone());
+            Ok(vec_including_prefix_byte)
+        })
+}
+
+pub fn convert_nibble_to_bytes(nibbles: Nibbles) -> Result<Bytes> {
+    Ok(nibbles.data)
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -843,5 +859,45 @@ mod tests {
         assert!(result.data[0] == expected_byte);
         assert!(result.data.len() == expected_length);
         assert!(nibble_length == expected_nibble_length);
+    }
+
+    #[test]
+    fn should_prefix_nibble_with_byte_correctly() {
+        let nibbles = get_sample_nibble_vec();
+        let mut prefix = vec![0xff];
+        let mut expected_result = prefix.clone();
+        let result = prefix_nibbles_with_byte(nibbles, prefix)
+            .unwrap();
+        let bytes = get_bytes_with_nibbles_from_index_zero();
+        expected_result.append(&mut bytes.clone());
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_prefix_offset_nibble_with_byte_correctly() {
+        let nibbles = get_sample_offset_nibble_vec();
+        let mut prefix = vec![0xff];
+        let mut expected_result = prefix.clone();
+        let result = prefix_nibbles_with_byte(nibbles, prefix)
+            .unwrap();
+        let bytes = get_bytes_with_nibbles_from_index_one();
+        expected_result.append(&mut bytes.clone());
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_convert_nibbles_to_bytes_correctly() {
+        let nibbles = get_sample_nibble_vec();
+        let expected_result = get_bytes_with_nibbles_from_index_zero();
+        let result = convert_nibble_to_bytes(nibbles).unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_convert_offset_nibbles_to_bytes_correctly() {
+        let nibbles = get_sample_offset_nibble_vec();
+        let expected_result = get_bytes_with_nibbles_from_index_one();
+        let result = convert_nibble_to_bytes(nibbles).unwrap();
+        assert!(result == expected_result);
     }
 }
