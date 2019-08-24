@@ -89,7 +89,7 @@ fn is_path_to_leaf_node(path: Bytes) -> Result<bool> {
     match path[0] {
         EVEN_LENGTH_LEAF_PREFIX_BYTE => Ok(true),
         EVEN_LENGTH_EXTENSION_PREFIX_BYTE => Ok(false),
-        // NOTE: Nibbles are offset yes, but want the first _encoding_ nibble!
+        // NOTE: Nibbles are offset yes, but we want the 1st _encoding_ nibble!
         _ => match get_nibble_at_index(&get_nibbles_from_bytes(path), 0) {
             Err(e) => Err(e),
             Ok(nibble) => match nibble {
@@ -101,6 +101,11 @@ fn is_path_to_leaf_node(path: Bytes) -> Result<bool> {
             }
         }
     }
+}
+
+fn is_path_to_extension_node(path: Bytes) -> Result<bool> {
+    is_path_to_leaf_node(path)
+        .and_then(|is_leaf_bool| Ok(!is_leaf_bool))
 }
 
 
@@ -246,6 +251,38 @@ mod tests {
         let result = is_path_to_leaf_node(odd_extension_path)
             .unwrap();
         assert!(!result);
+    }
+
+    #[test]
+    fn should_check_if_even_leaf_node_is_extension_correctly() {
+        let (_, even_leaf_path) = get_even_leaf_path_sample();
+        let result = is_path_to_extension_node(even_leaf_path)
+            .unwrap();
+        assert!(!result);
+    }
+
+    #[test]
+    fn should_check_if_odd_leaf_node_is_extension_correctly() {
+        let (_, odd_leaf_path) = get_odd_leaf_path_sample();
+        let result = is_path_to_extension_node(odd_leaf_path)
+            .unwrap();
+        assert!(!result);
+    }
+
+    #[test]
+    fn should_check_if_even_extension_node_is_extension_correctly() {
+        let (_, even_extension_path) = get_even_extension_path_sample();
+        let result = is_path_to_extension_node(even_extension_path)
+            .unwrap();
+        assert!(result);
+    }
+
+    #[test]
+    fn should_check_if_odd_extension_node_is_extension_correctly() {
+        let (_, odd_extension_path) = get_odd_extension_path_sample();
+        let result = is_path_to_extension_node(odd_extension_path)
+            .unwrap();
+        assert!(result);
     }
 
 }
