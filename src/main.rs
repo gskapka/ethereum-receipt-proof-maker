@@ -11,6 +11,7 @@ mod get_block;
 mod usage_info;
 mod test_utils;
 mod rlp_encode;
+mod path_codec;
 mod get_receipt;
 mod nibble_utils;
 mod get_database;
