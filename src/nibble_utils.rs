@@ -236,6 +236,13 @@ pub fn convert_nibble_to_bytes(nibbles: Nibbles) -> Result<Bytes> {
     Ok(nibbles.data)
 }
 
+fn slice_nibbles_at_byte_index(
+    nibbles: Nibbles,
+    byte_index: usize
+) -> Result<Nibbles> {
+    Ok(get_nibbles_from_bytes(nibbles.data[byte_index..].to_vec()))
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -902,5 +909,31 @@ mod tests {
         let expected_result = get_bytes_with_nibbles_from_index_one();
         let result = convert_nibble_to_bytes(nibbles).unwrap();
         assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_slice_nibbles_at_byte_index_correctly() {
+        let byte_index = 2;
+        let nibbles = get_sample_nibble_vec();
+        let expected_result = get_nibbles_from_bytes(
+            vec![0x56, 0x78, 0x9a, 0xbc, 0xde]
+        );
+        let result = slice_nibbles_at_byte_index(nibbles, byte_index)
+            .unwrap();
+        assert!(result.data == expected_result.data);
+    }
+
+    #[test]
+    fn should_slice_offset_nibbles_at_byte_index_correctly() {
+        let byte_index = 2;
+        let nibbles = get_sample_offset_nibble_vec();
+        let expected_result = get_nibbles_from_bytes(
+            vec![0x45, 0x67, 0x89, 0xab, 0xcd]
+        );
+        let result = slice_nibbles_at_byte_index(nibbles, byte_index)
+            .unwrap();
+        println!("\nresult: {:?}\n", result);
+        assert!(result.data == expected_result.data);
+
     }
 }
