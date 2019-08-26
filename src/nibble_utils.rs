@@ -243,6 +243,42 @@ fn slice_nibbles_at_byte_index(
     Ok(get_nibbles_from_bytes(nibbles.data[byte_index..].to_vec()))
 }
 
+pub fn slice_nibbles_at_nibble_index( // TODO: Test
+    nibbles: Nibbles,
+    nibble_index: usize
+) -> Result<Nibbles> {
+    match get_length_in_nibbles(&nibbles) <= nibble_index {
+        true => Err(AppError::Custom(
+            format!(
+                "✘ Not enough nibbles to slice at index {}",
+                nibble_index
+            )
+        )),
+        false => match nibble_index {
+            0 => Ok(nibbles),
+            1 => remove_first_nibble(nibbles),
+            _ => {
+                let first_nibble_index = nibbles.first_nibble_index;
+                let byte_index = convert_nibble_index_to_byte_index(
+                    &nibbles,
+                    &nibble_index
+                );
+                let sliced_nibbles = slice_nibbles_at_byte_index(
+                    nibbles,
+                    byte_index
+                )?;
+                match (nibble_index + first_nibble_index) % 2 == 0 {
+                    true => Ok(sliced_nibbles),
+                    false => replace_nibble_in_nibble_vec_at_nibble_index(
+                        sliced_nibbles,
+                        get_zero_nibble(),
+                        0
+                    ).map(set_first_index_in_nibble_vec_to_one)
+                }
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -921,6 +957,9 @@ mod tests {
         let result = slice_nibbles_at_byte_index(nibbles, byte_index)
             .unwrap();
         assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
     }
 
     #[test]
@@ -932,8 +971,152 @@ mod tests {
         );
         let result = slice_nibbles_at_byte_index(nibbles, byte_index)
             .unwrap();
-        println!("\nresult: {:?}\n", result);
         assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
+    }
+
+    #[test]
+    fn should_slice_nibbles_at_even_nibble_index_correctly() {
+        let nibble_index = 4;
+        assert!(nibble_index % 2 == 0);
+        let nibbles = get_sample_nibble_vec();
+        let expected_result = get_nibbles_from_bytes(
+            vec![0x56, 0x78, 0x9a, 0xbc, 0xde]
+        );
+        let len = get_length_in_nibbles(&nibbles.clone());
+        let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
+            .unwrap();
+        assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
+    }
+
+    #[test]
+    fn should_slice_nibbles_at_odd_nibble_index_correctly() {
+        let nibble_index = 5;
+        assert!(nibble_index % 2 != 0);
+        let nibbles = get_sample_nibble_vec();
+        let expected_result = get_nibbles_from_offset_bytes(
+            vec![0x6u8, 0x78, 0x9a, 0xbc, 0xde]
+        );
+        let len = get_length_in_nibbles(&nibbles.clone());
+        let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
+            .unwrap();
+        assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
+    }
+
+    #[test]
+    fn should_slice_offset_nibbles_at_even_nibble_index_correctly() {
+        let nibble_index = 4;
+        assert!(nibble_index % 2 == 0);
+        let nibbles = get_sample_offset_nibble_vec();
+        let expected_result = get_nibbles_from_offset_bytes(
+            vec![0x5u8, 0x67, 0x89, 0xab, 0xcd]
+        );
+        let len = get_length_in_nibbles(&nibbles.clone());
+        let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
+            .unwrap();
+        assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
+    }
+
+    #[test]
+    fn should_slice_ofset_nibbles_at_odd_nibble_index_correctly() {
+        let nibble_index = 5;
+        assert!(nibble_index % 2 != 0);
+        let nibbles = get_sample_offset_nibble_vec();
+        let expected_result = get_nibbles_from_bytes(
+            vec![0x67, 0x89, 0xab, 0xcd]
+        );
+        let len = get_length_in_nibbles(&nibbles.clone());
+        let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
+            .unwrap();
+        assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
+    }
+
+    #[test]
+    fn should_fail_to_slice_nibbles_if_nibble_index_too_great() {
+        let nibbles = get_sample_nibble_vec();
+        let nibble_length = get_length_in_nibbles(&nibbles);
+        let nibble_index = nibble_length + 1;
+        let expected_error = format!(
+            "✘ Not enough nibbles to slice at index {}",
+            nibble_index
+        );
+        assert!(nibble_length <= nibble_index);
+        match slice_nibbles_at_nibble_index(nibbles, nibble_index) {
+            Err(AppError::Custom(e)) => assert!(e == expected_error),
+            _ => panic!("Did not recieve expected error!")
+        }
+    }
+
+    #[test]
+    fn should_slice_nibbles_at_zero_nibble_index_correctly() {
+        let nibble_index = 0;
+        let nibbles = get_sample_nibble_vec();
+        let result = slice_nibbles_at_nibble_index(
+            nibbles.clone(),
+            nibble_index
+        ).unwrap();
+        assert!(result.data == nibbles.data);
+        assert!(result.first_nibble_index == nibbles.first_nibble_index);
+    }
+
+    #[test]
+    fn should_slice_offset_nibbles_at_zero_nibble_index_correctly() {
+        let nibble_index = 0;
+        let nibbles = get_sample_offset_nibble_vec();
+        let result = slice_nibbles_at_nibble_index(
+            nibbles.clone(),
+            nibble_index
+        ).unwrap();
+        assert!(result.data == nibbles.data);
+        assert!(result.first_nibble_index == nibbles.first_nibble_index);
+    }
+
+    #[test]
+    fn should_slice_nibbles_at_nibble_index_of_one_correctly() {
+        let nibble_index = 1;
+        let nibbles = get_sample_nibble_vec();
+        let result = slice_nibbles_at_nibble_index(
+            nibbles.clone(),
+            nibble_index
+        ).unwrap();
+        let expected_result = get_nibbles_from_offset_bytes(
+            vec![0x2u8, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde]
+        );
+        assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
+    }
+
+    #[test]
+    fn should_slice_offset_nibbles_at_nibble_index_of_one_correctly() {
+        let nibble_index = 1;
+        let nibbles = get_sample_offset_nibble_vec();
+        let result = slice_nibbles_at_nibble_index(
+            nibbles.clone(),
+            nibble_index
+        ).unwrap();
+        let expected_result = get_nibbles_from_bytes(
+            vec![0x23, 0x45, 0x67, 0x89, 0xab, 0xcd]
+        );
+        assert!(result.data == expected_result.data);
+        assert!(
+            result.first_nibble_index == expected_result.first_nibble_index
+        );
 
     }
 }
