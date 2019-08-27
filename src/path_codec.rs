@@ -12,9 +12,9 @@ use crate::nibble_utils::{
     convert_nibble_to_bytes,
     prefix_nibbles_with_byte,
     get_nibbles_from_offset_bytes,
-    set_first_index_in_nibble_vec_to_one,
-    set_first_index_in_nibble_vec_to_zero,
-    replace_nibble_in_nibble_vec_at_nibble_index,
+    set_first_index_in_nibbles_to_one,
+    set_first_index_in_nibbles_to_zero,
+    replace_nibble_in_nibbles_at_nibble_index,
 };
 
 const ODD_LENGTH_LEAF_PREFIX_NIBBLE: u8 = 3u8;      // [00000011]
@@ -46,8 +46,8 @@ fn encode_odd_length_path_from_nibbles(
     nibbles: Nibbles,
     prefix_nibble: Nibbles
 ) -> Result<Bytes> {
-    replace_nibble_in_nibble_vec_at_nibble_index(
-        set_first_index_in_nibble_vec_to_zero(nibbles),
+    replace_nibble_in_nibbles_at_nibble_index(
+        set_first_index_in_nibbles_to_zero(nibbles),
         prefix_nibble,
         0
     )
@@ -89,13 +89,13 @@ fn trim_encoding_byte(path: Bytes) -> Result<Bytes> {
 }
 
 fn decode_odd_length_path_to_nibbles(path: Bytes) -> Result<Nibbles> {
-    replace_nibble_in_nibble_vec_at_nibble_index(
+    replace_nibble_in_nibbles_at_nibble_index(
         // NOTE: Not offset so we can zero that first, encoding nibble...
         get_nibbles_from_bytes(path),
         get_zero_nibble(),
         0
     )
-        .map(set_first_index_in_nibble_vec_to_one)
+        .map(set_first_index_in_nibbles_to_one)
 }
 
 pub fn decode_path_to_nibbles_and_node_type(

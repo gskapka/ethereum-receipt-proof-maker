@@ -48,12 +48,12 @@ fn remove_first_nibble(nibbles: Nibbles) -> Result<Nibbles> {
         0 => Ok(EMPTY_NIBBLES),
         1 => Ok(EMPTY_NIBBLES),
         _ => match nibbles.first_nibble_index {
-            1 => remove_first_byte_from_nibble_vec(nibbles),
-            _ => replace_nibble_in_nibble_vec_at_nibble_index(
+            1 => remove_first_byte_from_nibbles(nibbles),
+            _ => replace_nibble_in_nibbles_at_nibble_index(
                 nibbles,
                 get_zero_nibble(),
                 0
-            ).map(set_first_index_in_nibble_vec_to_one),
+            ).map(set_first_index_in_nibbles_to_one),
         }
     }
 }
@@ -62,7 +62,7 @@ pub fn get_zero_nibble() -> Nibbles {
     Nibbles { data: vec![ZERO_BYTE], first_nibble_index: 1 }
 }
 
-fn remove_first_byte_from_nibble_vec(nibbles: Nibbles) -> Result<Nibbles> {
+fn remove_first_byte_from_nibbles(nibbles: Nibbles) -> Result<Nibbles> {
     match nibbles.data.len() > 1 {
         true => Ok(
             Nibbles {
@@ -77,11 +77,11 @@ fn remove_first_byte_from_nibble_vec(nibbles: Nibbles) -> Result<Nibbles> {
 
 }
 
-pub fn set_first_index_in_nibble_vec_to_zero(nibbles: Nibbles) -> Nibbles {
+pub fn set_first_index_in_nibbles_to_zero(nibbles: Nibbles) -> Nibbles {
     Nibbles { data: nibbles.data, first_nibble_index: 0 }
 }
 
-pub fn set_first_index_in_nibble_vec_to_one(nibbles: Nibbles) -> Nibbles {
+pub fn set_first_index_in_nibbles_to_one(nibbles: Nibbles) -> Nibbles {
     Nibbles { data: nibbles.data, first_nibble_index: 1 }
 }
 
@@ -93,7 +93,7 @@ pub fn get_nibbles_from_offset_bytes(nibbles: Bytes) -> Nibbles {
     Nibbles { data: nibbles, first_nibble_index: 1 }
 }
 
-pub fn replace_nibble_in_nibble_vec_at_nibble_index(
+pub fn replace_nibble_in_nibbles_at_nibble_index(
     nibbles: Nibbles,
     replacement_nibble: Nibbles,
     nibble_index: usize
@@ -106,7 +106,7 @@ pub fn replace_nibble_in_nibble_vec_at_nibble_index(
             }
         )
         .map(|byte| {
-            replace_byte_in_nibble_vec_at_byte_index(
+            replace_byte_in_nibbles_at_byte_index(
                 convert_nibble_index_to_byte_index(&nibbles, &nibble_index),
                 nibbles,
                 byte
@@ -121,7 +121,7 @@ fn convert_nibble_index_to_byte_index(
     (nibbles.first_nibble_index + nibble_index) / NIBBLES_IN_BYTE
 }
 
-fn replace_byte_in_nibble_vec_at_byte_index(
+fn replace_byte_in_nibbles_at_byte_index(
     index: usize,
     nibbles: Nibbles,
     byte: Byte,
@@ -273,11 +273,11 @@ pub fn slice_nibbles_at_nibble_index(
             )?;
             match (nibble_index + first_nibble_index) % 2 == 0 {
                 true => Ok(sliced_nibbles),
-                false => replace_nibble_in_nibble_vec_at_nibble_index(
+                false => replace_nibble_in_nibbles_at_nibble_index(
                     sliced_nibbles,
                     get_zero_nibble(),
                     0
-                ).map(set_first_index_in_nibble_vec_to_one)
+                ).map(set_first_index_in_nibbles_to_one)
             }
         }
     }
@@ -299,11 +299,11 @@ mod tests {
         vec![0x01u8, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd]
     }
 
-    fn get_sample_nibble_vec() -> Nibbles {
+    fn get_sample_nibbles() -> Nibbles {
         get_nibbles_from_bytes(get_bytes_with_nibbles_from_index_zero())
     }
 
-    fn get_sample_offset_nibble_vec() -> Nibbles {
+    fn get_sample_offset_nibbles() -> Nibbles {
         get_nibbles_from_offset_bytes(get_bytes_with_nibbles_from_index_one())
     }
 
@@ -497,14 +497,14 @@ mod tests {
     }
 
     #[test]
-    fn should_replace_byte_in_nibble_vec_correctly() {
+    fn should_replace_byte_in_nibbles_correctly() {
         let byte_index = 3;
         let replacement_byte = 170u8;
         let original_bytes = get_bytes_with_nibbles_from_index_zero();
         let original_byte = original_bytes[byte_index];
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         assert!(original_byte != replacement_byte);
-        let updated_nibbles= replace_byte_in_nibble_vec_at_byte_index(
+        let updated_nibbles= replace_byte_in_nibbles_at_byte_index(
             byte_index,
             nibbles,
             replacement_byte
@@ -521,14 +521,14 @@ mod tests {
     }
 
     #[test]
-    fn should_replace_byte_in_offset_nibble_vec_correctly() {
+    fn should_replace_byte_in_offset_nibbles_correctly() {
         let byte_index = 3;
         let replacement_byte = 170u8;
         let original_bytes = get_bytes_with_nibbles_from_index_one();
         let original_byte = original_bytes[byte_index];
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         assert!(original_byte != replacement_byte);
-        let updated_nibbles= replace_byte_in_nibble_vec_at_byte_index(
+        let updated_nibbles= replace_byte_in_nibbles_at_byte_index(
             byte_index,
             nibbles,
             replacement_byte
@@ -545,27 +545,27 @@ mod tests {
     }
 
     #[test]
-    fn should_convert_nibble_i_to_byte_i_in_nibble_vec_correctly() {
+    fn should_convert_nibble_i_to_byte_i_in_nibbles_correctly() {
         let nibble_index = 3;
         let expected_result = 1;
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let result = convert_nibble_index_to_byte_index(&nibbles, &nibble_index);
         assert!(result == expected_result);
     }
 
     #[test]
-    fn should_convert_nibble_i_to_byte_i_in_offset_nibble_vec_correctly() {
+    fn should_convert_nibble_i_to_byte_i_in_offset_nibbles_correctly() {
         let nibble_index = 3;
         let expected_result = 2;
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let result = convert_nibble_index_to_byte_index(&nibbles, &nibble_index);
         assert!(result == expected_result);
     }
 
     #[test]
-    fn should_replace_offset_nibble_at_nibble_index_in_nibble_vec_correctly() {
-        for nibble_index in 0..get_length_in_nibbles(&get_sample_nibble_vec()) {
-            let nibbles_before = get_sample_nibble_vec();
+    fn should_replace_offset_nibble_at_nibble_index_in_nibbles_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_nibbles()) {
+            let nibbles_before = get_sample_nibbles();
             let byte_index = convert_nibble_index_to_byte_index(
                 &nibbles_before,
                 &nibble_index
@@ -587,7 +587,7 @@ mod tests {
                     replacement_nibble.clone(),
                 )
             };
-            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+            let nibbles_after = replace_nibble_in_nibbles_at_nibble_index(
                 nibbles_before.clone(),
                 replacement_nibble.clone(),
                 nibble_index
@@ -614,9 +614,9 @@ mod tests {
     }
 
     #[test]
-    fn should_replace_offset_nibble_at_nibble_index_in_offset_nibble_vec_correctly() {
-        for nibble_index in 0..get_length_in_nibbles(&get_sample_offset_nibble_vec()) {
-            let nibbles_before = get_sample_offset_nibble_vec();
+    fn should_replace_offset_nibble_at_nibble_index_in_offset_nibbles_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_offset_nibbles()) {
+            let nibbles_before = get_sample_offset_nibbles();
             let byte_index = convert_nibble_index_to_byte_index(
                 &nibbles_before,
                 &nibble_index
@@ -638,7 +638,7 @@ mod tests {
                     replacement_nibble.clone(),
                 )
             };
-            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+            let nibbles_after = replace_nibble_in_nibbles_at_nibble_index(
                 nibbles_before.clone(),
                 replacement_nibble.clone(),
                 nibble_index
@@ -665,9 +665,9 @@ mod tests {
     }
 
     #[test]
-    fn should_replace_nibble_at_nibble_index_in_offset_nibble_vec_correctly() {
-        for nibble_index in 0..get_length_in_nibbles(&get_sample_offset_nibble_vec()) {
-            let nibbles_before = get_sample_offset_nibble_vec();
+    fn should_replace_nibble_at_nibble_index_in_offset_nibbles_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_offset_nibbles()) {
+            let nibbles_before = get_sample_offset_nibbles();
             let byte_index = convert_nibble_index_to_byte_index(
                 &nibbles_before,
                 &nibble_index
@@ -689,7 +689,7 @@ mod tests {
                     replacement_nibble.clone(),
                 )
             };
-            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+            let nibbles_after = replace_nibble_in_nibbles_at_nibble_index(
                 nibbles_before.clone(),
                 replacement_nibble.clone(),
                 nibble_index
@@ -717,9 +717,9 @@ mod tests {
     }
 
     #[test]
-    fn should_replace_nibble_at_nibble_index_in_nibble_vec_correctly() {
-        for nibble_index in 0..get_length_in_nibbles(&get_sample_nibble_vec()) {
-            let nibbles_before = get_sample_nibble_vec();
+    fn should_replace_nibble_at_nibble_index_in_nibbles_correctly() {
+        for nibble_index in 0..get_length_in_nibbles(&get_sample_nibbles()) {
+            let nibbles_before = get_sample_nibbles();
             let byte_index = convert_nibble_index_to_byte_index(
                 &nibbles_before,
                 &nibble_index
@@ -741,7 +741,7 @@ mod tests {
                     replacement_nibble.clone(),
                 )
             };
-            let nibbles_after = replace_nibble_in_nibble_vec_at_nibble_index(
+            let nibbles_after = replace_nibble_in_nibbles_at_nibble_index(
                 nibbles_before.clone(),
                 replacement_nibble.clone(),
                 nibble_index
@@ -769,32 +769,32 @@ mod tests {
     }
 
     #[test]
-    fn should_set_first_nibble_flag_in_nibble_vec_to_zero_correctly() {
+    fn should_set_first_nibble_flag_in_nibbles_to_zero_correctly() {
         let expected_result = 0;
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let nibble_flag_before = nibbles.first_nibble_index;
         assert!(nibble_flag_before != expected_result);
-        let updated_nibbles= set_first_index_in_nibble_vec_to_zero(nibbles);
+        let updated_nibbles= set_first_index_in_nibbles_to_zero(nibbles);
         let result = updated_nibbles.first_nibble_index;
         assert!(result == expected_result);
     }
 
     #[test]
-    fn should_set_first_nibble_flag_in_nibble_vec_to_one_correctly() {
+    fn should_set_first_nibble_flag_in_nibbles_to_one_correctly() {
         let expected_result = 1;
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let nibble_flag_before = nibbles.first_nibble_index;
         assert!(nibble_flag_before != expected_result);
-        let updated_nibbles= set_first_index_in_nibble_vec_to_one(nibbles);
+        let updated_nibbles= set_first_index_in_nibbles_to_one(nibbles);
         let result = updated_nibbles.first_nibble_index;
         assert!(result == expected_result);
     }
 
     #[test]
-    fn should_remove_first_byte_from_nibble_vec() {
-        let nibbles_before = get_sample_nibble_vec();
+    fn should_remove_first_byte_from_nibbles() {
+        let nibbles_before = get_sample_nibbles();
         let number_of_nibbles_before = get_length_in_nibbles(&nibbles_before);
-        let nibbles_after = remove_first_byte_from_nibble_vec(nibbles_before.clone())
+        let nibbles_after = remove_first_byte_from_nibbles(nibbles_before.clone())
             .unwrap();
         let number_of_nibbles_after = get_length_in_nibbles(&nibbles_after);
         assert!(number_of_nibbles_after == number_of_nibbles_before - 2);
@@ -802,10 +802,10 @@ mod tests {
     }
 
     #[test]
-    fn should_remove_first_byte_from_offest_nibble_vec() {
-        let nibbles_before = get_sample_offset_nibble_vec();
+    fn should_remove_first_byte_from_offest_nibbles() {
+        let nibbles_before = get_sample_offset_nibbles();
         let number_of_nibbles_before = get_length_in_nibbles(&nibbles_before);
-        let nibbles_after = remove_first_byte_from_nibble_vec(nibbles_before.clone())
+        let nibbles_after = remove_first_byte_from_nibbles(nibbles_before.clone())
             .unwrap();
         let number_of_nibbles_after = get_length_in_nibbles(&nibbles_after);
         assert!(number_of_nibbles_after == number_of_nibbles_before - 1);
@@ -819,7 +819,7 @@ mod tests {
         let vec = vec![8u8];
         assert!(vec.len() == 1);
         let nibble = get_nibbles_from_bytes(vec);
-        match remove_first_byte_from_nibble_vec(nibble) {
+        match remove_first_byte_from_nibbles(nibble) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Should be able to slice byte off 1 byte nibble!")
         }
@@ -840,8 +840,8 @@ mod tests {
     }
 
     #[test]
-    fn should_remove_first_nibble_from_nibble_vec() {
-        let nibbles = get_sample_nibble_vec();
+    fn should_remove_first_nibble_from_nibbles() {
+        let nibbles = get_sample_nibbles();
         let first_nibble_before = get_nibble_at_index(&nibbles, 0)
             .unwrap();
         let expected_first_nibble_after = get_nibble_at_index(&nibbles, 1)
@@ -868,8 +868,8 @@ mod tests {
     }
 
     #[test]
-    fn should_remove_first_nibble_from_offset_nibble_vec() {
-        let nibbles = get_sample_offset_nibble_vec();
+    fn should_remove_first_nibble_from_offset_nibbles() {
+        let nibbles = get_sample_offset_nibbles();
         let first_nibble_before = get_nibble_at_index(&nibbles, 0)
             .unwrap();
         let expected_first_nibble_after = get_nibble_at_index(&nibbles, 1)
@@ -909,7 +909,7 @@ mod tests {
 
     #[test]
     fn should_prefix_nibble_with_byte_correctly() {
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let mut prefix = vec![0xff];
         let mut expected_result = prefix.clone();
         let result = prefix_nibbles_with_byte(nibbles, prefix)
@@ -921,7 +921,7 @@ mod tests {
 
     #[test]
     fn should_prefix_offset_nibble_with_byte_correctly() {
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let mut prefix = vec![0xff];
         let mut expected_result = prefix.clone();
         let result = prefix_nibbles_with_byte(nibbles, prefix)
@@ -933,7 +933,7 @@ mod tests {
 
     #[test]
     fn should_convert_nibbles_to_bytes_correctly() {
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let expected_result = get_bytes_with_nibbles_from_index_zero();
         let result = convert_nibble_to_bytes(nibbles).unwrap();
         assert!(result == expected_result);
@@ -941,7 +941,7 @@ mod tests {
 
     #[test]
     fn should_convert_offset_nibbles_to_bytes_correctly() {
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let expected_result = get_bytes_with_nibbles_from_index_one();
         let result = convert_nibble_to_bytes(nibbles).unwrap();
         assert!(result == expected_result);
@@ -950,7 +950,7 @@ mod tests {
     #[test]
     fn should_slice_nibbles_at_byte_index_correctly() {
         let byte_index = 2;
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let expected_result = get_nibbles_from_bytes(
             vec![0x56, 0x78, 0x9a, 0xbc, 0xde]
         );
@@ -962,7 +962,7 @@ mod tests {
     #[test]
     fn should_slice_offset_nibbles_at_byte_index_correctly() {
         let byte_index = 2;
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let expected_result = get_nibbles_from_bytes(
             vec![0x45, 0x67, 0x89, 0xab, 0xcd]
         );
@@ -975,7 +975,7 @@ mod tests {
     fn should_slice_nibbles_at_even_nibble_index_correctly() {
         let nibble_index = 4;
         assert!(nibble_index % 2 == 0);
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let expected_result = get_nibbles_from_bytes(
             vec![0x56, 0x78, 0x9a, 0xbc, 0xde]
         );
@@ -989,7 +989,7 @@ mod tests {
     fn should_slice_nibbles_at_odd_nibble_index_correctly() {
         let nibble_index = 5;
         assert!(nibble_index % 2 != 0);
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let expected_result = get_nibbles_from_offset_bytes(
             vec![0x6u8, 0x78, 0x9a, 0xbc, 0xde]
         );
@@ -1003,7 +1003,7 @@ mod tests {
     fn should_slice_offset_nibbles_at_even_nibble_index_correctly() {
         let nibble_index = 4;
         assert!(nibble_index % 2 == 0);
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let expected_result = get_nibbles_from_offset_bytes(
             vec![0x5u8, 0x67, 0x89, 0xab, 0xcd]
         );
@@ -1017,7 +1017,7 @@ mod tests {
     fn should_slice_ofset_nibbles_at_odd_nibble_index_correctly() {
         let nibble_index = 5;
         assert!(nibble_index % 2 != 0);
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let expected_result = get_nibbles_from_bytes(
             vec![0x67, 0x89, 0xab, 0xcd]
         );
@@ -1029,7 +1029,7 @@ mod tests {
 
     #[test]
     fn should_return_empty_nibbles_when_slicing_with_index_greater_than_length() {
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let nibble_length = get_length_in_nibbles(&nibbles);
         let nibble_index = nibble_length + 1;
         assert!(nibble_length <= nibble_index);
@@ -1041,7 +1041,7 @@ mod tests {
     #[test]
     fn should_slice_nibbles_at_zero_nibble_index_correctly() {
         let nibble_index = 0;
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let result = slice_nibbles_at_nibble_index(
             nibbles.clone(),
             nibble_index
@@ -1052,7 +1052,7 @@ mod tests {
     #[test]
     fn should_slice_offset_nibbles_at_zero_nibble_index_correctly() {
         let nibble_index = 0;
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let result = slice_nibbles_at_nibble_index(
             nibbles.clone(),
             nibble_index
@@ -1063,7 +1063,7 @@ mod tests {
     #[test]
     fn should_slice_nibbles_at_nibble_index_of_one_correctly() {
         let nibble_index = 1;
-        let nibbles = get_sample_nibble_vec();
+        let nibbles = get_sample_nibbles();
         let result = slice_nibbles_at_nibble_index(
             nibbles.clone(),
             nibble_index
@@ -1077,7 +1077,7 @@ mod tests {
     #[test]
     fn should_slice_offset_nibbles_at_nibble_index_of_one_correctly() {
         let nibble_index = 1;
-        let nibbles = get_sample_offset_nibble_vec();
+        let nibbles = get_sample_offset_nibbles();
         let result = slice_nibbles_at_nibble_index(
             nibbles.clone(),
             nibble_index
