@@ -44,6 +44,32 @@ impl fmt::Debug for Nibbles {
     }
 }
 
+pub fn get_common_prefix_nibbles(
+    nibbles_a: Nibbles,
+    nibbles_b: Nibbles,
+) -> Result<(Nibbles, Nibbles, Nibbles)> {
+    let a_is_shorter = get_length_in_nibbles(&nibbles_a) <
+        get_length_in_nibbles(&nibbles_b);
+    let shorter_nibbles = if a_is_shorter {
+        nibbles_a.clone()
+    } else {
+        nibbles_b.clone()
+    };
+    let longer_nibbles = if a_is_shorter {
+        nibbles_b
+    } else { nibbles_a
+    };
+    let (common_prefix, a, b) = get_common_prefix_nibbles_recursively(
+        shorter_nibbles,
+        longer_nibbles,
+        EMPTY_NIBBLES
+    )?;
+    match a_is_shorter {
+        true => Ok((common_prefix, a, b)),
+        false => Ok((common_prefix, b, a))
+    }
+}
+
 fn get_common_prefix_nibbles_recursively(
     shorter_nibbles: Nibbles,
     longer_nibbles: Nibbles,
@@ -1556,5 +1582,48 @@ mod tests {
         assert!(res_1 == expected_res_1);
         assert!(res_2 == expected_res_2);
         assert!(res_prefix == EMPTY_NIBBLES);
+    }
+
+
+    #[test]
+    fn get_common_prefix_nibbles_should_work_if_first_nibbles_are_shorter() {
+        let prefix_bytes = vec![0x12, 0x34];
+        let shorter_bytes_suffix = vec![0x84, 0x9a];
+        let longer_bytes_suffix = vec![0x56, 0x78, 0x9a];
+        let shorter_bytes = vec![0x12, 0x34, 0x84, 0x9a];
+        let longer_bytes = vec![0x12, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_bytes(longer_bytes);
+        let shorter_nibbles = get_nibbles_from_bytes(shorter_bytes);
+        let expected_common_prefix_result = get_nibbles_from_bytes(prefix_bytes);
+        let expected_longer_result = get_nibbles_from_bytes(longer_bytes_suffix);
+        let expected_shorter_result = get_nibbles_from_bytes(shorter_bytes_suffix);
+        let (res_prefix, res_1, res_2) = get_common_prefix_nibbles(
+            shorter_nibbles,
+            longer_nibbles,
+        ).unwrap();
+        assert!(res_2 == expected_longer_result);
+        assert!(res_1 == expected_shorter_result);
+        assert!(res_prefix == expected_common_prefix_result);
+    }
+
+    #[test]
+    fn get_common_prefix_nibbles_should_work_if_second_nibbles_are_shorter() {
+        let prefix_bytes = vec![0x12, 0x34];
+        let shorter_bytes_suffix = vec![0x84, 0x9a];
+        let longer_bytes_suffix = vec![0x56, 0x78, 0x9a];
+        let shorter_bytes = vec![0x12, 0x34, 0x84, 0x9a];
+        let longer_bytes = vec![0x12, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_bytes(longer_bytes);
+        let shorter_nibbles = get_nibbles_from_bytes(shorter_bytes);
+        let expected_common_prefix_result = get_nibbles_from_bytes(prefix_bytes);
+        let expected_longer_result = get_nibbles_from_bytes(longer_bytes_suffix);
+        let expected_shorter_result = get_nibbles_from_bytes(shorter_bytes_suffix);
+        let (res_prefix, res_1, res_2) = get_common_prefix_nibbles(
+            longer_nibbles,
+            shorter_nibbles,
+        ).unwrap();
+        assert!(res_1 == expected_longer_result);
+        assert!(res_2 == expected_shorter_result);
+        assert!(res_prefix == expected_common_prefix_result);
     }
 }
