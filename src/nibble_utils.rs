@@ -129,7 +129,7 @@ fn remove_first_nibble(nibbles: Nibbles) -> Result<Nibbles> {
         0 => Ok(EMPTY_NIBBLES),
         1 => Ok(EMPTY_NIBBLES),
         _ => match nibbles.offset {
-            1 => remove_first_byte_from_nibbles(nibbles),
+            1 => Ok(remove_first_byte_from_nibbles(nibbles)),
             _ => replace_nibble_in_nibbles_at_nibble_index(
                 nibbles,
                 get_zero_nibble(),
@@ -143,17 +143,13 @@ pub fn get_zero_nibble() -> Nibbles {
     Nibbles { data: vec![ZERO_BYTE], offset: 1 }
 }
 
-fn remove_first_byte_from_nibbles(nibbles: Nibbles) -> Result<Nibbles> {
+fn remove_first_byte_from_nibbles(nibbles: Nibbles) -> Nibbles {
     match nibbles.data.len() > 1 {
-        true => Ok(
-            Nibbles {
-                offset: 0,
-                data: nibbles.data[1..].to_vec()
-            }
-        ),
-        false => Err(AppError::Custom(
-            "✘ Cannot remove byte, there's only 1 in the nibble vec!".to_string()
-        ))
+        false => EMPTY_NIBBLES,
+        true => Nibbles {
+            offset: 0,
+            data: nibbles.data[1..].to_vec()
+        }
     }
 }
 
@@ -884,8 +880,7 @@ mod tests {
     fn should_remove_first_byte_from_nibbles() {
         let nibbles_before = get_sample_nibbles();
         let number_of_nibbles_before = get_length_in_nibbles(&nibbles_before);
-        let nibbles_after = remove_first_byte_from_nibbles(nibbles_before.clone())
-            .unwrap();
+        let nibbles_after = remove_first_byte_from_nibbles(nibbles_before.clone());
         let number_of_nibbles_after = get_length_in_nibbles(&nibbles_after);
         assert!(number_of_nibbles_after == number_of_nibbles_before - 2);
         assert!(nibbles_after.data.len() == nibbles_before.data.len() - 1);
@@ -895,8 +890,7 @@ mod tests {
     fn should_remove_first_byte_from_offest_nibbles() {
         let nibbles_before = get_sample_offset_nibbles();
         let number_of_nibbles_before = get_length_in_nibbles(&nibbles_before);
-        let nibbles_after = remove_first_byte_from_nibbles(nibbles_before.clone())
-            .unwrap();
+        let nibbles_after = remove_first_byte_from_nibbles(nibbles_before.clone());
         let number_of_nibbles_after = get_length_in_nibbles(&nibbles_after);
         assert!(number_of_nibbles_after == number_of_nibbles_before - 1);
         assert!(nibbles_after.data.len() == nibbles_before.data.len() - 1);
@@ -904,15 +898,10 @@ mod tests {
     }
 
     #[test]
-    fn should_err_when_trying_to_remove_first_byte_of_one_byte_nibble() {
-        let expected_err = "✘ Cannot remove byte, there's only 1 in the nibble vec!".to_string();
-        let vec = vec![8u8];
-        assert!(vec.len() == 1);
-        let nibble = get_nibbles_from_bytes(vec);
-        match remove_first_byte_from_nibbles(nibble) {
-            Err(AppError::Custom(e)) => assert!(e == expected_err),
-            _ => panic!("Should be able to slice byte off 1 byte nibble!")
-        }
+    fn should_remove_first_byte_of_single_nibble_correctly() {
+        let nibble = Nibbles { data: vec![0xfu8], offset: 1 };
+        let result = remove_first_byte_from_nibbles(nibble);
+        assert!(result == EMPTY_NIBBLES);
     }
 
     #[test]
