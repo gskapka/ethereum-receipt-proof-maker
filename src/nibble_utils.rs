@@ -12,6 +12,7 @@ use crate::constants::{
     NUM_NIBBLES_IN_BYTE,
 };
 
+// TODO Move to types?
 const EMPTY_NIBBLES: Nibbles = Nibbles { data: Vec::new(), offset: 0 };
 
 #[derive(Clone, Eq)]
@@ -43,6 +44,29 @@ impl fmt::Debug for Nibbles {
     }
 }
 
+fn get_common_prefix_nibbles_recursively(
+    shorter_nibbles: Nibbles,
+    longer_nibbles: Nibbles,
+    common_prefix: Nibbles,
+) -> Result<(Nibbles, Nibbles, Nibbles)> {
+    match get_length_in_nibbles(&shorter_nibbles) {
+        0 => Ok((common_prefix, shorter_nibbles, longer_nibbles)),
+        _ => {
+            let first_nibble = get_nibbles_from_bytes(
+                vec![get_nibble_at_index(&shorter_nibbles, 0)?]
+            );
+            match get_nibble_at_index(&shorter_nibbles, 0)? == get_nibble_at_index(&longer_nibbles, 0)? {
+                false => Ok((common_prefix, shorter_nibbles, longer_nibbles)),
+                true => get_common_prefix_nibbles_recursively(
+                    remove_first_nibble(shorter_nibbles)?,
+                    remove_first_nibble(longer_nibbles)?,
+                    push_nibble_into_nibbles(first_nibble, common_prefix)?
+                )
+            }
+        }
+    }
+}
+
 fn get_appending_byte_from_nibble(nibble: Nibbles) -> Result <u8> {
     Ok(nibble.data[0] << NUM_BITS_IN_NIBBLE)
 }
@@ -62,7 +86,9 @@ fn push_nibble_into_nibbles(
     nibble_to_append: Nibbles,
     nibbles: Nibbles,
 ) -> Result<Nibbles> {
-    if nibbles == EMPTY_NIBBLES { return Ok(nibble_to_append) }
+    if nibbles == EMPTY_NIBBLES {
+        return Ok(set_nibble_offset_to_one(nibble_to_append))
+    };
     if nibble_to_append == EMPTY_NIBBLES { return Ok(nibbles) }
     match nibbles.offset {
         0 => get_appending_byte_from_nibble(nibble_to_append)
@@ -590,7 +616,7 @@ mod tests {
         let original_byte = original_bytes[byte_index];
         let nibbles = get_sample_nibbles();
         assert!(original_byte != replacement_byte);
-        let updated_nibbles= replace_byte_in_nibbles_at_byte_index(
+        let updated_nibbles = replace_byte_in_nibbles_at_byte_index(
             byte_index,
             nibbles,
             replacement_byte
@@ -614,7 +640,7 @@ mod tests {
         let original_byte = original_bytes[byte_index];
         let nibbles = get_sample_offset_nibbles();
         assert!(original_byte != replacement_byte);
-        let updated_nibbles= replace_byte_in_nibbles_at_byte_index(
+        let updated_nibbles = replace_byte_in_nibbles_at_byte_index(
             byte_index,
             nibbles,
             replacement_byte
@@ -860,7 +886,7 @@ mod tests {
         let nibbles = get_sample_offset_nibbles();
         let nibble_flag_before = nibbles.offset;
         assert!(nibble_flag_before != expected_result);
-        let updated_nibbles= set_nibble_offset_to_zero(nibbles);
+        let updated_nibbles = set_nibble_offset_to_zero(nibbles);
         let result = updated_nibbles.offset;
         assert!(result == expected_result);
     }
@@ -871,7 +897,7 @@ mod tests {
         let nibbles = get_sample_nibbles();
         let nibble_flag_before = nibbles.offset;
         assert!(nibble_flag_before != expected_result);
-        let updated_nibbles= set_nibble_offset_to_one(nibbles);
+        let updated_nibbles = set_nibble_offset_to_one(nibbles);
         let result = updated_nibbles.offset;
         assert!(result == expected_result);
     }
@@ -1301,8 +1327,6 @@ mod tests {
         };
         let result = push_nibble_into_nibbles(nibble, nibbles)
             .unwrap();
-        println!("\nresult data: {:?}\n", result.data);
-        println!("\nresult offset: {:?}\n", result.offset);
         assert!(result == expected_result);
     }
 
@@ -1337,5 +1361,200 @@ mod tests {
     fn should_remove_last_byte_from_empty_nibble_correctly() {
         let result = remove_last_byte_from_nibbles(EMPTY_NIBBLES);
         assert!(result == EMPTY_NIBBLES);
+    }
+
+    #[test]
+    fn should_get_common_prefix_nibbles_recursively_correctly_when_both_not_offset() {
+        let prefix_bytes = vec![0x12, 0x34];
+        let shorter_bytes_suffix = vec![0x84, 0x9a];
+        let longer_bytes_suffix = vec![0x56, 0x78, 0x9a];
+        let shorter_bytes = vec![0x12, 0x34, 0x84, 0x9a];
+        let longer_bytes = vec![0x12, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_bytes(longer_bytes);
+        let shorter_nibbles = get_nibbles_from_bytes(shorter_bytes);
+        let expected_common_prefix_result = get_nibbles_from_bytes(prefix_bytes);
+        let expected_longer_result = get_nibbles_from_bytes(longer_bytes_suffix);
+        let expected_shorter_result = get_nibbles_from_bytes(shorter_bytes_suffix);
+        let (res_prefix, res_shorter, res_longer) = get_common_prefix_nibbles_recursively(
+            shorter_nibbles,
+            longer_nibbles,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_longer == expected_longer_result);
+        assert!(res_shorter == expected_shorter_result);
+        assert!(res_prefix == expected_common_prefix_result);
+    }
+
+    #[test]
+    fn should_get_common_prefix_nibbles_recursively_correctly_when_both_offset() {
+        let prefix_bytes = vec![0x2u8, 0x34];
+        let shorter_bytes_suffix = vec![0x84, 0x9a];
+        let longer_bytes_suffix = vec![0x56, 0x78, 0x9a];
+        let shorter_bytes = vec![0x2u8, 0x34, 0x84, 0x9a];
+        let longer_bytes = vec![0x2u8, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_offset_bytes(longer_bytes);
+        let shorter_nibbles = get_nibbles_from_offset_bytes(shorter_bytes);
+        let expected_common_prefix_result = get_nibbles_from_offset_bytes(prefix_bytes);
+        let expected_longer_result = get_nibbles_from_bytes(longer_bytes_suffix);
+        let expected_shorter_result = get_nibbles_from_bytes(shorter_bytes_suffix);
+        let (res_prefix, res_shorter, res_longer) = get_common_prefix_nibbles_recursively(
+            shorter_nibbles,
+            longer_nibbles,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_longer == expected_longer_result);
+        assert!(res_shorter == expected_shorter_result);
+        assert!(res_prefix == expected_common_prefix_result);
+    }
+
+    #[test]
+    fn should_get_common_prefix_nibbles_recursively_correctly_when_identical_and_both_offset() {
+        let longer_bytes = vec![0x2u8, 0x34, 0x56, 0x78, 0x9a];
+        let shorter_bytes = vec![0x2u8, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_offset_bytes(longer_bytes.clone());
+        let shorter_nibbles = get_nibbles_from_offset_bytes(shorter_bytes.clone());
+        let expected_common_prefix_result = get_nibbles_from_offset_bytes(longer_bytes.clone());
+        let (res_prefix, res_shorter, res_longer) = get_common_prefix_nibbles_recursively(
+            shorter_nibbles,
+            longer_nibbles,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_longer == EMPTY_NIBBLES);
+        assert!(res_shorter == EMPTY_NIBBLES);
+        assert!(res_prefix == expected_common_prefix_result);
+    }
+
+    #[test]
+    fn should_get_common_prefix_nibbles_recursively_correctly_when_identical_and_neither_offset() {
+        let longer_bytes = vec![0x12, 0x34, 0x56, 0x78, 0x9a];
+        let shorter_bytes = vec![0x12, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_bytes(longer_bytes.clone());
+        let shorter_nibbles = get_nibbles_from_bytes(shorter_bytes.clone());
+        let expected_common_prefix_result = get_nibbles_from_bytes(longer_bytes.clone());
+        let (res_prefix, res_shorter, res_longer) = get_common_prefix_nibbles_recursively(
+            shorter_nibbles,
+            longer_nibbles,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_longer == EMPTY_NIBBLES);
+        assert!(res_shorter == EMPTY_NIBBLES);
+        assert!(res_prefix == expected_common_prefix_result);
+    }
+
+    #[test]
+    fn should_get_common_prefix_nibbles_recursively_correctly_when_one_offset() {
+        let prefix_bytes = vec![0x12, 0x34];
+        let shorter_bytes_suffix = vec![0x84, 0x9a];
+        let shorter_bytes = vec![0x12, 0x34, 0x84, 0x9a];
+        let longer_bytes_suffix = vec![0x5u8, 0x67, 0x89];
+        let longer_bytes = vec![0x1u8, 0x23, 0x45, 0x67, 0x89];
+        let longer_nibbles = get_nibbles_from_offset_bytes(longer_bytes);
+        let shorter_nibbles = get_nibbles_from_bytes(shorter_bytes);
+        let expected_common_prefix_result = get_nibbles_from_bytes(prefix_bytes);
+        let expected_longer_result = get_nibbles_from_offset_bytes(longer_bytes_suffix);
+        let expected_shorter_result = get_nibbles_from_bytes(shorter_bytes_suffix);
+        let (res_prefix, res_shorter, res_longer) = get_common_prefix_nibbles_recursively(
+            shorter_nibbles,
+            longer_nibbles,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_longer == expected_longer_result);
+        assert!(res_shorter == expected_shorter_result);
+        assert!(res_prefix == expected_common_prefix_result);
+
+    }
+
+    #[test]
+    fn should_get_common_prefix_correctly_when_one_is_substring_of_other() {
+        let prefix_bytes = vec![0x12, 0x34, 0x56];
+        let longer_bytes_suffix = vec![0x78, 0x9a];
+        let shorter_bytes = vec![0x12, 0x34, 0x56];
+        let longer_bytes = vec![0x12, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_bytes(longer_bytes.clone());
+        let shorter_nibbles = get_nibbles_from_bytes(shorter_bytes.clone());
+        let expected_common_prefix_result = get_nibbles_from_bytes(prefix_bytes);
+        let expected_longer_result = get_nibbles_from_bytes(longer_bytes_suffix);
+        let (res_prefix, res_shorter, res_longer) = get_common_prefix_nibbles_recursively(
+            shorter_nibbles,
+            longer_nibbles,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_shorter == EMPTY_NIBBLES);
+        assert!(res_longer == expected_longer_result);
+        assert!(res_prefix == expected_common_prefix_result);
+    }
+
+    #[test]
+    fn should_get_common_prefix_correctly_when_one_is_substring_of_other_and_offset() {
+        let prefix_bytes = vec![0x2u8, 0x34, 0x56];
+        let longer_bytes_suffix = vec![0x78, 0x9a];
+        let shorter_bytes = vec![0x2u8, 0x34, 0x56];
+        let longer_bytes = vec![0x2u8, 0x34, 0x56, 0x78, 0x9a];
+        let longer_nibbles = get_nibbles_from_offset_bytes(longer_bytes.clone());
+        let shorter_nibbles = get_nibbles_from_offset_bytes(shorter_bytes.clone());
+        let expected_common_prefix_result = get_nibbles_from_offset_bytes(prefix_bytes);
+        let expected_longer_result = get_nibbles_from_bytes(longer_bytes_suffix);
+        let (res_prefix, res_shorter, res_longer) = get_common_prefix_nibbles_recursively(
+            shorter_nibbles,
+            longer_nibbles,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_shorter == EMPTY_NIBBLES);
+        assert!(res_longer == expected_longer_result);
+        assert!(res_prefix == expected_common_prefix_result);
+    }
+
+    #[test]
+    fn should_get_common_prefix_correctly_when_there_is_no_common_prefix_and_neither_offset() {
+        let bytes_1 = vec![0xf2, 0x34, 0x56, 0x78, 0x9a];
+        let bytes_2 = vec![0xba, 0x34, 0x56, 0x78, 0x9a];
+        let nibbles_1 = get_nibbles_from_bytes(bytes_1);
+        let nibbles_2 = get_nibbles_from_bytes(bytes_2);
+        let expected_res_1 = nibbles_1.clone();
+        let expected_res_2 = nibbles_2.clone();
+        let (res_prefix, res_1, res_2) = get_common_prefix_nibbles_recursively(
+            nibbles_1,
+            nibbles_2,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_1 == expected_res_1);
+        assert!(res_2 == expected_res_2);
+        assert!(res_prefix == EMPTY_NIBBLES);
+    }
+
+    #[test]
+    fn should_get_common_prefix_correctly_when_there_is_no_common_prefix_and_both_offset() {
+        let bytes_1 = vec![0x2u8, 0x34, 0x56, 0x78, 0x9a];
+        let bytes_2 = vec![0xau8, 0x34, 0x56, 0x78, 0x9a];
+        let nibbles_1 = get_nibbles_from_offset_bytes(bytes_1);
+        let nibbles_2 = get_nibbles_from_offset_bytes(bytes_2);
+        let expected_res_1 = nibbles_1.clone();
+        let expected_res_2 = nibbles_2.clone();
+        let (res_prefix, res_1, res_2) = get_common_prefix_nibbles_recursively(
+            nibbles_1,
+            nibbles_2,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_1 == expected_res_1);
+        assert!(res_2 == expected_res_2);
+        assert!(res_prefix == EMPTY_NIBBLES);
+    }
+
+    #[test]
+    fn should_get_common_prefix_correctly_when_there_is_no_common_prefix_and_one_offset() {
+        let bytes_1 = vec![0xa2, 0x34, 0x56, 0x78, 0x9a];
+        let bytes_2 = vec![0xfu8, 0x34, 0x56, 0x78, 0x9a];
+        let nibbles_1 = get_nibbles_from_bytes(bytes_1);
+        let nibbles_2 = get_nibbles_from_offset_bytes(bytes_2);
+        let expected_res_1 = nibbles_1.clone();
+        let expected_res_2 = nibbles_2.clone();
+        let (res_prefix, res_1, res_2) = get_common_prefix_nibbles_recursively(
+            nibbles_1,
+            nibbles_2,
+            EMPTY_NIBBLES,
+        ).unwrap();
+        assert!(res_1 == expected_res_1);
+        assert!(res_2 == expected_res_2);
+        assert!(res_prefix == EMPTY_NIBBLES);
     }
 }
