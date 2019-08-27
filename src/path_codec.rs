@@ -11,9 +11,9 @@ use crate::nibble_utils::{
     get_nibbles_from_bytes,
     convert_nibble_to_bytes,
     prefix_nibbles_with_byte,
+    set_nibble_offset_to_one,
+    set_nibble_offset_to_zero,
     get_nibbles_from_offset_bytes,
-    set_first_index_in_nibbles_to_one,
-    set_first_index_in_nibbles_to_zero,
     replace_nibble_in_nibbles_at_nibble_index,
 };
 
@@ -47,7 +47,7 @@ fn encode_odd_length_path_from_nibbles(
     prefix_nibble: Nibbles
 ) -> Result<Bytes> {
     replace_nibble_in_nibbles_at_nibble_index(
-        set_first_index_in_nibbles_to_zero(nibbles),
+        set_nibble_offset_to_zero(nibbles),
         prefix_nibble,
         0
     )
@@ -95,7 +95,7 @@ fn decode_odd_length_path_to_nibbles(path: Bytes) -> Result<Nibbles> {
         get_zero_nibble(),
         0
     )
-        .map(set_first_index_in_nibbles_to_one)
+        .map(set_nibble_offset_to_one)
 }
 
 pub fn decode_path_to_nibbles_and_node_type(
