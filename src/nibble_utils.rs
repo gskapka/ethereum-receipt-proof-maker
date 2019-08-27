@@ -12,6 +12,8 @@ use crate::constants::{
     HIGH_NIBBLE_MASK,
 };
 
+const EMPTY_NIBBLES: Nibbles = Nibbles { data: Vec::new(), first_nibble_index: 0 };
+
 #[derive(Clone)]
 pub struct Nibbles {
     pub data: Bytes,
@@ -27,13 +29,16 @@ impl PartialEq for Nibbles {
 
 impl fmt::Debug for Nibbles {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for i in 0..get_length_in_nibbles(&self) {
-            write!(
-                f,
-                "0x{:01x} ",
-                get_nibble_at_index(&self, i).unwrap()
-            )?;
-        }
+        match self == &EMPTY_NIBBLES {
+            true => write!(f, "Nibble array is empty!")?,
+            false => for i in 0..get_length_in_nibbles(&self) {
+                write!(
+                    f,
+                    "0x{:01x} ",
+                    get_nibble_at_index(&self, i).unwrap()
+                )?;
+            }
+        };
         Ok(())
     }
 }
