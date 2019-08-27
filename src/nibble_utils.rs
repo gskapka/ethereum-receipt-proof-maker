@@ -18,6 +18,13 @@ pub struct Nibbles {
     pub first_nibble_index: usize,
 }
 
+impl PartialEq for Nibbles {
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data &&
+        self.first_nibble_index == other.first_nibble_index
+    }
+}
+
 impl fmt::Debug for Nibbles {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for i in 0..get_length_in_nibbles(&self) {
@@ -956,10 +963,7 @@ mod tests {
         );
         let result = slice_nibbles_at_byte_index(nibbles, byte_index)
             .unwrap();
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -971,10 +975,7 @@ mod tests {
         );
         let result = slice_nibbles_at_byte_index(nibbles, byte_index)
             .unwrap();
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -988,10 +989,7 @@ mod tests {
         let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -1005,10 +1003,7 @@ mod tests {
         let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -1022,10 +1017,7 @@ mod tests {
         let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -1039,10 +1031,7 @@ mod tests {
         let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -1069,8 +1058,7 @@ mod tests {
             nibbles.clone(),
             nibble_index
         ).unwrap();
-        assert!(result.data == nibbles.data);
-        assert!(result.first_nibble_index == nibbles.first_nibble_index);
+        assert!(nibbles == result);
     }
 
     #[test]
@@ -1081,8 +1069,7 @@ mod tests {
             nibbles.clone(),
             nibble_index
         ).unwrap();
-        assert!(result.data == nibbles.data);
-        assert!(result.first_nibble_index == nibbles.first_nibble_index);
+        assert!(nibbles == result);
     }
 
     #[test]
@@ -1096,10 +1083,7 @@ mod tests {
         let expected_result = get_nibbles_from_offset_bytes(
             vec![0x2u8, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde]
         );
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -1113,10 +1097,6 @@ mod tests {
         let expected_result = get_nibbles_from_bytes(
             vec![0x23, 0x45, 0x67, 0x89, 0xab, 0xcd]
         );
-        assert!(result.data == expected_result.data);
-        assert!(
-            result.first_nibble_index == expected_result.first_nibble_index
-        );
-
+        assert!(result == expected_result);
     }
 }
