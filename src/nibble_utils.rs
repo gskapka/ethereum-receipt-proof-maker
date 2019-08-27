@@ -58,6 +58,25 @@ fn append_byte_to_nibble_data(nibbles: Nibbles, byte: Bytes) -> Result<Bytes> {
     }
 }
 
+fn push_nibble_into_nibbles(
+    nibble_to_append: Nibbles,
+    nibbles: Nibbles,
+) -> Result<Nibbles> {
+    if nibbles == EMPTY_NIBBLES { return Ok(nibble_to_append) }
+    if nibble_to_append == EMPTY_NIBBLES { return Ok(nibbles) }
+    match nibbles.offset {
+        0 => get_appending_byte_from_nibble(nibble_to_append)
+            .and_then(|byte| append_byte_to_nibble_data(nibbles, vec![byte]))
+            .map(shift_bits_in_vec_right_one_nibble)
+            .map(get_nibbles_from_offset_bytes)
+            .map(remove_last_byte_from_nibbles),
+        _ => get_appending_byte_from_nibble(nibble_to_append)
+            .and_then(|byte| append_byte_to_nibble_data(nibbles, vec![byte]))
+            .map(shift_bits_in_vec_left_one_nibble)
+            .map(get_nibbles_from_bytes)
+            .map(remove_last_byte_from_nibbles)
+    }
+}
 
 fn shift_bits_in_vec_right_one_nibble(bytes: Bytes) -> Bytes {
     match bytes.len() {
@@ -1210,7 +1229,6 @@ mod tests {
         let result = get_appending_byte_from_nibble(nibble)
             .unwrap();
         let expected_result = 0xb0;
-        println!("\nResult: {:?}\n", hex::encode(&[result]));
         assert!(result == expected_result)
     }
 
@@ -1233,6 +1251,60 @@ mod tests {
         expected_result.push(byte[0]);
         let result = append_byte_to_nibble_data(nibbles, byte)
             .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_push_nibble_into_nibbles_correctly() {
+        let nibbles = get_sample_nibbles();
+        let nibble = Nibbles { data: vec![0xfu8], offset: 1 };
+        let expected_result = Nibbles {
+            data: vec![0x01u8, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef],
+            offset: 1
+        };
+        let result = push_nibble_into_nibbles(nibble, nibbles)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_push_nibble_into_nibbles_of_length_one_correctly() {
+        let nibbles = Nibbles { data: vec![0xau8], offset: 1 };
+        let nibble = Nibbles { data: vec![0xfu8], offset: 1 };
+        let expected_result = Nibbles {
+            data: vec![0xaf],
+            offset: 0
+        };
+        let result = push_nibble_into_nibbles(nibble, nibbles)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_push_nibble_into_offset_nibbles_correctly() {
+        let nibbles = get_sample_offset_nibbles();
+        let nibble = Nibbles { data: vec![0xfu8], offset: 1 };
+        let expected_result = Nibbles {
+            data: vec![0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xdf],
+            offset: 0
+        };
+        let result = push_nibble_into_nibbles(nibble, nibbles)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_push_nibble_into_empty_nibbles_correctly() {
+        let nibbles = EMPTY_NIBBLES;
+        let nibble = Nibbles { data: vec![0xfu8], offset: 1 };
+        let expected_result = Nibbles {
+            data: vec![0xfu8],
+            offset: 1
+        };
+        let result = push_nibble_into_nibbles(nibble, nibbles)
+            .unwrap();
+        println!("\nresult data: {:?}\n", result.data);
+        println!("\nresult offset: {:?}\n", result.offset);
         assert!(result == expected_result);
     }
 }
