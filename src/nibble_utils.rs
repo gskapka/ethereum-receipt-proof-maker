@@ -14,7 +14,7 @@ use crate::constants::{
 
 const EMPTY_NIBBLES: Nibbles = Nibbles { data: Vec::new(), offset: 0 };
 
-#[derive(Clone)]
+#[derive(Clone, Eq)]
 pub struct Nibbles {
     pub data: Bytes,
     pub offset: usize,
@@ -46,6 +46,18 @@ impl fmt::Debug for Nibbles {
 fn get_appending_byte_from_nibble(nibble: Nibbles) -> Result <u8> {
     Ok(nibble.data[0] << NUM_BITS_IN_NIBBLE)
 }
+
+fn append_byte_to_nibble_data(nibbles: Nibbles, byte: Bytes) -> Result<Bytes> {
+    match nibbles == EMPTY_NIBBLES {
+        true => Ok(byte),
+        false => {
+            let mut nibble_data = nibbles.data;
+            nibble_data.push(byte[0]);
+            Ok(nibble_data)
+        }
+    }
+}
+
 
 fn shift_bits_in_vec_right_one_nibble(bytes: Bytes) -> Bytes {
     match bytes.len() {
@@ -1200,5 +1212,27 @@ mod tests {
         let expected_result = 0xb0;
         println!("\nResult: {:?}\n", hex::encode(&[result]));
         assert!(result == expected_result)
+    }
+
+    #[test]
+    fn should_append_byte_to_nibble_data_correctly() {
+        let byte = vec![0xff];
+        let nibbles = get_sample_nibbles();
+        let mut expected_result = nibbles.clone().data;
+        expected_result.push(byte[0]);
+        let result = append_byte_to_nibble_data(nibbles, byte)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_append_byte_to_empty_nibble_data_correctly() {
+        let byte = vec![0xff];
+        let nibbles = EMPTY_NIBBLES;
+        let mut expected_result = nibbles.clone().data;
+        expected_result.push(byte[0]);
+        let result = append_byte_to_nibble_data(nibbles, byte)
+            .unwrap();
+        assert!(result == expected_result);
     }
 }
