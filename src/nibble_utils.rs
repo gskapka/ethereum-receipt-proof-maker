@@ -7,9 +7,9 @@ use crate::types::{
 };
 use crate::constants::{
     ZERO_BYTE,
-    BITS_IN_NIBBLE,
-    NIBBLES_IN_BYTE,
     HIGH_NIBBLE_MASK,
+    NUM_BITS_IN_NIBBLE,
+    NUM_NIBBLES_IN_BYTE,
 };
 
 const EMPTY_NIBBLES: Nibbles = Nibbles { data: Vec::new(), first_nibble_index: 0 };
@@ -118,7 +118,7 @@ fn convert_nibble_index_to_byte_index(
     nibbles: &Nibbles,
     nibble_index: &usize
 ) -> usize {
-    (nibbles.first_nibble_index + nibble_index) / NIBBLES_IN_BYTE
+    (nibbles.first_nibble_index + nibble_index) / NUM_NIBBLES_IN_BYTE
 }
 
 fn replace_byte_in_nibbles_at_byte_index(
@@ -213,11 +213,11 @@ fn mask_higher_nibble(byte: Byte) -> Byte {
 }
 
 fn shift_nibble_right(byte: Byte) -> Byte {
-    byte >> BITS_IN_NIBBLE
+    byte >> NUM_BITS_IN_NIBBLE
 }
 
 fn shift_nibble_left(byte: Byte) -> Byte {
-    byte << BITS_IN_NIBBLE
+    byte << NUM_BITS_IN_NIBBLE
 }
 
 fn get_low_nibble_from_byte(nibbles: &Nibbles, nibble_index: &usize) -> Result<Byte> {
