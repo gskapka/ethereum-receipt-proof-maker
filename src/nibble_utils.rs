@@ -44,20 +44,17 @@ impl fmt::Debug for Nibbles {
 }
 
 fn remove_first_nibble(nibbles: Nibbles) -> Result<Nibbles> {
-    match get_length_in_nibbles(&nibbles) > 1 {
-        true => match nibbles.first_nibble_index {
+    match get_length_in_nibbles(&nibbles) {
+        0 => Ok(EMPTY_NIBBLES),
+        1 => Ok(EMPTY_NIBBLES),
+        _ => match nibbles.first_nibble_index {
             1 => remove_first_byte_from_nibble_vec(nibbles),
             _ => replace_nibble_in_nibble_vec_at_nibble_index(
                 nibbles,
                 get_zero_nibble(),
                 0
             ).map(set_first_index_in_nibble_vec_to_one),
-        },
-        false => replace_nibble_in_nibble_vec_at_nibble_index(
-            nibbles,
-            get_zero_nibble(),
-            0
-        )
+        }
     }
 }
 
@@ -907,10 +904,7 @@ mod tests {
         let nibble = get_nibbles_from_offset_bytes(vec![byte]);
         let result = remove_first_nibble(nibble)
             .unwrap();
-        let nibble_length = get_length_in_nibbles(&result);
-        assert!(result.data[0] == expected_byte);
-        assert!(result.data.len() == expected_length);
-        assert!(nibble_length == expected_nibble_length);
+        assert!(result == EMPTY_NIBBLES);
     }
 
     #[test]
@@ -1092,5 +1086,11 @@ mod tests {
             vec![0x23, 0x45, 0x67, 0x89, 0xab, 0xcd]
         );
         assert!(result == expected_result);
+    }
+
+    #[test]
+    fn empty_nibbles_should_have_nibble_length_of_zero() {
+        let length_in_nibbles = get_length_in_nibbles(&EMPTY_NIBBLES);
+        assert!(length_in_nibbles == 0)
     }
 }
