@@ -255,38 +255,32 @@ fn slice_nibbles_at_byte_index(
     Ok(get_nibbles_from_bytes(nibbles.data[byte_index..].to_vec()))
 }
 
-pub fn slice_nibbles_at_nibble_index( // TODO: Test
+pub fn slice_nibbles_at_nibble_index(
     nibbles: Nibbles,
     nibble_index: usize
 ) -> Result<Nibbles> {
-    match get_length_in_nibbles(&nibbles) <= nibble_index {
-        true => Err(AppError::Custom(
-            format!(
-                "✘ Not enough nibbles to slice at index {}",
-                nibble_index
-            )
-        )),
-        false => match nibble_index {
-            0 => Ok(nibbles),
-            1 => remove_first_nibble(nibbles),
-            _ => {
-                let first_nibble_index = nibbles.first_nibble_index;
-                let byte_index = convert_nibble_index_to_byte_index(
-                    &nibbles,
-                    &nibble_index
-                );
-                let sliced_nibbles = slice_nibbles_at_byte_index(
-                    nibbles,
-                    byte_index
-                )?;
-                match (nibble_index + first_nibble_index) % 2 == 0 {
-                    true => Ok(sliced_nibbles),
-                    false => replace_nibble_in_nibble_vec_at_nibble_index(
-                        sliced_nibbles,
-                        get_zero_nibble(),
-                        0
-                    ).map(set_first_index_in_nibble_vec_to_one)
-                }
+    match nibble_index {
+        // NOTE: The following pattern guard is ∵ we compare to a runtime var!
+        x if (x >= get_length_in_nibbles(&nibbles)) => Ok(EMPTY_NIBBLES),
+        0 => Ok(nibbles),
+        1 => remove_first_nibble(nibbles),
+        _ => {
+            let first_nibble_index = nibbles.first_nibble_index;
+            let byte_index = convert_nibble_index_to_byte_index(
+                &nibbles,
+                &nibble_index
+            );
+            let sliced_nibbles = slice_nibbles_at_byte_index(
+                nibbles,
+                byte_index
+            )?;
+            match (nibble_index + first_nibble_index) % 2 == 0 {
+                true => Ok(sliced_nibbles),
+                false => replace_nibble_in_nibble_vec_at_nibble_index(
+                    sliced_nibbles,
+                    get_zero_nibble(),
+                    0
+                ).map(set_first_index_in_nibble_vec_to_one)
             }
         }
     }
@@ -1040,19 +1034,14 @@ mod tests {
     }
 
     #[test]
-    fn should_fail_to_slice_nibbles_if_nibble_index_too_great() {
+    fn should_return_empty_nibbles_when_slicing_with_index_greater_than_length() {
         let nibbles = get_sample_nibble_vec();
         let nibble_length = get_length_in_nibbles(&nibbles);
         let nibble_index = nibble_length + 1;
-        let expected_error = format!(
-            "✘ Not enough nibbles to slice at index {}",
-            nibble_index
-        );
         assert!(nibble_length <= nibble_index);
-        match slice_nibbles_at_nibble_index(nibbles, nibble_index) {
-            Err(AppError::Custom(e)) => assert!(e == expected_error),
-            _ => panic!("Did not recieve expected error!")
-        }
+        let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
+            .unwrap();
+        assert!(result == EMPTY_NIBBLES)
     }
 
     #[test]
