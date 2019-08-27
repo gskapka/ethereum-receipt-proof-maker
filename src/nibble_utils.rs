@@ -43,6 +43,10 @@ impl fmt::Debug for Nibbles {
     }
 }
 
+fn get_appending_byte_from_nibble(nibble: Nibbles) -> Result <u8> {
+    Ok(nibble.data[0] << NUM_BITS_IN_NIBBLE)
+}
+
 fn shift_bits_in_vec_right_one_nibble(bytes: Bytes) -> Bytes {
     match bytes.len() {
         0 => vec![ZERO_BYTE],
@@ -1186,5 +1190,15 @@ mod tests {
         let expected_result = vec![ZERO_BYTE];
         let result = shift_bits_in_vec_left_one_nibble(byte);
         assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_appending_byte_from_nibble_correctly() {
+        let nibble = Nibbles { data: vec![0xab], offset: 1};
+        let result = get_appending_byte_from_nibble(nibble)
+            .unwrap();
+        let expected_result = 0xb0;
+        println!("\nResult: {:?}\n", hex::encode(&[result]));
+        assert!(result == expected_result)
     }
 }
