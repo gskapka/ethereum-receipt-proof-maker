@@ -155,7 +155,16 @@ fn remove_first_byte_from_nibbles(nibbles: Nibbles) -> Result<Nibbles> {
             "✘ Cannot remove byte, there's only 1 in the nibble vec!".to_string()
         ))
     }
+}
 
+fn remove_last_byte_from_nibbles(nibbles: Nibbles) -> Nibbles {
+    match nibbles.data.len() > 1 {
+        false => EMPTY_NIBBLES,
+        true => Nibbles {
+            offset: nibbles.offset,
+            data: nibbles.data[..nibbles.data.len() - 1].to_vec()
+        }
+    }
 }
 
 pub fn set_nibble_offset_to_zero(nibbles: Nibbles) -> Nibbles {
@@ -1306,5 +1315,38 @@ mod tests {
         println!("\nresult data: {:?}\n", result.data);
         println!("\nresult offset: {:?}\n", result.offset);
         assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_remove_last_byte_from_nibbles_correctly() {
+        let nibbles = get_sample_nibbles();
+        let expected_result = get_nibbles_from_bytes(
+            vec![0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc]
+        );
+        let result = remove_last_byte_from_nibbles(nibbles);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_remove_last_byte_from_offset_nibbles_correctly() {
+        let nibbles = get_sample_offset_nibbles();
+        let expected_result = get_nibbles_from_offset_bytes(
+            vec![0x01u8, 0x23, 0x45, 0x67, 0x89, 0xab]
+        );
+        let result = remove_last_byte_from_nibbles(nibbles);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_remove_last_byte_from_single_nibble_correctly() {
+        let nibble = Nibbles { data: vec![0xfu8], offset: 1 };
+        let result = remove_last_byte_from_nibbles(nibble);
+        assert!(result == EMPTY_NIBBLES);
+    }
+
+    #[test]
+    fn should_remove_last_byte_from_empty_nibble_correctly() {
+        let result = remove_last_byte_from_nibbles(EMPTY_NIBBLES);
+        assert!(result == EMPTY_NIBBLES);
     }
 }
