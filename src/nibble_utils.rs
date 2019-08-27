@@ -43,6 +43,52 @@ impl fmt::Debug for Nibbles {
     }
 }
 
+fn shift_bits_in_vec_right_one_nibble(bytes: Bytes) -> Bytes {
+    match bytes.len() {
+        0 => vec![ZERO_BYTE],
+        1 => vec![bytes[0] >> NUM_BITS_IN_NIBBLE],
+        _ => {
+            let mut new_bytes: Bytes = Vec::new();
+            for i in 0..bytes.len() {
+                let high_nibble_byte = match i {
+                    x if (x == 0 || x == bytes.len()) => ZERO_BYTE,
+                    _ => bytes[i - 1] << NUM_BITS_IN_NIBBLE
+                };
+                let low_nibble_byte = bytes[i] >> NUM_BITS_IN_NIBBLE;
+                let byte = merge_nibbles_from_bytes(low_nibble_byte, high_nibble_byte);
+                new_bytes.push(byte);
+            };
+
+            let final_byte = merge_nibbles_from_bytes(
+                ZERO_BYTE,
+                bytes[bytes.len() - 1] << NUM_BITS_IN_NIBBLE,
+            );
+            new_bytes.push(final_byte);
+            new_bytes
+        }
+    }
+}
+
+fn shift_bits_in_vec_left_one_nibble(bytes: Bytes) -> Bytes {
+    match bytes.len() {
+        0 => vec![ZERO_BYTE],
+        1 => vec![bytes[0] << NUM_BITS_IN_NIBBLE],
+        _ => {
+            let mut new_bytes: Bytes = Vec::new();
+            for i in 0..bytes.len() {
+                let high_nibble_byte = bytes[i] << NUM_BITS_IN_NIBBLE;
+                let low_nibble_byte = match i {
+                    x if (x == bytes.len() - 1 || x == bytes.len()) => ZERO_BYTE,
+                    _ => bytes[i + 1] >> NUM_BITS_IN_NIBBLE
+                };
+                let byte = merge_nibbles_from_bytes(low_nibble_byte, high_nibble_byte);
+                new_bytes.push(byte);
+            };
+            new_bytes
+        }
+    }
+}
+
 fn remove_first_nibble(nibbles: Nibbles) -> Result<Nibbles> {
     match get_length_in_nibbles(&nibbles) {
         0 => Ok(EMPTY_NIBBLES),
@@ -1092,5 +1138,53 @@ mod tests {
     fn empty_nibbles_should_have_nibble_length_of_zero() {
         let length_in_nibbles = get_length_in_nibbles(&EMPTY_NIBBLES);
         assert!(length_in_nibbles == 0)
+    }
+
+    #[test]
+    fn should_shift_bytes_in_vec_right_one_nibble() {
+        let bytes = get_bytes_with_nibbles_from_index_zero();
+        let expected_result = vec![0x01u8, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xe0];
+        let result = shift_bits_in_vec_right_one_nibble(bytes);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_shift_one_byte_in_vec_right_one_nibble() {
+        let byte = vec![0xab];
+        let expected_result = vec![0xau8];
+        let result = shift_bits_in_vec_right_one_nibble(byte);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_shift_no_bytes_in_vec_right_one_nibble() {
+        let byte = Vec::new();
+        let expected_result = vec![ZERO_BYTE];
+        let result = shift_bits_in_vec_right_one_nibble(byte);
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_shift_bytes_in_vec_left_one_nibble() {
+        let bytes = get_bytes_with_nibbles_from_index_one();
+        let expected_result = vec![0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xd0];
+        let result = shift_bits_in_vec_left_one_nibble(bytes.clone());
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_shift_one_byte_in_vec_left_one_nibble() {
+        let byte = vec![0xab];
+        let expected_result = vec![0xb0];
+        let result = shift_bits_in_vec_left_one_nibble(byte.clone());
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_shift_no_bytes_in_vec_left_one_nibble() {
+        let byte = Vec::new();
+        let expected_result = vec![ZERO_BYTE];
+        let result = shift_bits_in_vec_left_one_nibble(byte);
+        assert!(result == expected_result);
     }
 }
