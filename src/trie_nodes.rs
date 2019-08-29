@@ -44,11 +44,8 @@ type ChildNodes = [Option<Bytes>; 16]; // TODO: Move to types?
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct BranchNode {
-    //pub raw: Bytes,
     pub value: Option<Bytes>,
     pub branches: ChildNodes,
-    //pub encoded_path: Bytes,
-    //pub path_nibbles: Nibbles,
 }
 
 impl Node {
@@ -259,6 +256,13 @@ mod tests {
             .unwrap()
     }
 
+    fn get_sample_branch_node_expected_hash() -> H256 {
+        let hex = "9b88bb3372fcfde94cfbfd784ffcf64490a75bb2adedc128e67c887ce3d78535"
+            .to_string();
+        convert_hex_to_h256(hex)
+            .unwrap()
+    }
+
     #[test]
     fn should_get_new_leaf_node_correctly() {
         let panic_str = "Node should be a leaf node";
@@ -448,6 +452,16 @@ mod tests {
         let expected_result = get_sample_branch_node_expected_encoding();
         let result = branch_node
             .rlp_encode()
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_branch_node_hash_correctly() {
+        let branch_node = get_sample_branch_node();
+        let expected_result = get_sample_branch_node_expected_hash();
+        let result = branch_node
+            .hash()
             .unwrap();
         assert!(result == expected_result);
     }
