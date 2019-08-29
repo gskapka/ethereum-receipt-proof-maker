@@ -7,13 +7,11 @@ use crate::types::{
 };
 use crate::constants::{
     ZERO_BYTE,
+    EMPTY_NIBBLES,
     HIGH_NIBBLE_MASK,
     NUM_BITS_IN_NIBBLE,
     NUM_NIBBLES_IN_BYTE,
 };
-
-// TODO Move to types?
-const EMPTY_NIBBLES: Nibbles = Nibbles { data: Vec::new(), offset: 0 };
 
 #[derive(Clone, Eq)]
 pub struct Nibbles {
@@ -57,7 +55,8 @@ pub fn get_common_prefix_nibbles(
     };
     let longer_nibbles = if a_is_shorter {
         nibbles_b
-    } else { nibbles_a
+    } else {
+        nibbles_a
     };
     let (common_prefix, a, b) = get_common_prefix_nibbles_recursively(
         shorter_nibbles,
@@ -419,6 +418,10 @@ pub fn slice_nibbles_at_nibble_index(
             }
         }
     }
+}
+
+pub fn drop_first_nibble(nibbles: Nibbles) -> Result<Nibbles> {
+    slice_nibbles_at_nibble_index(nibbles, 1)
 }
 
 #[cfg(test)]
@@ -1029,9 +1032,6 @@ mod tests {
     #[test]
     fn should_remove_first_nibble_if_only_one_nibble() {
         let byte = 5u8;
-        let expected_length = 1;
-        let expected_byte = 0u8;
-        let expected_nibble_length = 1;
         let nibble = get_nibbles_from_offset_bytes(vec![byte]);
         let result = remove_first_nibble(nibble)
             .unwrap();
@@ -1053,7 +1053,7 @@ mod tests {
     #[test]
     fn should_prefix_offset_nibble_with_byte_correctly() {
         let nibbles = get_sample_offset_nibbles();
-        let mut prefix = vec![0xff];
+        let prefix = vec![0xff];
         let mut expected_result = prefix.clone();
         let result = prefix_nibbles_with_byte(nibbles, prefix)
             .unwrap();
@@ -1110,7 +1110,6 @@ mod tests {
         let expected_result = get_nibbles_from_bytes(
             vec![0x56, 0x78, 0x9a, 0xbc, 0xde]
         );
-        let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
         assert!(result == expected_result);
@@ -1124,7 +1123,6 @@ mod tests {
         let expected_result = get_nibbles_from_offset_bytes(
             vec![0x6u8, 0x78, 0x9a, 0xbc, 0xde]
         );
-        let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
         assert!(result == expected_result);
@@ -1138,7 +1136,6 @@ mod tests {
         let expected_result = get_nibbles_from_offset_bytes(
             vec![0x5u8, 0x67, 0x89, 0xab, 0xcd]
         );
-        let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
         assert!(result == expected_result);
@@ -1152,7 +1149,6 @@ mod tests {
         let expected_result = get_nibbles_from_bytes(
             vec![0x67, 0x89, 0xab, 0xcd]
         );
-        let len = get_length_in_nibbles(&nibbles.clone());
         let result = slice_nibbles_at_nibble_index(nibbles, nibble_index)
             .unwrap();
         assert!(result == expected_result);
