@@ -49,7 +49,7 @@ pub struct BranchNode {
 }
 
 impl Node {
-    pub fn new_empty() -> Result<Node> { // TODO Test
+    pub fn get_new_empty_node() -> Result<Node> {
         Ok(
             Node {
                 leaf: None,
@@ -59,8 +59,13 @@ impl Node {
         )
     }
 
-    pub fn new_leaf(path_nibbles: Nibbles, value: Bytes) -> Result<Node> {
-        let encoded_path = encode_leaf_path_from_nibbles(path_nibbles.clone())?;
+    pub fn get_new_leaf_node(
+        path_nibbles: Nibbles,
+        value: Bytes
+    ) -> Result<Node> {
+        let encoded_path = encode_leaf_path_from_nibbles(
+            path_nibbles.clone()
+        )?;
         let mut raw = encoded_path.clone();
         raw.append(&mut value.clone());
         Ok(
@@ -79,8 +84,13 @@ impl Node {
         )
     }
 
-    pub fn new_extension(path_nibbles: Nibbles, value: Bytes) -> Result<Node> {
-        let encoded_path = encode_extension_path_from_nibbles(path_nibbles.clone())?;
+    pub fn get_new_extension_node(
+        path_nibbles: Nibbles,
+        value: Bytes
+    ) -> Result<Node> {
+        let encoded_path = encode_extension_path_from_nibbles(
+            path_nibbles.clone()
+        )?;
         let mut raw = encoded_path.clone();
         raw.append(&mut value.clone());
         Ok(
@@ -99,7 +109,7 @@ impl Node {
         )
     }
 
-    pub fn new_branch(value: Option<Bytes>) -> Result<Node> {
+    pub fn get_new_branch_node(value: Option<Bytes>) -> Result<Node> {
         Ok(
             Node {
                 leaf: None,
@@ -114,7 +124,11 @@ impl Node {
         )
     }
 
-    pub fn update_branch_at_index(self, new_value: Option<Bytes>, index: usize) -> Result<Self> {
+    pub fn update_branch_at_index(
+        self,
+        new_value: Option<Bytes>,
+        index: usize
+    ) -> Result<Self> {
         if let Some(branch) = self.branch {
             Ok(
                 Node {
@@ -139,7 +153,7 @@ impl Node {
         }
     }
 
-    pub fn rlp_encode(&self) -> Result<Bytes> {
+    pub fn get_rlp_encoding(&self) -> Result<Bytes> {
         let mut rlp_stream = RlpStream::new();
         if let Some(leaf) = &self.leaf {
             rlp_stream.begin_list(2);
@@ -169,12 +183,12 @@ impl Node {
         }
     }
 
-    pub fn hash(&self) -> Result<H256> {
-        self.rlp_encode()
+    pub fn get_hash(&self) -> Result<H256> {
+        self.get_rlp_encoding()
             .and_then(|encoded| keccak_hash_bytes(&encoded))
     }
 
-    pub fn get_node_type(&self) -> String {
+    pub fn get_type(&self) -> String {
         if let Some(_) = self.leaf {
             "leaf".to_string()
         } else if let Some(_) = self.branch {
@@ -219,7 +233,7 @@ mod tests {
         let path_bytes = vec![0x12, 0x34, 0x56];
         let path_nibbles = get_nibbles_from_bytes(path_bytes.clone());
         let value = hex::decode("c0ffee".to_string()).unwrap();
-        Node::new_leaf(path_nibbles, value)
+        Node::get_new_leaf_node(path_nibbles, value)
             .unwrap()
     }
 
@@ -229,7 +243,7 @@ mod tests {
         let value = hex::decode(
             "1d237c84432c78d82886cb7d6549c179ca51ebf3b324d2a3fa01af6a563a9377".to_string()
         ).unwrap();
-        Node::new_extension(path_nibbles, value)
+        Node::get_new_extension_node(path_nibbles, value)
             .unwrap()
     }
 
@@ -243,7 +257,7 @@ mod tests {
         let index_1 = 1;
         let index_2 = 2;
         let value = None;
-        Node::new_branch(value)
+        Node::get_new_branch_node(value)
             .and_then(|node| node.update_branch_at_index(Some(branch_value_1), index_1))
             .and_then(|node| node.update_branch_at_index(Some(branch_value_2), index_2))
             .unwrap()
@@ -296,11 +310,11 @@ mod tests {
             .unwrap();
         let mut expected_raw = expected_encoded_path.clone();
         expected_raw.append(&mut value.clone());
-        let result = Node::new_leaf(path_nibbles.clone(), value.clone())
+        let result = Node::get_new_leaf_node(path_nibbles.clone(), value.clone())
             .unwrap();
         let node_type = result
             .clone()
-            .get_node_type();
+            .get_type();
         assert!(node_type == "leaf".to_string());
         if let Some(_) = result.extension {
             panic!(panic_str)
@@ -325,7 +339,7 @@ mod tests {
         let leaf_node = get_sample_leaf_node();
         let expected_result = get_sample_leaf_node_expected_encoding();
         let result = leaf_node
-            .rlp_encode()
+            .get_rlp_encoding()
             .unwrap();
         assert!(result == expected_result);
     }
@@ -335,7 +349,7 @@ mod tests {
         let leaf_node = get_sample_leaf_node();
         let expected_result = get_sample_leaf_node_expected_hash();
         let result = leaf_node
-            .hash()
+            .get_hash()
             .unwrap();
         assert!(result == expected_result);
     }
@@ -351,11 +365,11 @@ mod tests {
         ).unwrap();
         let expected_encoded_path = encode_extension_path_from_nibbles(path_nibbles.clone())
             .unwrap();
-        let result = Node::new_extension(path_nibbles.clone(), value.clone())
+        let result = Node::get_new_extension_node(path_nibbles.clone(), value.clone())
             .unwrap();
         let node_type = result
             .clone()
-            .get_node_type();
+            .get_type();
         assert!(node_type == "extension".to_string());
         let mut expected_raw = expected_encoded_path.clone();
         expected_raw.append(&mut value.clone());
@@ -382,7 +396,7 @@ mod tests {
         let extension_node = get_sample_extension_node();
         let expected_result = get_sample_extension_node_expected_encoding();
         let result = extension_node
-            .rlp_encode()
+            .get_rlp_encoding()
             .unwrap();
         assert!(result == expected_result);
     }
@@ -392,7 +406,7 @@ mod tests {
         let extension_node = get_sample_extension_node();
         let expected_result = get_sample_extension_node_expected_hash();
         let result = extension_node
-            .hash()
+            .get_hash()
             .unwrap();
         assert!(result == expected_result);
     }
@@ -400,7 +414,7 @@ mod tests {
     #[test]
     fn should_get_new_branch_with_no_value_correctly() {
         let panic_str = "Node should be a branch node";
-        let result = Node::new_branch(None).unwrap();
+        let result = Node::get_new_branch_node(None).unwrap();
         if let Some(_) = result.extension {
             panic!(panic_str)
         } else if let Some(_) = result.leaf {
@@ -408,7 +422,7 @@ mod tests {
         }
         let node_type = result
             .clone()
-            .get_node_type();
+            .get_type();
         assert!(node_type == "branch".to_string());
         match result.branch {
             None => panic!(panic_str),
@@ -426,7 +440,7 @@ mod tests {
         let panic_str = "Node should be a branch node";
         let value = hex::decode("c0ffee")
             .unwrap();
-        let result = Node::new_branch(Some(value.clone())).unwrap();
+        let result = Node::get_new_branch_node(Some(value.clone())).unwrap();
         if let Some(_) = result.extension {
             panic!(panic_str)
         } else if let Some(_) = result.leaf {
@@ -434,7 +448,7 @@ mod tests {
         }
         let node_type = result
             .clone()
-            .get_node_type();
+            .get_type();
         assert!(node_type == "branch".to_string());
         match result.branch {
             None => panic!(panic_str),
@@ -453,7 +467,7 @@ mod tests {
         let index = 5;
         let value = None;
         let branch_value = hex::decode("c0ffee").unwrap();
-        let branch_node = Node::new_branch(value).unwrap();
+        let branch_node = Node::get_new_branch_node(value).unwrap();
         assert!(
             branch_node
                 .clone()
@@ -489,7 +503,7 @@ mod tests {
         let branch_node = get_sample_branch_node();
         let expected_result = get_sample_branch_node_expected_encoding();
         let result = branch_node
-            .rlp_encode()
+            .get_rlp_encoding()
             .unwrap();
         assert!(result == expected_result);
     }
@@ -499,15 +513,15 @@ mod tests {
         let branch_node = get_sample_branch_node();
         let expected_result = get_sample_branch_node_expected_hash();
         let result = branch_node
-            .hash()
+            .get_hash()
             .unwrap();
         assert!(result == expected_result);
     }
 
     #[test]
     fn should_get_new_empty_node() {
-        let empty = Node::new_empty().unwrap();
-        let result = empty.get_node_type();
+        let empty = Node::get_new_empty_node().unwrap();
+        let result = empty.get_type();
         assert!(result == "empty".to_string());
     }
 }
