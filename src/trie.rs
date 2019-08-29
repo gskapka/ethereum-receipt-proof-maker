@@ -41,6 +41,8 @@ impl Trie {
         }
     }
 
+    //pub fn find(self, key: Nibbles)
+
     pub fn update_root_hash(mut self, new_hash: H256) -> Result<Self> {
         self.root = new_hash;
         Ok(self)
@@ -89,6 +91,7 @@ mod tests {
     use crate::get_database::get_thing_from_database;
     use crate::nibble_utils::{
         get_nibbles_from_bytes,
+        convert_hex_string_to_nibbles,
     };
 
     #[test]
@@ -102,8 +105,8 @@ mod tests {
 
     #[test]
     fn should_put_thing_in_empty_trie() {
-        let key_bytes = vec![0xc0, 0xff, 0xee];
-        let key = get_nibbles_from_bytes(key_bytes);
+        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+            .unwrap();
         let value = vec![0xde, 0xca, 0xff];
         let expected_node = Node::get_new_leaf_node(key.clone(), value.clone())
             .unwrap();
@@ -143,8 +146,8 @@ mod tests {
 
     #[test]
     fn should_put_node_in_stack() {
-        let key_bytes = vec![0xc0, 0xff, 0xee];
-        let key = get_nibbles_from_bytes(key_bytes);
+        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+            .unwrap();
         let value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
@@ -159,8 +162,8 @@ mod tests {
 
     #[test]
     fn should_update_root_hash_from_node_in_stack() {
-        let key_bytes = vec![0xc0, 0xff, 0xee];
-        let key = get_nibbles_from_bytes(key_bytes);
+        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+            .unwrap();
         let value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
@@ -181,8 +184,8 @@ mod tests {
 
     #[test]
     fn should_put_node_in_database_in_trie() {
-        let key_bytes = vec![0xc0, 0xff, 0xee];
-        let key = get_nibbles_from_bytes(key_bytes);
+        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+            .unwrap();
         let value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
@@ -203,8 +206,8 @@ mod tests {
 
     #[test]
     fn should_save_stack_of_length_1_to_database() {
-        let key_bytes = vec![0xc0, 0xff, 0xee];
-        let key = get_nibbles_from_bytes(key_bytes);
+        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+            .unwrap();
         let value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
