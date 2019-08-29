@@ -59,6 +59,25 @@ impl Node {
         )
     }
 
+    pub fn new_extension(path_nibbles: Nibbles, value: Bytes) -> Result<Node> {
+        let encoded_path = encode_extension_path_from_nibbles(path_nibbles.clone())?;
+        let mut raw = encoded_path.clone();
+        raw.append(&mut value.clone());
+        Ok(
+            Node {
+                leaf: None,
+                extension: Some(
+                    ExtensionNode {
+                        raw,
+                        value,
+                        path_nibbles,
+                        encoded_path,
+                    }
+                )
+            }
+        )
+    }
+
     pub fn rlp_encode(&self) -> Result<Bytes> {
         if let Some(leaf) = &self.leaf {
             let mut rlp_stream = RlpStream::new();
@@ -101,8 +120,23 @@ mod tests {
             .unwrap()
     }
 
+    fn get_sample_extension_node() -> Node {
+        let path_bytes = vec![0xc0, 0xff, 0xee];
+        let path_nibbles = get_nibbles_from_bytes(path_bytes);
+        let value = hex::decode(
+            "1d237c84432c78d82886cb7d6549c179ca51ebf3b324d2a3fa01af6a563a9377".to_string()
+        ).unwrap();
+        Node::new_extension(path_nibbles, value)
+            .unwrap()
+    }
+
     fn get_sample_leaf_node_expected_encoding() -> Bytes {
         hex::decode("c9842012345683c0ffee")
+            .unwrap()
+    }
+
+    fn get_sample_extension_node_expected_encoding() -> Bytes {
+        hex::decode("e68400c0ffeea01d237c84432c78d82886cb7d6549c179ca51ebf3b324d2a3fa01af6a563a9377")
             .unwrap()
     }
 
@@ -113,6 +147,12 @@ mod tests {
             .unwrap()
     }
 
+    fn get_sample_extension_node_expected_hash() -> H256 {
+        let hex = "d1425391446456311990cdf61e1dbe92b14cb53caad0539a15564b9efac0f733"
+            .to_string();
+        convert_hex_to_h256(hex)
+            .unwrap()
+    }
 
     #[test]
     fn should_get_new_leaf_node_correctly() {
@@ -137,7 +177,7 @@ mod tests {
                 assert!(leaf.raw == expected_raw);
                 assert!(leaf.path_nibbles == path_nibbles);
                 assert!(leaf.encoded_path == expected_encoded_path);
-                assert!(nibble_length== expected_nibble_length)
+                assert!(nibble_length == expected_nibble_length)
             }
         }
     }
@@ -157,6 +197,56 @@ mod tests {
         let leaf_node = get_sample_leaf_node();
         let expected_result = get_sample_leaf_node_expected_hash();
         let result = leaf_node
+            .hash()
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_extension_node_correctly() {
+        let path_bytes = vec![0xc0, 0xff, 0xee];
+        let expected_nibble_length = path_bytes.clone().len() * 2;
+        let path_nibbles = get_nibbles_from_bytes(path_bytes);
+        let value = hex::decode(
+            "4aad98246efabf243441508dc0f328d80e83e9522e43709abab1c0c9cf4416dc".to_string()
+        ).unwrap();
+        let expected_encoded_path = encode_extension_path_from_nibbles(path_nibbles.clone())
+            .unwrap();
+        let result = Node::new_extension(path_nibbles.clone(), value.clone())
+            .unwrap();
+        let mut expected_raw = expected_encoded_path.clone();
+        expected_raw.append(&mut value.clone());
+        if let Some(_) = result.leaf {
+            panic!("Node should be an extension node!")
+        }
+        match result.extension {
+            None => panic!("Extension node should be present in node!"),
+            Some(extension) => {
+                let nibble_length = get_length_in_nibbles(&extension.path_nibbles.clone());
+                assert!(extension.value == value);
+                assert!(extension.raw == expected_raw);
+                assert!(extension.path_nibbles == path_nibbles);
+                assert!(extension.encoded_path == expected_encoded_path);
+                assert!(nibble_length == expected_nibble_length)
+            }
+        }
+    }
+
+    #[test]
+    fn should_rlp_encode_extension_node_correctly() {
+        let extension_node = get_sample_extension_node();
+        let expected_result = get_sample_extension_node_expected_encoding();
+        let result = extension_node
+            .rlp_encode()
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_extension_node_hash_correctly() {
+        let extension_node = get_sample_extension_node();
+        let expected_result = get_sample_extension_node_expected_hash();
+        let result = extension_node
             .hash()
             .unwrap();
         assert!(result == expected_result);
