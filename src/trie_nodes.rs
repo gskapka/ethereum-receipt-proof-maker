@@ -13,8 +13,13 @@ use crate::nibble_utils::{
 use crate::types::{
     Bytes,
     Result,
+    ChildNodes,
 };
 
+static LEAF_NODE_STRING: &'static str = "leaf";
+static EMPTY_NODE_STRING: &'static str = "empty";
+static BRANCH_NODE_STRING: &'static str = "branch";
+static EXTENSION_NODE_STRING: &'static str = "extension";
 static NO_NODE_IN_STRUCT_ERR: &'static str = "✘ No node present in struct to rlp-encode!";
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -39,8 +44,6 @@ pub struct ExtensionNode {
     pub encoded_path: Bytes,
     pub path_nibbles: Nibbles,
 }
-
-type ChildNodes = [Option<Bytes>; 16]; // TODO: Move to types?
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct BranchNode {
@@ -188,15 +191,15 @@ impl Node {
             .and_then(|encoded| keccak_hash_bytes(&encoded))
     }
 
-    pub fn get_type(&self) -> String {
+    pub fn get_type(&self) -> &'static str {
         if let Some(_) = self.leaf {
-            "leaf".to_string()
+            LEAF_NODE_STRING
         } else if let Some(_) = self.branch {
-            "branch".to_string()
+            BRANCH_NODE_STRING
         } else if let Some(_) = self.extension {
-            "extension".to_string()
+            EXTENSION_NODE_STRING
         } else {
-            "empty".to_string()
+            EMPTY_NODE_STRING
         }
     }
 }
@@ -315,7 +318,7 @@ mod tests {
         let node_type = result
             .clone()
             .get_type();
-        assert!(node_type == "leaf".to_string());
+        assert!(node_type == LEAF_NODE_STRING);
         if let Some(_) = result.extension {
             panic!(panic_str)
         } else if let Some(_) = result.branch {
@@ -370,7 +373,7 @@ mod tests {
         let node_type = result
             .clone()
             .get_type();
-        assert!(node_type == "extension".to_string());
+        assert!(node_type == EXTENSION_NODE_STRING);
         let mut expected_raw = expected_encoded_path.clone();
         expected_raw.append(&mut value.clone());
         if let Some(_) = result.leaf {
@@ -423,7 +426,7 @@ mod tests {
         let node_type = result
             .clone()
             .get_type();
-        assert!(node_type == "branch".to_string());
+        assert!(node_type == BRANCH_NODE_STRING);
         match result.branch {
             None => panic!(panic_str),
             Some(branch) => {
@@ -522,6 +525,6 @@ mod tests {
     fn should_get_new_empty_node() {
         let empty = Node::get_new_empty_node().unwrap();
         let result = empty.get_type();
-        assert!(result == "empty".to_string());
+        assert!(result == EMPTY_NODE_STRING);
     }
 }
