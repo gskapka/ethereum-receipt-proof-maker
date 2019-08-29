@@ -15,7 +15,6 @@ use crate::make_rpc_call::{
     deserialize_to_receipt_rpc_response,
 };
 use crate::constants::{
-    EMPTY_NODE,
     DOT_ENV_PATH,
     DEFAULT_ENDPOINT,
 };
@@ -384,14 +383,4 @@ mod tests {
             assert!(!dot_env_file_exists());
         }
     }
-
-    /*
-    #[test]
-    fn should_get_database_with_thing_in_it() {
-        let expected_key = get_expected_key_of_thing_in_database();
-        let database = get_database_with_thing_in_it()
-            .unwrap();
-        assert!(database.contains(expected_key.as_fixed_bytes(), EMPTY_NODE));
-    }
-    */
 }
