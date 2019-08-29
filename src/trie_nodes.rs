@@ -176,7 +176,7 @@ impl Node {
                     Some(thing) => rlp_stream.append(&thing.clone())
                 };
             }
-            let mut value = match &branch.value {
+            match &branch.value {
                 None => rlp_stream.append_empty_data(),
                 Some(value) => rlp_stream.append(&value.clone())
             };
@@ -226,10 +226,7 @@ fn update_child_nodes(
 mod tests {
     use hex;
     use super::*;
-    use crate::nibble_utils::{
-        Nibbles,
-        get_length_in_nibbles,
-    };
+    use crate::nibble_utils::get_length_in_nibbles;
     use crate::utils::convert_hex_to_h256;
 
     fn get_sample_leaf_node() -> Node {
