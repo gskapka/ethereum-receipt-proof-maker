@@ -101,14 +101,35 @@ impl Node {
                     BranchNode {
                         value,
                         branches: get_empty_child_nodes(),
-                        //raw,
-                        //value,
-                        //path_nibbles,
-                        //encoded_path,
                     }
                 )
             }
         )
+    }
+
+    pub fn update_branch_at_index(self, new_value: Option<Bytes>, index: usize) -> Result<Self> {
+        if let Some(branch) = self.branch {
+            Ok(
+                Node {
+                    leaf: None,
+                    extension: None,
+                    branch: Some(
+                        BranchNode {
+                            value: branch.value,
+                            branches: update_child_nodes(
+                                branch.branches,
+                                new_value,
+                                index,
+                            )?
+                        }
+                    )
+                }
+            )
+        } else {
+            Err(AppError::Custom(
+                "✘ Cannot update branches - not a branch node!".to_string()
+            ))
+        }
     }
 
     pub fn rlp_encode(&self) -> Result<Bytes> {
@@ -142,6 +163,15 @@ fn get_empty_child_nodes() -> ChildNodes {
         None, None, None, None,
         None, None, None, None,
     ]
+}
+
+fn update_child_nodes(
+    mut child_nodes: ChildNodes,
+    new_value: Option<Bytes>,
+    index: usize,
+) -> Result<ChildNodes> {
+    child_nodes[index] = new_value;
+    Ok(child_nodes)
 }
 
 #[cfg(test)]
@@ -342,4 +372,42 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn should_update_branch_at_index_correctly() {
+        let index = 5;
+        let value = None;
+        let branch_value = hex::decode("c0ffee").unwrap();
+        let branch_node = Node::new_branch(value).unwrap();
+        assert!(
+            branch_node
+                .clone()
+                .branch
+                .unwrap()
+                .branches[index] == None
+        );
+        let result = branch_node.update_branch_at_index(
+            Some(branch_value.clone()),
+            index,
+        ).unwrap();
+        assert!(
+            result
+                .clone()
+                .branch
+                .unwrap()
+                .branches[index] == Some(branch_value)
+        );
+    }
+
+    #[test]
+    fn should_fail_to_update_branch_of_non_branch_node_correctly() {
+        let expected_error = "✘ Cannot update branches - not a branch node!";
+        let non_branch_node = get_sample_leaf_node();
+        match non_branch_node.update_branch_at_index(None, 4) {
+            Err(AppError::Custom(e)) => assert!(e == expected_error),
+            _ => panic!("Did not receive expected error!")
+        }
+    }
+
+
 }
