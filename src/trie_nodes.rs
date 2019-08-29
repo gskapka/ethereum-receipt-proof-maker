@@ -17,14 +17,14 @@ use crate::types::{
 
 static NO_NODE_IN_STRUCT_ERR: &'static str = "✘ No node present in struct to rlp-encode!";
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Node {
     pub leaf: Option<LeafNode>,
     pub branch: Option<BranchNode>,
     pub extension: Option<ExtensionNode>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct LeafNode {
     pub raw: Bytes,
     pub value: Bytes,
@@ -32,7 +32,7 @@ pub struct LeafNode {
     pub path_nibbles: Nibbles,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ExtensionNode {
     pub raw: Bytes,
     pub value: Bytes,
@@ -42,7 +42,7 @@ pub struct ExtensionNode {
 
 type ChildNodes = [Option<Bytes>; 16]; // TODO: Move to types?
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct BranchNode {
     //pub raw: Bytes,
     pub value: Option<Bytes>,
