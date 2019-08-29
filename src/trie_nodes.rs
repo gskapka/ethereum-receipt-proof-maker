@@ -133,17 +133,29 @@ impl Node {
     }
 
     pub fn rlp_encode(&self) -> Result<Bytes> {
+        let mut rlp_stream = RlpStream::new();
         if let Some(leaf) = &self.leaf {
-            let mut rlp_stream = RlpStream::new();
             rlp_stream.begin_list(2);
             rlp_stream.append(&leaf.encoded_path);
             rlp_stream.append(&leaf.value);
             Ok(rlp_stream.out())
         } else if let Some(extension) = &self.extension {
-            let mut rlp_stream = RlpStream::new();
             rlp_stream.begin_list(2);
             rlp_stream.append(&extension.encoded_path);
             rlp_stream.append(&extension.value);
+            Ok(rlp_stream.out())
+        } else if let Some(branch) = &self.branch {
+            rlp_stream.begin_list(17);
+            for i in 0..branch.branches.len() {
+                match &branch.branches[i] {
+                    None => rlp_stream.append_empty_data(),
+                    Some(thing) => rlp_stream.append(&thing.clone())
+                };
+            }
+            let mut value = match &branch.value {
+                None => rlp_stream.append_empty_data(),
+                Some(value) => rlp_stream.append(&value.clone())
+            };
             Ok(rlp_stream.out())
         } else {
             Err(AppError::Custom(NO_NODE_IN_STRUCT_ERR.to_string()))
@@ -202,6 +214,22 @@ mod tests {
             .unwrap()
     }
 
+    fn get_sample_branch_node() -> Node {
+        let branch_value_1 = hex::decode(
+            "4f81663d4c7aeb115e49625430e3fa114445dc0a9ed73a7598a31cd60808a758"
+        ).unwrap();
+        let branch_value_2 = hex::decode(
+            "d55a192f93e0576f46019553e2b4c0ff4b8de57cd73020f751aed18958e9ecdb"
+        ).unwrap();
+        let index_1 = 1;
+        let index_2 = 2;
+        let value = None;
+        Node::new_branch(value)
+            .and_then(|node| node.update_branch_at_index(Some(branch_value_1), index_1))
+            .and_then(|node| node.update_branch_at_index(Some(branch_value_2), index_2))
+            .unwrap()
+    }
+
     fn get_sample_leaf_node_expected_encoding() -> Bytes {
         hex::decode("c9842012345683c0ffee")
             .unwrap()
@@ -209,6 +237,11 @@ mod tests {
 
     fn get_sample_extension_node_expected_encoding() -> Bytes {
         hex::decode("e68400c0ffeea01d237c84432c78d82886cb7d6549c179ca51ebf3b324d2a3fa01af6a563a9377")
+            .unwrap()
+    }
+
+    fn get_sample_branch_node_expected_encoding() -> Bytes {
+        hex::decode("f85180a04f81663d4c7aeb115e49625430e3fa114445dc0a9ed73a7598a31cd60808a758a0d55a192f93e0576f46019553e2b4c0ff4b8de57cd73020f751aed18958e9ecdb8080808080808080808080808080")
             .unwrap()
     }
 
@@ -409,5 +442,13 @@ mod tests {
         }
     }
 
-
+    #[test]
+    fn should_rlp_encode_branch_node_correctly() {
+        let branch_node = get_sample_branch_node();
+        let expected_result = get_sample_branch_node_expected_encoding();
+        let result = branch_node
+            .rlp_encode()
+            .unwrap();
+        assert!(result == expected_result);
+    }
 }
