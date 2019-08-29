@@ -15,7 +15,7 @@ use ethereum_types::{
 
 pub type Byte = u8;
 pub type Bytes = Vec<u8>;
-pub type Node<'a> = (&'a[u8], Option<u8>);
+pub type ChildNodes = [Option<Bytes>; 16];
 pub type Database = HashMap<H256, Bytes>;
 pub type Result<T> = result::Result<T, AppError>;
 
