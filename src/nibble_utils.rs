@@ -1041,7 +1041,7 @@ mod tests {
     #[test]
     fn should_prefix_nibble_with_byte_correctly() {
         let nibbles = get_sample_nibbles();
-        let mut prefix = vec![0xff];
+        let prefix = vec![0xff];
         let mut expected_result = prefix.clone();
         let result = prefix_nibbles_with_byte(nibbles, prefix)
             .unwrap();
