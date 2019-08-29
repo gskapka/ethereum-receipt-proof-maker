@@ -20,6 +20,7 @@ static NO_NODE_IN_STRUCT_ERR: &'static str = "✘ No node present in struct to r
 #[derive(Debug, PartialEq, Eq)]
 pub struct Node {
     pub leaf: Option<LeafNode>,
+    pub branch: Option<BranchNode>,
     pub extension: Option<ExtensionNode>,
 }
 
@@ -39,6 +40,17 @@ pub struct ExtensionNode {
     pub path_nibbles: Nibbles,
 }
 
+type ChildNodes = [Option<Bytes>; 16]; // TODO: Move to types?
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct BranchNode {
+    //pub raw: Bytes,
+    pub value: Option<Bytes>,
+    pub branches: ChildNodes,
+    //pub encoded_path: Bytes,
+    //pub path_nibbles: Nibbles,
+}
+
 impl Node {
     pub fn new_leaf(path_nibbles: Nibbles, value: Bytes) -> Result<Node> {
         let encoded_path = encode_leaf_path_from_nibbles(path_nibbles.clone())?;
@@ -46,6 +58,7 @@ impl Node {
         raw.append(&mut value.clone());
         Ok(
             Node {
+                branch: None,
                 extension: None,
                 leaf: Some(
                     LeafNode {
@@ -66,12 +79,32 @@ impl Node {
         Ok(
             Node {
                 leaf: None,
+                branch: None,
                 extension: Some(
                     ExtensionNode {
                         raw,
                         value,
                         path_nibbles,
                         encoded_path,
+                    }
+                )
+            }
+        )
+    }
+
+    pub fn new_branch(value: Option<Bytes>) -> Result<Node> {
+        Ok(
+            Node {
+                leaf: None,
+                extension: None,
+                branch: Some(
+                    BranchNode {
+                        value,
+                        branches: get_empty_child_nodes(),
+                        //raw,
+                        //value,
+                        //path_nibbles,
+                        //encoded_path,
                     }
                 )
             }
@@ -100,6 +133,15 @@ impl Node {
         self.rlp_encode()
             .and_then(|encoded| keccak_hash_bytes(&encoded))
     }
+}
+
+fn get_empty_child_nodes() -> ChildNodes {
+    [
+        None, None, None, None,
+        None, None, None, None,
+        None, None, None, None,
+        None, None, None, None,
+    ]
 }
 
 #[cfg(test)]
@@ -156,6 +198,7 @@ mod tests {
 
     #[test]
     fn should_get_new_leaf_node_correctly() {
+        let panic_str = "Node should be a leaf node";
         let path_bytes = vec![0x12, 0x34, 0x56];
         let expected_nibble_length = path_bytes.clone().len() * 2;
         let path_nibbles = get_nibbles_from_bytes(path_bytes.clone());
@@ -167,10 +210,12 @@ mod tests {
         let result = Node::new_leaf(path_nibbles.clone(), value.clone())
             .unwrap();
         if let Some(_) = result.extension {
-            panic!("Node should be a leaf node!")
+            panic!(panic_str)
+        } else if let Some(_) = result.branch {
+            panic!(panic_str)
         }
         match result.leaf {
-            None => panic!("Leaf node should be present in node!"),
+            None => panic!(panic_str),
             Some(leaf) => {
                 let nibble_length = get_length_in_nibbles(&leaf.path_nibbles.clone());
                 assert!(leaf.value == value);
@@ -204,6 +249,7 @@ mod tests {
 
     #[test]
     fn should_get_extension_node_correctly() {
+        let panic_str = "Node should be an extension node";
         let path_bytes = vec![0xc0, 0xff, 0xee];
         let expected_nibble_length = path_bytes.clone().len() * 2;
         let path_nibbles = get_nibbles_from_bytes(path_bytes);
@@ -217,10 +263,12 @@ mod tests {
         let mut expected_raw = expected_encoded_path.clone();
         expected_raw.append(&mut value.clone());
         if let Some(_) = result.leaf {
-            panic!("Node should be an extension node!")
+            panic!(panic_str)
+        } else if let Some(_) = result.branch {
+            panic!(panic_str)
         }
         match result.extension {
-            None => panic!("Extension node should be present in node!"),
+            None => panic!(panic_str),
             Some(extension) => {
                 let nibble_length = get_length_in_nibbles(&extension.path_nibbles.clone());
                 assert!(extension.value == value);
@@ -250,5 +298,48 @@ mod tests {
             .hash()
             .unwrap();
         assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_new_branch_with_no_value_correctly() {
+        let panic_str = "Node should be a branch node";
+        let result = Node::new_branch(None).unwrap();
+        if let Some(_) = result.extension {
+            panic!(panic_str)
+        } else if let Some(_) = result.leaf {
+            panic!(panic_str)
+        }
+        match result.branch {
+            None => panic!(panic_str),
+            Some(branch) => {
+                if let Some(_) = branch.value {
+                    panic!("Branch should not have a value!")
+                };
+                assert!(branch.branches == get_empty_child_nodes());
+            }
+        }
+    }
+
+    #[test]
+    fn should_get_new_branch_with_value_correctly() {
+        let panic_str = "Node should be a branch node";
+        let value = hex::decode("c0ffee")
+            .unwrap();
+        let result = Node::new_branch(Some(value.clone())).unwrap();
+        if let Some(_) = result.extension {
+            panic!(panic_str)
+        } else if let Some(_) = result.leaf {
+            panic!(panic_str)
+        }
+        match result.branch {
+            None => panic!(panic_str),
+            Some(branch) => {
+                match branch.value {
+                    Some(_value) => assert!(_value == value),
+                    None => panic!("Branch should have a value!")
+                }
+                assert!(branch.branches == get_empty_child_nodes());
+            }
+        }
     }
 }
