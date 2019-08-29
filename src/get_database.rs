@@ -55,6 +55,13 @@ mod tests {
     };
 
     #[test]
+    fn should_get_new_empty_database() {
+        let database = get_new_database()
+            .unwrap();
+        assert!(database.is_empty())
+    }
+
+    #[test]
     fn should_insert_thing_in_database() {
         let database = get_new_database()
             .unwrap();
