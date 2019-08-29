@@ -25,7 +25,7 @@ pub fn put_thing_in_database(
 
 pub fn get_thing_from_database(
     database: &Database,
-    key: H256,
+    key: &H256,
 ) -> Result<Bytes> {
     match database.get(&key) {
         Some(thing) => Ok(thing.to_vec()),
@@ -79,7 +79,7 @@ mod tests {
         let database = get_database_with_thing_in_it()
             .unwrap();
         let key = get_expected_key_of_thing_in_database();
-        let result = get_thing_from_database(&database, key)
+        let result = get_thing_from_database(&database, &key)
             .unwrap();
         assert!(result == expected_thing);
     }
@@ -90,7 +90,7 @@ mod tests {
         let state = get_valid_initial_state()
             .unwrap();
         let expected_thing = get_thing_to_put_in_database();
-        match get_thing_from_database(&state.database, expected_key) {
+        match get_thing_from_database(&state.database, &expected_key) {
             Ok(_) => panic!("Thing should not be in database!"),
             _ => assert!(true)
         }
@@ -99,7 +99,7 @@ mod tests {
             expected_key,
             expected_thing.clone()
         ).unwrap();
-        match get_thing_from_database(&returned_state.database, expected_key) {
+        match get_thing_from_database(&returned_state.database, &expected_key) {
             Ok(thing) => assert!(thing == expected_thing),
             _ => panic!("Thing should be in database!")
         }
