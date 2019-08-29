@@ -1,4 +1,5 @@
 use crate::types::Byte;
+use crate::nibble_utils::Nibbles;
 
 pub const ZERO_BYTE: u8 = 0u8;
 pub const HASH_LENGTH: usize  = 32;
@@ -12,3 +13,4 @@ pub const ADDRESS_LENGTH_CHARS: usize = 40;
 pub static DOT_ENV_PATH: &'static str = "./.env";
 pub static EMPTY_NODE: crate::types::Node<'static> = (&[], None);
 pub static DEFAULT_ENDPOINT: &'static str = "http://localhost:8545/";
+pub const EMPTY_NIBBLES: Nibbles = Nibbles { data: Vec::new(), offset: 0 };
