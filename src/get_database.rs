@@ -1,6 +1,5 @@
 use ethereum_types::H256;
 use crate::errors::AppError;
-use crate::utils::convert_h256_to_prefixed_hex;
 use crate::types::{
     Bytes,
     Result,
