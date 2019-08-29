@@ -139,3 +139,5 @@ __❍__ The current memory database usage is pure in that we clone the db and re
  - [x] Have timeout error on reqwests.
  - [ ] Spinners for when it's doing the bits that take a while...?
  - [ ] Benchmark it and maybe don't clone the db per above note?
+ - [ ] Have method to convert hex string of even/odd length to offset/non- nibbles.
+ - [ ] Need a node rlp-decoder!
