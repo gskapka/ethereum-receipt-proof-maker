@@ -193,6 +193,16 @@ impl Node {
             .and_then(|encoded| keccak_hash_bytes(&encoded))
     }
 
+    pub fn get_key(&self) -> Option<Nibbles> {
+        if let Some(leaf_node) = &self.leaf {
+            Some(leaf_node.path_nibbles.clone())
+        } else if let Some(extension_node) = &self.extension {
+            Some(extension_node.path_nibbles.clone())
+        } else {
+            None
+        }
+    }
+
     pub fn get_type(&self) -> &'static str {
         if let Some(_) = self.leaf {
             LEAF_NODE_STRING
@@ -525,5 +535,30 @@ mod tests {
         let empty = Node::get_new_empty_node().unwrap();
         let result = empty.get_type();
         assert!(result == EMPTY_NODE_STRING);
+    }
+
+    #[test]
+    fn should_get_key_from_leaf_node() {
+        let path_bytes = vec![0x12, 0x34, 0x56];
+        let expected_result = get_nibbles_from_bytes(path_bytes.clone());
+        let node = get_sample_leaf_node();
+        let result = node.get_key();
+        assert!(result == Some(expected_result));
+    }
+
+    #[test]
+    fn should_get_key_from_extension_node() {
+        let node = get_sample_extension_node();
+        let path_bytes = vec![0xc0, 0xff, 0xee];
+        let expected_result = get_nibbles_from_bytes(path_bytes);
+        let result = node.get_key();
+        assert!(result == Some(expected_result));
+    }
+
+    #[test]
+    fn should_get_no_key_from_branch_node() {
+        let node = get_sample_branch_node();
+        let result = node.get_key();
+        assert!(result == None);
     }
 }
