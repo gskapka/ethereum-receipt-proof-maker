@@ -1,7 +1,13 @@
 use ethereum_types::H256;
 use crate::trie_nodes::Node;
 use crate::nibble_utils::Nibbles;
-use crate::constants::HASHED_NULL_NODE;
+use crate::constants::{
+    HASHED_NULL_NODE,
+    LEAF_NODE_STRING,
+    EMPTY_NODE_STRING,
+    BRANCH_NODE_STRING,
+    EXTENSION_NODE_STRING,
+};
 use crate::get_database::{
     get_new_database,
     put_thing_in_database,
@@ -124,7 +130,7 @@ mod tests {
         assert!(result.root == expected_node.get_hash().unwrap());
         let thing_from_db = get_thing_from_database(
             &result.database,
-            expected_db_key
+            &expected_db_key
         ).unwrap();
         assert!(thing_from_db == expected_thing_from_db)
     }
@@ -199,7 +205,7 @@ mod tests {
         let updated_trie = trie
             .put_node_in_database(node.clone())
             .unwrap();
-        let result = get_thing_from_database(&updated_trie.database, hash)
+        let result = get_thing_from_database(&updated_trie.database, &hash)
             .unwrap();
         assert!(result == expected_result);
     }
@@ -227,8 +233,55 @@ mod tests {
         assert!(result.stack.len() == 0);
         let thing_from_db = get_thing_from_database(
             &result.database,
-            expected_db_key
+            &expected_db_key
         ).unwrap();
         assert!(thing_from_db == expected_thing_from_db)
+    }
+
+    #[test]
+    #[ignore]
+    fn should_save_stack_of_length_gt_one() {
+        let key_1 = convert_hex_string_to_nibbles("c0ffee".to_string())
+            .unwrap();
+        let key_2 = convert_hex_string_to_nibbles("decaf".to_string())
+            .unwrap();
+        let value_1 = vec![0xde, 0xca, 0xff];
+        let value_2 = vec![0xc0, 0xff, 0xee];
+        let trie = Trie::get_new_trie()
+            .unwrap();
+        let node_1 = Node::get_new_leaf_node(key_1.clone(), value_1.clone())
+            .unwrap();
+        let node_2 = Node::get_new_leaf_node(key_2.clone(), value_2.clone())
+            .unwrap();
+        let expected_db_key_1 = node_1
+            .get_hash()
+            .unwrap();
+        let expected_db_key_2 = node_2
+            .get_hash()
+            .unwrap();
+        let expected_thing_from_db_1 = node_1
+            .get_rlp_encoding()
+            .unwrap();
+        let expected_thing_from_db_2 = node_2
+            .get_rlp_encoding()
+            .unwrap();
+        let updated_trie_1 = trie.put_node_in_stack(node_1)
+            .unwrap();
+        let updated_trie_2 = updated_trie_1.put_node_in_stack(node_2)
+            .unwrap();
+        assert!(updated_trie_2.stack.len() == 2);
+        let result = updated_trie_2.save_stack_to_database()
+            .unwrap();
+        assert!(result.stack.len() == 0);
+        let thing_from_db_1 = get_thing_from_database(
+            &result.database,
+            &expected_db_key_1
+        ).unwrap();
+        let thing_from_db_2 = get_thing_from_database(
+            &result.database,
+            &expected_db_key_2
+        ).unwrap();
+        assert!(thing_from_db_1 == expected_thing_from_db_1);
+        assert!(thing_from_db_2 == expected_thing_from_db_2);
     }
 }
