@@ -93,7 +93,6 @@ pub fn decode_prefixed_hex(hex_to_decode: String) -> Result<Vec<u8>> {
         .and_then(decode_hex)
 }
 
-// TODO: Test
 pub fn convert_h256_to_prefixed_hex(hash: H256) -> Result <String> {
     Ok(format!("0x{}", hex::encode(hash)))
 }
@@ -395,5 +394,14 @@ mod tests {
             Err(AppError::Custom(e)) => assert!(e == expected_error),
             _ => panic!("did not get expected error!")
         }
+    }
+
+    #[test]
+    fn should_convert_h256_to_prefixed_hex() {
+        let h256 = H256::zero();
+        let expected_result = "0x0000000000000000000000000000000000000000000000000000000000000000".to_string();
+        let result = convert_h256_to_prefixed_hex(h256)
+            .unwrap();
+        assert!(result == expected_result);
     }
 }
