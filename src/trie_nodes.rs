@@ -15,11 +15,13 @@ use crate::types::{
     Result,
     ChildNodes,
 };
+use crate::constants::{
+    LEAF_NODE_STRING,
+    EMPTY_NODE_STRING,
+    BRANCH_NODE_STRING,
+    EXTENSION_NODE_STRING,
+};
 
-static LEAF_NODE_STRING: &'static str = "leaf";
-static EMPTY_NODE_STRING: &'static str = "empty";
-static BRANCH_NODE_STRING: &'static str = "branch";
-static EXTENSION_NODE_STRING: &'static str = "extension";
 static NO_NODE_IN_STRUCT_ERR: &'static str = "✘ No node present in struct to rlp-encode!";
 
 #[derive(Debug, PartialEq, Eq, Clone)]
