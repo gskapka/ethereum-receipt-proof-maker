@@ -106,6 +106,13 @@ pub fn get_no_overwrite_state_err(substring: &str) -> String {
     format!("✘ Cannot overwrite {} in state!" , substring)
 }
 
+pub fn convert_bytes_to_h256(bytes: &Bytes) -> Result<H256> {
+    match bytes.len() {
+        32 => Ok(H256::from_slice(&bytes[..])),
+        _ => Err(AppError::Custom("✘ Wrong number of bytes for hash!".to_string()))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -356,6 +363,37 @@ mod tests {
             assert!(result == file);
         } else {
             assert!(!dot_env_file_exists())
+        }
+    }
+
+    #[test]
+    fn should_get_hash_from_bytes() {
+        let bytes = vec![
+            0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0, 0xff,
+            0xee, 0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0,
+            0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee,
+            0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0, 0xff
+        ];
+        assert!(bytes.len() == 32);
+        match convert_bytes_to_h256(&bytes) {
+            Ok(hash) => assert!(hash.to_fixed_bytes().to_vec() == bytes),
+            Err(_) => panic!("Should have created hash!")
+        }
+    }
+
+    #[test]
+    fn should_fail_to_get_hash_from_wrong_sized_bytes() {
+        let expected_error = "✘ Wrong number of bytes for hash!";
+        let bytes = vec![
+            0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0, 0xff,
+            0xee, 0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0,
+            0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee,
+            0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee, 0xc0
+        ];
+        assert!(bytes.len() != 32);
+        match convert_bytes_to_h256(&bytes) {
+            Err(AppError::Custom(e)) => assert!(e == expected_error),
+            _ => panic!("did not get expected error!")
         }
     }
 }
