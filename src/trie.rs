@@ -75,6 +75,16 @@ impl Trie {
         }
     }
 
+    fn reset_stack(self) -> Result<Self> {
+        Ok(
+            Trie {
+                root: self.root,
+                stack: Vec::new(),
+                database: self.database
+            }
+        )
+    }
+
     fn put_node_in_database(self, node: Node) -> Result<Self> {
         Ok(
             Trie {
@@ -283,5 +293,24 @@ mod tests {
         ).unwrap();
         assert!(thing_from_db_1 == expected_thing_from_db_1);
         assert!(thing_from_db_2 == expected_thing_from_db_2);
+    }
+
+    #[test]
+    fn should_reset_stack() {
+        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+            .unwrap();
+        let value = vec![0xde, 0xca, 0xff];
+        let trie = Trie::get_new_trie()
+            .unwrap();
+        assert!(trie.stack.len() == 0);
+        let node = Node::get_new_leaf_node(key.clone(), value.clone())
+            .unwrap();
+        let trie_with_stack = trie.put_node_in_stack(node.clone())
+            .unwrap();
+        assert!(trie_with_stack.stack.len() == 1);
+        assert!(trie_with_stack.stack.last() == Some(&node));
+        let result = trie_with_stack.reset_stack()
+            .unwrap();
+        assert!(result.stack.len() == 0);
     }
 }
