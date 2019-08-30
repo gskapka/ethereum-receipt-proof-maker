@@ -42,6 +42,12 @@ impl fmt::Debug for Nibbles {
     }
 }
 
+impl Nibbles {
+    pub fn len(&self) -> usize {
+        get_length_in_nibbles(&self)
+    }
+}
+
 pub fn get_common_prefix_nibbles(
     nibbles_a: Nibbles,
     nibbles_b: Nibbles,
