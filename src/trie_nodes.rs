@@ -1,14 +1,18 @@
-use rlp::RlpStream;
 use ethereum_types::H256;
 use crate::errors::AppError;
 use crate::get_keccak_hash::keccak_hash_bytes;
+use rlp::{
+    Rlp,
+    RlpStream
+};
 use crate::path_codec::{
     encode_leaf_path_from_nibbles,
     encode_extension_path_from_nibbles,
+    decode_path_to_nibbles_and_node_type,
 };
 use crate::nibble_utils::{
     Nibbles,
-    get_nibbles_from_bytes
+    get_nibbles_from_bytes,
 };
 use crate::types::{
     Bytes,
@@ -204,6 +208,18 @@ impl Node {
         }
     }
 
+    pub fn get_value(&self) -> Option<Bytes> { // TODO: Test
+        if let Some(leaf_node) = &self.leaf {
+            Some(leaf_node.value.clone())
+        } else if let Some(extension_node) = &self.extension {
+            Some(extension_node.value.clone())
+        } else if let Some(branch_node) = &self.branch {
+            branch_node.value.clone()
+        } else {
+            None
+        }
+    }
+
     pub fn get_type(&self) -> &'static str {
         if let Some(_) = self.leaf {
             LEAF_NODE_STRING
@@ -213,6 +229,63 @@ impl Node {
             EXTENSION_NODE_STRING
         } else {
             EMPTY_NODE_STRING
+        }
+    }
+}
+
+pub fn rlp_decode_node(rlp_data: Bytes) -> Result<Node> {
+    match Rlp::new(&rlp_data).as_list() {
+        Err(e) => Err(AppError::Custom(e.to_string())),
+        Ok(list) => {
+            match list.len() {
+                2 => {
+                    let path: &Bytes = &list[0];
+                    let value: &Bytes = &list[1];
+                    let (
+                        path_nibbles,
+                        node_type
+                    ) = decode_path_to_nibbles_and_node_type(path.clone())?;
+                    match node_type == LEAF_NODE_STRING {
+                        true => Node::get_new_leaf_node(
+                            path_nibbles,
+                            value.to_vec(),
+                        ),
+                        false => Node::get_new_extension_node(
+                            path_nibbles,
+                            value.to_vec(),
+                        )
+                    }
+                },
+                17 => {
+                    let value: &Bytes = &list[16];
+                    let mut branches = get_empty_child_nodes();
+                    for i in 0..16 {
+                        if list[i].len() > 0 {
+                            let value: &Bytes = &list[i];
+                            branches[i] = Some(value.to_vec())
+                        }
+                    }
+                    Ok(
+                        Node {
+                            leaf: None,
+                            extension: None,
+                            branch: Some(
+                                BranchNode {
+                                    branches,
+                                    value: if value.len() > 0 {
+                                        Some(value.to_vec())
+                                     } else {
+                                         None
+                                     }
+                                }
+                            )
+                        }
+                    )
+                },
+                _ => Err(AppError::Custom(
+                    "✘ Cannot decode node from rlp data!".to_string()
+                ))
+            }
         }
     }
 }
@@ -561,5 +634,64 @@ mod tests {
         let node = get_sample_branch_node();
         let result = node.get_key();
         assert!(result == EMPTY_NIBBLES);
+    }
+
+    #[test]
+    fn should_get_value_from_leaf_node() {
+        let expected_result = hex::decode("c0ffee".to_string()).unwrap();
+        let node = get_sample_leaf_node();
+        let result = node.get_value();
+        assert!(result == Some(expected_result));
+    }
+
+    #[test]
+    fn should_get_value_from_extension_node() {
+        let node = get_sample_extension_node();
+        let expected_result = hex::decode(
+            "1d237c84432c78d82886cb7d6549c179ca51ebf3b324d2a3fa01af6a563a9377".to_string()
+        ).unwrap();
+        let result = node.get_value();
+        assert!(result == Some(expected_result));
+    }
+
+    #[test]
+    fn should_get_value_from_branch_node() {
+        let node = get_sample_branch_node();
+        let expected_result = None;
+        let result = node.get_value();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_rlp_decode_leaf_node() {
+        let node = get_sample_leaf_node();
+        let rlp_encoded_node = node
+            .get_rlp_encoding()
+            .unwrap();
+        let result = rlp_decode_node(rlp_encoded_node)
+            .unwrap();
+        assert!(result == node );
+    }
+
+    #[test]
+    fn should_rlp_decode_extension_node() {
+        let node = get_sample_extension_node();
+        let rlp_encoded_node = node
+            .get_rlp_encoding()
+            .unwrap();
+        let result = rlp_decode_node(rlp_encoded_node)
+            .unwrap();
+        assert!(result == node);
+    }
+
+    #[test]
+    fn should_rlp_decode_branch_node() {
+        let node = get_sample_branch_node();
+        let rlp_encoded_node = node
+            .get_rlp_encoding()
+            .unwrap();
+        let result = rlp_decode_node(rlp_encoded_node)
+            .unwrap();
+        assert!(result == node);
     }
 }
