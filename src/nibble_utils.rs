@@ -314,6 +314,19 @@ pub fn get_length_in_nibbles(nibbles: &Nibbles) -> usize {
     nibbles.data.len() * 2 - nibbles.offset
 }
 
+pub fn split_at_first_nibble(nibbles: &Nibbles) -> Result<(Nibbles, Nibbles)> {
+    match get_length_in_nibbles(&nibbles) > 0 {
+        false => Ok((EMPTY_NIBBLES, EMPTY_NIBBLES)),
+        true => get_nibble_at_index(&nibbles, 0)
+            .and_then(|first_nibble|
+                Ok((
+                    get_nibbles_from_offset_bytes(vec![first_nibble]),
+                    slice_nibbles_at_nibble_index(nibbles.clone(), 1)?
+                ))
+            )
+    }
+}
+
 pub fn get_nibble_at_index(
     nibbles: &Nibbles,
     nibble_index: usize
@@ -1651,5 +1664,35 @@ mod tests {
             .unwrap();
         assert!(result == expected_result);
     }
-}
 
+    #[test]
+    fn should_split_at_first_nibble_correctly() {
+        let bytes = vec![0xdu8, 0xec, 0xaf];
+        let nibbles = get_nibbles_from_offset_bytes(bytes);
+        let expected_nibbles = get_nibbles_from_bytes(vec![0xec, 0xaf]);
+        let expected_nibble = get_nibbles_from_offset_bytes(vec![0xdu8]);
+        let (result_nibble, result_nibbles) = split_at_first_nibble(&nibbles)
+            .unwrap();
+        assert!(result_nibble == expected_nibble);
+        assert!(result_nibbles == expected_nibbles);
+    }
+
+    #[test]
+    fn should_split_at_first_nibble_from_single_nibbles_correctly() {
+        let bytes = vec![0xdu8];
+        let nibbles = get_nibbles_from_offset_bytes(bytes);
+        let expected_nibble = get_nibbles_from_offset_bytes(vec![0xdu8]);
+        let (result_nibble, result_nibbles) = split_at_first_nibble(&nibbles)
+            .unwrap();
+        assert!(result_nibble == expected_nibble);
+        assert!(result_nibbles == EMPTY_NIBBLES);
+    }
+
+    #[test]
+    fn should_split_at_first_nibble_from_empty_nibbles_correctly() {
+        let (result_nibble, result_nibbles) = split_at_first_nibble(&EMPTY_NIBBLES)
+            .unwrap();
+        assert!(result_nibble == EMPTY_NIBBLES);
+        assert!(result_nibbles == EMPTY_NIBBLES);
+    }
+}
