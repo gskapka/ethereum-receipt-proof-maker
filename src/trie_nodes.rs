@@ -16,6 +16,7 @@ use crate::types::{
     ChildNodes,
 };
 use crate::constants::{
+    EMPTY_NIBBLES,
     LEAF_NODE_STRING,
     EMPTY_NODE_STRING,
     BRANCH_NODE_STRING,
@@ -193,13 +194,13 @@ impl Node {
             .and_then(|encoded| keccak_hash_bytes(&encoded))
     }
 
-    pub fn get_key(&self) -> Option<Nibbles> {
+    pub fn get_key(&self) -> Nibbles {
         if let Some(leaf_node) = &self.leaf {
-            Some(leaf_node.path_nibbles.clone())
+            leaf_node.path_nibbles.clone()
         } else if let Some(extension_node) = &self.extension {
-            Some(extension_node.path_nibbles.clone())
+            extension_node.path_nibbles.clone()
         } else {
-            None
+            EMPTY_NIBBLES
         }
     }
 
@@ -543,7 +544,7 @@ mod tests {
         let expected_result = get_nibbles_from_bytes(path_bytes.clone());
         let node = get_sample_leaf_node();
         let result = node.get_key();
-        assert!(result == Some(expected_result));
+        assert!(result == expected_result);
     }
 
     #[test]
@@ -552,13 +553,13 @@ mod tests {
         let path_bytes = vec![0xc0, 0xff, 0xee];
         let expected_result = get_nibbles_from_bytes(path_bytes);
         let result = node.get_key();
-        assert!(result == Some(expected_result));
+        assert!(result == expected_result);
     }
 
     #[test]
     fn should_get_no_key_from_branch_node() {
         let node = get_sample_branch_node();
         let result = node.get_key();
-        assert!(result == None);
+        assert!(result == EMPTY_NIBBLES);
     }
 }
