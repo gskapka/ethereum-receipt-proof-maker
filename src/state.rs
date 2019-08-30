@@ -345,8 +345,8 @@ mod tests {
         let state = get_valid_initial_state()
             .unwrap();
         match get_thing_from_database(&state.database, &expected_key) {
-            Ok(_) => panic!("Thing should not be in database!"),
-            _ => assert!(true)
+            Some(_) => panic!("Thing should not be in database!"),
+            None => assert!(true)
         }
         let database_with_thing_in_it = get_database_with_thing_in_it()
             .unwrap();
@@ -355,8 +355,8 @@ mod tests {
             database_with_thing_in_it
         ).unwrap();
         match get_thing_from_database(&updated_state.database, &expected_key) {
-            Ok(thing) => assert!(thing == expected_thing),
-            _ => panic!("Thing should be in database!")
+            Some(thing) => assert!(thing == expected_thing),
+            None => panic!("Thing should be in database!")
         }
     }
 }

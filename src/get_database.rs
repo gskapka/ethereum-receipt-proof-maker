@@ -26,12 +26,10 @@ pub fn put_thing_in_database(
 pub fn get_thing_from_database(
     database: &Database,
     key: &H256,
-) -> Result<Bytes> {
+) -> Option<Bytes> {
     match database.get(&key) {
-        Some(thing) => Ok(thing.to_vec()),
-        None => Err(AppError::Custom(
-            format!("✘ Error! Nothing in database under key: {}", key)
-        )),
+        Some(thing) => Some(thing.to_vec()),
+        None => None
     }
 }
 
@@ -91,8 +89,8 @@ mod tests {
             .unwrap();
         let expected_thing = get_thing_to_put_in_database();
         match get_thing_from_database(&state.database, &expected_key) {
-            Ok(_) => panic!("Thing should not be in database!"),
-            _ => assert!(true)
+            Some(_) => panic!("Thing should not be in database!"),
+            None => assert!(true)
         }
         let returned_state = put_thing_in_database_in_state(
             state,
@@ -100,8 +98,8 @@ mod tests {
             expected_thing.clone()
         ).unwrap();
         match get_thing_from_database(&returned_state.database, &expected_key) {
-            Ok(thing) => assert!(thing == expected_thing),
-            _ => panic!("Thing should be in database!")
+            Some(thing) => assert!(thing == expected_thing),
+            None => panic!("Thing should be in database!")
         }
     }
 }
