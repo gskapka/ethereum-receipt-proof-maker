@@ -1,5 +1,6 @@
 use ethereum_types::H256;
 use crate::errors::AppError;
+use crate::get_database::get_thing_from_database;
 use crate::get_keccak_hash::keccak_hash_bytes;
 use rlp::{
     Rlp,
@@ -17,6 +18,7 @@ use crate::nibble_utils::{
 use crate::types::{
     Bytes,
     Result,
+    Database,
     ChildNodes,
 };
 use crate::constants::{
@@ -308,12 +310,26 @@ fn update_child_nodes(
     Ok(child_nodes)
 }
 
+pub fn get_node_from_database(
+    database: &Database,
+    key: &H256
+) -> Result<Option<Node>> {
+    match get_thing_from_database(database, key) {
+        None => Ok(None),
+        Some(encoded_node) => Ok(Some(rlp_decode_node(encoded_node)?))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use hex;
     use super::*;
     use crate::nibble_utils::get_length_in_nibbles;
     use crate::utils::convert_hex_to_h256;
+    use crate::get_database::{
+        get_new_database,
+        put_thing_in_database,
+    };
 
     fn get_sample_leaf_node() -> Node {
         let path_bytes = vec![0x12, 0x34, 0x56];
@@ -693,5 +709,67 @@ mod tests {
         let result = rlp_decode_node(rlp_encoded_node)
             .unwrap();
         assert!(result == node);
+    }
+
+    #[test]
+    fn should_get_leaf_node_from_database() {
+        let database = get_new_database()
+            .unwrap();
+        let node = get_sample_leaf_node();
+        let key = node.get_hash().unwrap();
+        let rlp_encoded_node = node.get_rlp_encoding().unwrap();
+        let updated_database = put_thing_in_database(
+            database,
+            key,
+            rlp_encoded_node,
+        ).unwrap();
+        let result = get_node_from_database(&updated_database, &key)
+            .unwrap();
+        assert!(result == Some(node));
+    }
+
+    #[test]
+    fn should_get_branch_node_from_database() {
+        let database = get_new_database()
+            .unwrap();
+        let node = get_sample_branch_node();
+        let key = node.get_hash().unwrap();
+        let rlp_encoded_node = node.get_rlp_encoding().unwrap();
+        let updated_database = put_thing_in_database(
+            database,
+            key,
+            rlp_encoded_node,
+        ).unwrap();
+        let result = get_node_from_database(&updated_database, &key)
+            .unwrap();
+        assert!(result == Some(node));
+    }
+
+    #[test]
+    fn should_get_extension_node_from_database() {
+        let database = get_new_database()
+            .unwrap();
+        let node = get_sample_branch_node();
+        let key = node.get_hash().unwrap();
+        let rlp_encoded_node = node.get_rlp_encoding().unwrap();
+        let updated_database = put_thing_in_database(
+            database,
+            key,
+            rlp_encoded_node,
+        ).unwrap();
+        let result = get_node_from_database(&updated_database, &key)
+            .unwrap();
+        assert!(result == Some(node));
+    }
+
+    #[test]
+    fn should_fail_to_get_non_existing_node_from_db() {
+        let database = get_new_database()
+            .unwrap();
+        let node = get_sample_branch_node();
+        let dummy_key = node.get_hash().unwrap();
+        let result = get_node_from_database(&database, &dummy_key)
+            .unwrap();
+        assert!(result == None);
     }
 }
