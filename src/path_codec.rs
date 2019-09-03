@@ -16,6 +16,10 @@ use crate::nibble_utils::{
     get_nibbles_from_offset_bytes,
     replace_nibble_in_nibbles_at_nibble_index,
 };
+use crate::constants::{
+    LEAF_NODE_STRING,
+    EXTENSION_NODE_STRING,
+};
 
 const ODD_LENGTH_LEAF_PREFIX_NIBBLE: u8 = 3u8;      // [00000011]
 const EVEN_LENGTH_LEAF_PREFIX_BYTE: u8 = 32u8;      // [00100000]
@@ -66,15 +70,15 @@ fn encode_odd_length_leaf_path_from_nibbles(
     encode_odd_length_path_from_nibbles(nibbles, get_leaf_prefix_nibble())
 }
 
-fn is_path_to_leaf_node(path: Bytes) -> Result<bool> {
-    decode_path_to_nibbles_and_node_type(path)
+fn is_path_to_leaf_node(path: &Bytes) -> Result<bool> {
+    decode_path_to_nibbles_and_node_type(path.to_vec())
         .and_then(|(_, node_type)| match &(*node_type) {
             "leaf" => Ok(true),
             _ => Ok(false)
         })
 }
 
-fn is_path_to_extension_node(path: Bytes) -> Result<bool> {
+fn is_path_to_extension_node(path: &Bytes) -> Result<bool> {
     is_path_to_leaf_node(path)
         .and_then(|is_leaf_bool| Ok(!is_leaf_bool))
 }
@@ -100,15 +104,15 @@ fn decode_odd_length_path_to_nibbles(path: Bytes) -> Result<Nibbles> {
 
 pub fn decode_path_to_nibbles_and_node_type(
     path: Bytes
-) -> Result<(Nibbles, String)> {
+) -> Result<(Nibbles, &'static str)> {
     match path[0] {
         EVEN_LENGTH_LEAF_PREFIX_BYTE => Ok((
             get_nibbles_from_bytes(trim_encoding_byte(path)?),
-            "leaf".to_string()
+            LEAF_NODE_STRING
         )),
         EVEN_LENGTH_EXTENSION_PREFIX_BYTE => Ok((
             get_nibbles_from_bytes(trim_encoding_byte(path)?),
-            "extension".to_string()
+            EXTENSION_NODE_STRING
         )),
         _ => match get_nibble_at_index(
             &get_nibbles_from_bytes(path.clone())
@@ -118,11 +122,11 @@ pub fn decode_path_to_nibbles_and_node_type(
             Ok(nibble) => match nibble {
                 ODD_LENGTH_LEAF_PREFIX_NIBBLE => Ok((
                     decode_odd_length_path_to_nibbles(path)?,
-                    "leaf".to_string()
+                    LEAF_NODE_STRING
                 )),
                 ODD_LENGTH_EXTENSION_PREFIX_NIBBLE => Ok((
                     decode_odd_length_path_to_nibbles(path)?,
-                    "extension".to_string()
+                    EXTENSION_NODE_STRING
                 )),
                 _ => Err(AppError::Custom(
                     "✘ Malformed path - cannot determine node type!".to_string()
@@ -270,7 +274,7 @@ mod tests {
     #[test]
     fn should_check_if_even_leaf_node_is_leaf_correctly() {
         let (_, even_leaf_path) = get_even_leaf_path_sample();
-        let result = is_path_to_leaf_node(even_leaf_path)
+        let result = is_path_to_leaf_node(&even_leaf_path)
             .unwrap();
         assert!(result);
     }
@@ -278,7 +282,7 @@ mod tests {
     #[test]
     fn should_check_if_odd_leaf_node_is_leaf_correctly() {
         let (_, odd_leaf_path) = get_odd_leaf_path_sample();
-        let result = is_path_to_leaf_node(odd_leaf_path)
+        let result = is_path_to_leaf_node(&odd_leaf_path)
             .unwrap();
         assert!(result);
     }
@@ -286,7 +290,7 @@ mod tests {
     #[test]
     fn should_check_if_even_extension_node_is_leaf_correctly() {
         let (_, even_extension_path) = get_even_extension_path_sample();
-        let result = is_path_to_leaf_node(even_extension_path)
+        let result = is_path_to_leaf_node(&even_extension_path)
             .unwrap();
         assert!(!result);
     }
@@ -294,7 +298,7 @@ mod tests {
     #[test]
     fn should_check_if_odd_extension_node_is_leaf_correctly() {
         let (_, odd_extension_path) = get_odd_extension_path_sample();
-        let result = is_path_to_leaf_node(odd_extension_path)
+        let result = is_path_to_leaf_node(&odd_extension_path)
             .unwrap();
         assert!(!result);
     }
@@ -302,7 +306,7 @@ mod tests {
     #[test]
     fn should_check_if_even_leaf_node_is_extension_correctly() {
         let (_, even_leaf_path) = get_even_leaf_path_sample();
-        let result = is_path_to_extension_node(even_leaf_path)
+        let result = is_path_to_extension_node(&even_leaf_path)
             .unwrap();
         assert!(!result);
     }
@@ -310,7 +314,7 @@ mod tests {
     #[test]
     fn should_check_if_odd_leaf_node_is_extension_correctly() {
         let (_, odd_leaf_path) = get_odd_leaf_path_sample();
-        let result = is_path_to_extension_node(odd_leaf_path)
+        let result = is_path_to_extension_node(&odd_leaf_path)
             .unwrap();
         assert!(!result);
     }
@@ -318,7 +322,7 @@ mod tests {
     #[test]
     fn should_check_if_even_extension_node_is_extension_correctly() {
         let (_, even_extension_path) = get_even_extension_path_sample();
-        let result = is_path_to_extension_node(even_extension_path)
+        let result = is_path_to_extension_node(&even_extension_path)
             .unwrap();
         assert!(result);
     }
@@ -326,7 +330,7 @@ mod tests {
     #[test]
     fn should_check_if_odd_extension_node_is_extension_correctly() {
         let (_, odd_extension_path) = get_odd_extension_path_sample();
-        let result = is_path_to_extension_node(odd_extension_path)
+        let result = is_path_to_extension_node(&odd_extension_path)
             .unwrap();
         assert!(result);
     }
