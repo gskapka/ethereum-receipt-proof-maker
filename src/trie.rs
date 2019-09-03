@@ -50,16 +50,80 @@ impl Trie {
     }
 
     pub fn put(self, key: Nibbles, value: Bytes) -> Result<Self> {
-        match self.root == HASHED_NULL_NODE { // Note: Tested!
+        match self.root == HASHED_NULL_NODE { // NOTE: Tested!
             true => Node::get_new_leaf_node(key, value)
                 .and_then(|node| Trie::put_node_in_stack(self, node))
                 .and_then(Trie::update_root_hash_from_node_in_stack)
                 .and_then(Trie::save_stack_to_database),
-            _ => Ok(self)
+            false => Trie::find(self, key) // NOTE: Untested & unfinished
+                .and_then(Trie::process_node_stack)
         }
     }
 
-    //pub fn find(self, key: Nibbles)
+    fn find( // TODO Untested!
+        self,
+        target_key: Nibbles
+    ) -> Result<(Self, NodeStack, Nibbles)> {
+        get_node_from_database(&self.database, &self.root)
+            .and_then(|maybe_node| match maybe_node {
+                Some(node) => Trie::find_path(self, vec![node], target_key),
+                None => Err(AppError::Custom(
+                    "✘ Find Error: Could not find root node in db!".to_string()
+                ))
+            })
+    }
+
+    fn find_path( // TODO: Untested!
+        self,
+        mut node_stack: NodeStack,
+        key: Nibbles
+    ) -> Result<(Self, NodeStack, Nibbles)> {
+        match node_stack.pop() {
+            None => Ok((self, node_stack, key)),
+            Some(current_node) => {
+                match current_node.get_type() {
+                    "leaf" => Self::continue_finding_from_leaf(
+                        self,
+                        current_node,
+                        node_stack,
+                        key,
+                    ),
+                    "branch" => Self::continue_finding_from_branch(
+                        self,
+                        current_node,
+                        node_stack,
+                        key
+                    ),
+                    "extension" => Self::continue_finding_from_extension(
+                        self,
+                        current_node,
+                        node_stack,
+                        key,
+                    ),
+                    _ => Err(AppError::Custom(
+                        "✘ Find Error: Node type not recognized!".to_string()
+                    ))
+                }
+            }
+        }
+    }
+
+    fn continue_finding_from_leaf( // TODO: Untested!
+        self,
+        current_node: Node,
+        mut node_stack: NodeStack,
+        key: Nibbles
+    ) -> Result<(Self, NodeStack, Nibbles)> {
+        get_common_prefix_nibbles(key.clone(), current_node.get_key())
+            .and_then(|(_, remaining_key, _)| {
+                node_stack.push(current_node);
+                match remaining_key.len() {
+                    0 => Ok((self, node_stack, EMPTY_NIBBLES)), // Full match
+                    _ => Ok((self, node_stack, key)) // Some|no match
+                }
+            })
+    }
+
 
     pub fn update_root_hash(mut self, new_hash: H256) -> Result<Self> {
         self.root = new_hash;
