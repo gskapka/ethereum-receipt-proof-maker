@@ -141,3 +141,4 @@ __❍__ The current memory database usage is pure in that we clone the db and re
  - [ ] Benchmark it and maybe don't clone the db per above note?
  - [ ] Have method to convert hex string of even/odd length to offset/non- nibbles.
  - [ ] Need a node rlp-decoder!
+ - [ ] passing self as an arg INSIDE a tuple causes weird compiler issue. (see trie, process_node_stack(...).
