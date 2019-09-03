@@ -107,7 +107,25 @@ impl Trie {
             }
         }
     }
-
+    /**
+     *
+     * Finding onwards from a leaf node:
+     *
+     * Once at a leaf node we first check for any common prefix between our
+     * target key and the leaf key. Once determined, we consider the two cases
+     * of what remains of the target key:
+     *
+     * 1) No key remains.
+     * 2) Some or all the key remains.
+     *
+     * In the first case, we have a full match and so return stack including
+     * this leaf node along with an empty key.
+     *
+     * In case 2) we have no match but this is the closest node we got to. The
+     * curent node is pushed back on the stack, which latter is returned along
+     * with the key that remains to be found that was passed in.
+     *
+     */
     fn continue_finding_from_leaf( // TODO: Untested!
         self,
         current_node: Node,
