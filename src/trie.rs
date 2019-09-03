@@ -1,7 +1,19 @@
 use ethereum_types::H256;
-use crate::trie_nodes::Node;
-use crate::nibble_utils::Nibbles;
+use crate::errors::AppError;
+use crate::utils::convert_bytes_to_h256;
+use crate::trie_nodes::{
+    Node,
+    rlp_decode_node,
+    get_node_from_database,
+};
+use crate::nibble_utils::{
+    Nibbles,
+    get_length_in_nibbles,
+    split_at_first_nibble,
+    get_common_prefix_nibbles,
+};
 use crate::constants::{
+    EMPTY_NIBBLES,
     HASHED_NULL_NODE,
     LEAF_NODE_STRING,
     EMPTY_NODE_STRING,
@@ -18,19 +30,19 @@ use crate::types::{
     Database
 };
 
-pub type Stack = Vec<Node>; // TODO: Move to types!
+pub type NodeStack = Vec<Node>; // TODO: Move to types!
 
 pub struct Trie {
     pub root: H256,
-    pub stack: Stack,
     pub database: Database,
+    pub node_stack: NodeStack,
 }
 
 impl Trie {
     pub fn get_new_trie() -> Result<Trie> {
         Ok(
             Trie {
-                stack: Vec::new(),
+                node_stack: Vec::new(),
                 root: HASHED_NULL_NODE,
                 database: get_new_database()?
             }
@@ -55,19 +67,19 @@ impl Trie {
     }
 
     pub fn put_node_in_stack(mut self, node: Node) -> Result<Self> {
-        self.stack.push(node);
+        self.node_stack.push(node);
         Ok(self)
     }
 
     pub fn update_root_hash_from_node_in_stack(self) -> Result<Self> {
-        let hash = self.stack.last()?.get_hash()?;
+        let hash = self.node_stack.last()?.get_hash()?;
         self.update_root_hash(hash)
     }
 
     fn save_stack_to_database(mut self) -> Result<Self> {
-        match self.stack.len() > 0 {
+        match self.node_stack.len() > 0 {
             true => {
-                let node = self.stack.pop()?;
+                let node = self.node_stack.pop()?;
                 self.put_node_in_database(node)
                     .and_then(Trie::save_stack_to_database)
             },
@@ -79,7 +91,7 @@ impl Trie {
         Ok(
             Trie {
                 root: self.root,
-                stack: Vec::new(),
+                node_stack: Vec::new(),
                 database: self.database
             }
         )
@@ -89,7 +101,7 @@ impl Trie {
         Ok(
             Trie {
                 root: self.root,
-                stack: self.stack,
+                node_stack: self.node_stack,
                 database: put_thing_in_database(
                     self.database,
                     node.get_hash()?,
@@ -116,7 +128,7 @@ mod tests {
             .unwrap();
         assert!(trie.database.is_empty());
         assert!(trie.root == HASHED_NULL_NODE);
-        assert!(trie.stack.len() == 0);
+        assert!(trie.node_stack.len() == 0);
     }
 
     #[test]
@@ -136,7 +148,7 @@ mod tests {
             .unwrap();
         let result = trie.put(key, value)
             .unwrap();
-        assert!(result.stack.len() == 0);
+        assert!(result.node_stack.len() == 0);
         assert!(result.root == expected_node.get_hash().unwrap());
         let thing_from_db = get_thing_from_database(
             &result.database,
@@ -167,13 +179,13 @@ mod tests {
         let value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
-        assert!(trie.stack.len() == 0);
+        assert!(trie.node_stack.len() == 0);
         let node = Node::get_new_leaf_node(key.clone(), value.clone())
             .unwrap();
         let result = trie.put_node_in_stack(node.clone())
             .unwrap();
-        assert!(result.stack.len() == 1);
-        assert!(result.stack.last() == Some(&node));
+        assert!(result.node_stack.len() == 1);
+        assert!(result.node_stack.last() == Some(&node));
     }
 
     #[test]
@@ -193,9 +205,9 @@ mod tests {
         let result = updated_trie.update_root_hash_from_node_in_stack()
             .unwrap();
         assert!(result.root != old_root);
-        assert!(result.stack.len() == 1);
+        assert!(result.node_stack.len() == 1);
         assert!(result.root == expected_root);
-        assert!(result.stack.last().unwrap().get_hash().unwrap() == result.root);
+        assert!(result.node_stack.last().unwrap().get_hash().unwrap() == result.root);
     }
 
     #[test]
@@ -237,10 +249,10 @@ mod tests {
             .unwrap();
         let updated_trie = trie.put_node_in_stack(node)
             .unwrap();
-        assert!(updated_trie.stack.len() == 1);
+        assert!(updated_trie.node_stack.len() == 1);
         let result = updated_trie.save_stack_to_database()
             .unwrap();
-        assert!(result.stack.len() == 0);
+        assert!(result.node_stack.len() == 0);
         let thing_from_db = get_thing_from_database(
             &result.database,
             &expected_db_key
@@ -279,10 +291,10 @@ mod tests {
             .unwrap();
         let updated_trie_2 = updated_trie_1.put_node_in_stack(node_2)
             .unwrap();
-        assert!(updated_trie_2.stack.len() == 2);
+        assert!(updated_trie_2.node_stack.len() == 2);
         let result = updated_trie_2.save_stack_to_database()
             .unwrap();
-        assert!(result.stack.len() == 0);
+        assert!(result.node_stack.len() == 0);
         let thing_from_db_1 = get_thing_from_database(
             &result.database,
             &expected_db_key_1
@@ -302,15 +314,15 @@ mod tests {
         let value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
-        assert!(trie.stack.len() == 0);
+        assert!(trie.node_stack.len() == 0);
         let node = Node::get_new_leaf_node(key.clone(), value.clone())
             .unwrap();
         let trie_with_stack = trie.put_node_in_stack(node.clone())
             .unwrap();
-        assert!(trie_with_stack.stack.len() == 1);
-        assert!(trie_with_stack.stack.last() == Some(&node));
+        assert!(trie_with_stack.node_stack.len() == 1);
+        assert!(trie_with_stack.node_stack.last() == Some(&node));
         let result = trie_with_stack.reset_stack()
             .unwrap();
-        assert!(result.stack.len() == 0);
+        assert!(result.node_stack.len() == 0);
     }
 }
