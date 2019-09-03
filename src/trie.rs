@@ -141,7 +141,65 @@ impl Trie {
                 }
             })
     }
-
+    /**
+     *
+     * Finding onwards from an extension node:
+     *
+     * Once at an extension either we have three cases to consider:
+     *
+     * 1) No common prefix between target key and extension key.
+     * 2) A common prefix that partially consumes the extension key.
+     * 3) A common prefix that entirely consumes the extension key.
+     *
+     * In all three case we require the current node returned for further work.
+     * In cases 1) & 2) we have reached the end of our search and so simply
+     * return the stack of nodes and the key passed in.
+     *
+     * In case 3) we have fully consumed the extension node and so must get the
+     * next node that the extension points to and add that to the stack. Then
+     * pass that stack along with what remains of our target key for continued
+     * searching.
+     *
+     */
+    fn continue_finding_from_extension( // TODO Untested!
+        self,
+        current_node: Node,
+        mut node_stack: NodeStack,
+        key: Nibbles
+    ) -> Result<(Self, NodeStack, Nibbles)> {
+        get_common_prefix_nibbles(key.clone(), current_node.get_key())
+            .and_then(|(common_prefix, remaining_key, remaining_node_key)| {
+                let next_node_hash = &convert_bytes_to_h256(
+                    &current_node.get_value()?
+                )?;
+                node_stack.push(current_node);
+                match common_prefix.len() {
+                    0 => Ok((self, node_stack, key)),
+                    _ => match remaining_node_key.len() > 0 {
+                        true => Ok((self, node_stack, key)),
+                        false => { // Fully matched the extension ∴ continue.
+                            match get_node_from_database(
+                                &self.database,
+                                next_node_hash
+                            )? {
+                                Some(next_node) => {
+                                    node_stack.push(next_node);
+                                    Self::find_path(
+                                        self,
+                                        node_stack,
+                                        remaining_key
+                                    )
+                                },
+                                None => Err(AppError::Custom(
+                                    "✘ Find Error: Extension child not in db!"
+                                        .to_string()
+                                ))
+                            }
+                        }
+                    }
+                }
+            })
+    }
 
     pub fn update_root_hash(mut self, new_hash: H256) -> Result<Self> {
         self.root = new_hash;
