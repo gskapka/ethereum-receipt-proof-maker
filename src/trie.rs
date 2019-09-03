@@ -200,6 +200,69 @@ impl Trie {
                 }
             })
     }
+    /**
+     *
+     * Finding onwards from a branch node:
+     *
+     * When arriving at a branch node, we take our target key and slice off the
+     * first nibble. This is then used as the index for inspecting the branches
+     * children, at which point there are two cases:
+     *
+     * 1) The child is empty.
+     * 2) The child is not empty.
+     *
+     * In the first case, we have reached the end of our search. The branch node
+     * is placed back in the stack which is then returned along with the target
+     * key passed in.
+     *
+     * In the second case, we have two more cases:
+     *
+     * 1) The child is a hash.
+     * 2) The child is an inline node.
+     *
+     * In the first case we search the database for the node pointed to by that
+     * hash and then add it to the stack after first adding the branch node
+     * we're currently looking at back to the stack. We then recurse back into
+     * the `find_path` function with our updated stack and the target key.
+     *
+     * The second case is not yet currently handled. // TODO!
+     *
+     */
+    fn continue_finding_from_branch( // TODO Untested!
+        self,
+        current_node: Node,
+        mut node_stack: NodeStack,
+        key: Nibbles
+    ) -> Result<(Self, NodeStack, Nibbles)> {
+        node_stack.push(current_node.clone());
+        split_at_first_nibble(&key)
+            .and_then(|(first_nibble, remaining_nibbles)| {
+                let index = first_nibble.data[0] as usize;
+                match &current_node.branch?.branches[index] {
+                    None => Ok((self, node_stack, key)),
+                    Some(bytes) => {
+                        let maybe_next_node = get_node_from_database(
+                            &self.database,
+                            &convert_bytes_to_h256(&bytes)?
+                        )?;
+                        match maybe_next_node {
+                            Some(next_node) => {
+                                node_stack.push(next_node);
+                                Self::find_path(
+                                    self,
+                                    node_stack,
+                                    remaining_nibbles
+                                )
+                            },
+                            None => Err(AppError::Custom(
+                                "✘ Find Error: Branch child not in db!"
+                                    .to_string()
+                            )),
+                        }
+                    }
+                }
+        })
+    }
 
     pub fn update_root_hash(mut self, new_hash: H256) -> Result<Self> {
         self.root = new_hash;
