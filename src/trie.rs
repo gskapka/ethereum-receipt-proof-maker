@@ -23,6 +23,7 @@ use crate::constants::{
 use crate::get_database::{
     get_new_database,
     put_thing_in_database,
+    remove_thing_from_database,
 };
 use crate::types::{
     Bytes,
@@ -313,6 +314,19 @@ impl Trie {
             }
         )
     }
+
+    fn remove_node_from_database(self, node: Node) -> Result<Self> {
+        Ok(
+            Trie {
+                root: self.root,
+                node_stack: self.node_stack,
+                database: remove_thing_from_database(
+                    self.database,
+                    &node.get_hash()?,
+                )?
+            }
+        )
+    }
 }
 
 #[cfg(test)]
@@ -377,13 +391,13 @@ mod tests {
 
     #[test]
     fn should_put_node_in_stack() {
-        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+        let node_key = convert_hex_string_to_nibbles("c0ffe".to_string())
             .unwrap();
-        let value = vec![0xde, 0xca, 0xff];
+        let node_value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
         assert!(trie.node_stack.len() == 0);
-        let node = Node::get_new_leaf_node(key.clone(), value.clone())
+        let node = Node::get_new_leaf_node(node_key.clone(), node_value.clone())
             .unwrap();
         let result = trie.put_node_in_stack(node.clone())
             .unwrap();
@@ -393,13 +407,13 @@ mod tests {
 
     #[test]
     fn should_update_root_hash_from_node_in_stack() {
-        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+        let node_key = convert_hex_string_to_nibbles("c0ffe".to_string())
             .unwrap();
-        let value = vec![0xde, 0xca, 0xff];
+        let node_value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
         let old_root = trie.root;
-        let node = Node::get_new_leaf_node(key.clone(), value.clone())
+        let node = Node::get_new_leaf_node(node_key.clone(), node_value.clone())
             .unwrap();
         let expected_root = node.get_hash()
             .unwrap();
@@ -415,34 +429,57 @@ mod tests {
 
     #[test]
     fn should_put_node_in_database_in_trie() {
-        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+        let node_key = convert_hex_string_to_nibbles("c0ffe".to_string())
             .unwrap();
-        let value = vec![0xde, 0xca, 0xff];
+        let node_value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
-        let node = Node::get_new_leaf_node(key.clone(), value.clone())
+        let node = Node::get_new_leaf_node(node_key.clone(), node_value.clone())
             .unwrap();
         let expected_result = node.get_rlp_encoding()
             .unwrap();
-        let hash = node
+        let node_hash = node
             .get_hash()
             .unwrap();
         let updated_trie = trie
             .put_node_in_database(node.clone())
             .unwrap();
-        let result = get_thing_from_database(&updated_trie.database, &hash)
+        let result = get_thing_from_database(&updated_trie.database, &node_hash)
             .unwrap();
         assert!(result == expected_result);
     }
 
     #[test]
-    fn should_save_stack_of_length_1_to_database() {
-        let key = convert_hex_string_to_nibbles("c0ffe".to_string())
+    fn should_remove_node_from_database() {
+        let node_key = convert_hex_string_to_nibbles("c0ffe".to_string())
             .unwrap();
-        let value = vec![0xde, 0xca, 0xff];
+        let node_value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
-        let node = Node::get_new_leaf_node(key.clone(), value.clone())
+        let node = Node::get_new_leaf_node(node_key.clone(), node_value.clone())
+            .unwrap();
+        let expected_result = node.get_rlp_encoding()
+            .unwrap();
+        let node_hash = node
+            .get_hash()
+            .unwrap();
+        let updated_trie = trie
+            .put_node_in_database(node.clone())
+            .unwrap();
+        assert!(updated_trie.database.contains_key(&node_hash));
+        let resulting_trie = updated_trie.remove_node_from_database(node)
+            .unwrap();
+        assert!(!resulting_trie.database.contains_key(&node_hash));
+    }
+
+    #[test]
+    fn should_save_stack_of_length_1_to_database() {
+        let node_key = convert_hex_string_to_nibbles("c0ffe".to_string())
+            .unwrap();
+        let node_value = vec![0xde, 0xca, 0xff];
+        let trie = Trie::get_new_trie()
+            .unwrap();
+        let node = Node::get_new_leaf_node(node_key.clone(), node_value.clone())
             .unwrap();
         let expected_db_key = node
             .get_hash()
@@ -514,11 +551,11 @@ mod tests {
     fn should_reset_stack() {
         let key = convert_hex_string_to_nibbles("c0ffe".to_string())
             .unwrap();
-        let value = vec![0xde, 0xca, 0xff];
+        let node_value = vec![0xde, 0xca, 0xff];
         let trie = Trie::get_new_trie()
             .unwrap();
         assert!(trie.node_stack.len() == 0);
-        let node = Node::get_new_leaf_node(key.clone(), value.clone())
+        let node = Node::get_new_leaf_node(key.clone(), node_value.clone())
             .unwrap();
         let trie_with_stack = trie.put_node_in_stack(node.clone())
             .unwrap();
