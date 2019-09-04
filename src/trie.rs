@@ -329,6 +329,13 @@ impl Trie {
     }
 }
 
+fn get_key_length_accounted_for_in_stack(node_stack: &NodeStack) -> usize {
+    node_stack
+        .iter()
+        .map(|node| node.get_key_length())
+        .sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -337,6 +344,11 @@ mod tests {
     use crate::nibble_utils::{
         get_nibbles_from_bytes,
         convert_hex_string_to_nibbles,
+    };
+    use crate::test_utils::{
+        get_sample_leaf_node,
+        get_sample_branch_node,
+        get_sample_extension_node,
     };
 
     #[test]
@@ -564,5 +576,19 @@ mod tests {
         let result = trie_with_stack.reset_stack()
             .unwrap();
         assert!(result.node_stack.len() == 0);
+    }
+
+    #[test]
+    fn should_sum_length_of_key_so_far_in_node_stack() {
+        let mut node_stack: NodeStack = Vec::new();
+        let leaf_node = get_sample_leaf_node();
+        let branch_node = get_sample_branch_node();
+        let extension_node = get_sample_extension_node();
+        node_stack.push(leaf_node);
+        node_stack.push(extension_node);
+        node_stack.push(branch_node);
+        let expected_result = 13;
+        let result = get_key_length_accounted_for_in_stack(&node_stack);
+        assert!(result == expected_result);
     }
 }
