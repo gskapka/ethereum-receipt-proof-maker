@@ -23,6 +23,17 @@ pub fn put_thing_in_database(
     Ok(database)
 }
 
+pub fn remove_thing_from_database(
+    mut database: Database,
+    key: &H256
+) -> Result<Database> {
+    match database.remove(&key) {
+        Some(_) => Ok(database),
+        None => Ok(database)
+    }
+}
+
+
 pub fn get_thing_from_database(
     database: &Database,
     key: &H256,
@@ -101,5 +112,23 @@ mod tests {
             Some(thing) => assert!(thing == expected_thing),
             None => panic!("Thing should be in database!")
         }
+    }
+
+    #[test]
+    fn should_remove_thing_from_database() {
+        let key = get_expected_key_of_thing_in_database();
+        let database = get_new_database()
+            .unwrap();
+        let updated_database = put_thing_in_database(
+            database,
+            key.clone(),
+            get_thing_to_put_in_database(),
+        ).unwrap();
+        assert!(updated_database.contains_key(&key));
+        let result = remove_thing_from_database(
+            updated_database,
+            &key,
+        ).unwrap();
+        assert!(!result.contains_key(&key));
     }
 }
