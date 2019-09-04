@@ -204,13 +204,27 @@ impl Node {
         if let Some(leaf_node) = &self.leaf {
             leaf_node.path_nibbles.clone()
         } else if let Some(extension_node) = &self.extension {
+            // TODO/FIXME: Could be inline node!!
             extension_node.path_nibbles.clone()
         } else {
             EMPTY_NIBBLES
         }
     }
 
-    pub fn get_value(&self) -> Option<Bytes> { // TODO: Test
+    pub fn get_key_length(&self) -> usize {
+        if let Some(leaf_node) = &self.leaf {
+            leaf_node.path_nibbles.clone().len()
+        } else if let Some(extension_node) = &self.extension {
+            // TODO/FIXME: Could be inline node!!
+            extension_node.path_nibbles.clone().len()
+        } else if let Some(branch_node) = &self.branch {
+            1
+        } else {
+            0
+        }
+    }
+
+    pub fn get_value(&self) -> Option<Bytes> {
         if let Some(leaf_node) = &self.leaf {
             Some(leaf_node.value.clone())
         } else if let Some(extension_node) = &self.extension {
@@ -771,5 +785,38 @@ mod tests {
         let result = get_node_from_database(&database, &dummy_key)
             .unwrap();
         assert!(result == None);
+    }
+
+    #[test]
+    fn should_get_key_length_of_leaf_node() {
+        let node = get_sample_leaf_node();
+        let expected_result = 6; // Note: "123456" length.
+        let result = node.get_key_length();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_key_length_of_extension_node() {
+        let node = get_sample_extension_node();
+        let expected_result = 6; // Note: "c0ffee" length.
+        let result = node.get_key_length();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_key_length_of_branch_node() {
+        let node = get_sample_branch_node();
+        let expected_result = 1;
+        let result = node.get_key_length();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_get_key_length_of_empty_node() {
+        let node = Node::get_new_empty_node()
+            .unwrap();
+        let expected_result = 0;
+        let result = node.get_key_length();
+        assert!(result == expected_result);
     }
 }
