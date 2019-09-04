@@ -112,6 +112,12 @@ pub fn convert_bytes_to_h256(bytes: &Bytes) -> Result<H256> {
     }
 }
 
+pub fn convert_h256_to_bytes(hash: H256) -> Bytes {
+    hash
+        .as_bytes()
+        .to_vec()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -133,6 +139,16 @@ mod tests {
     fn get_sample_h256() -> H256 {
         convert_hex_to_h256(get_sample_block_hash().to_string())
             .unwrap()
+    }
+
+    #[test]
+    fn should_convert_hash_to_bytes() {
+        let hash = get_sample_h256();
+        let result = convert_h256_to_bytes(hash);
+        let expected_hex = &get_sample_block_hash()[2..];
+        let expected_result = hex::decode(expected_hex)
+            .unwrap();
+        assert!(result == expected_result);
     }
 
     #[test]
