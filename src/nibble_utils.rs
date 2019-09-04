@@ -452,6 +452,13 @@ pub fn convert_hex_string_to_nibbles(hex_string: String) -> Result<Nibbles> {
     }
 }
 
+pub fn convert_nibble_to_usize(nibbles: Nibbles) -> usize {
+    match nibbles.len() == 0 {
+        true => 0,
+        false => nibbles.data[0] as usize
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -474,6 +481,19 @@ mod tests {
 
     fn get_sample_offset_nibbles() -> Nibbles {
         get_nibbles_from_offset_bytes(get_bytes_with_nibbles_from_index_one())
+    }
+
+    #[test]
+    fn should_convert_nibble_to_usize() {
+        let nibble = get_nibbles_from_bytes(vec![0xfu8]);
+        let result = convert_nibble_to_usize(nibble);
+        assert!(result == 15);
+    }
+
+    #[test]
+    fn should_convert_zero_nibble_to_usize() {
+        let result = convert_nibble_to_usize(EMPTY_NIBBLES);
+        assert!(result == 0);
     }
 
     #[test]
