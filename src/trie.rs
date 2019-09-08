@@ -338,9 +338,14 @@ fn get_key_length_accounted_for_in_stack(node_stack: &NodeStack) -> usize {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
     use super::*;
+    use crate::types::Receipt;
     use crate::utils::convert_hex_to_h256;
+    use crate::get_receipt::get_receipt_from_tx_hash;
     use crate::get_database::get_thing_from_database;
+    use crate::make_rpc_call::deserialize_to_receipt_rpc_response;
+    use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
     use crate::nibble_utils::{
         get_nibbles_from_bytes,
         convert_hex_string_to_nibbles,
@@ -348,8 +353,28 @@ mod tests {
     use crate::test_utils::{
         get_sample_leaf_node,
         get_sample_branch_node,
+        SAMPLE_RECEIPT_JSON_PATH,
+        SAMPLE_RECECIPT_TX_HASHES,
         get_sample_extension_node,
     };
+
+    fn get_sample_receipts() -> Vec<Receipt> {
+        SAMPLE_RECECIPT_TX_HASHES
+            .iter()
+            .map(|hash_string|
+                 format!("{}{}", SAMPLE_RECEIPT_JSON_PATH, hash_string)
+            )
+            .map(|path| fs::read_to_string(path).unwrap())
+            .map(|rpc_string|
+                 deserialize_to_receipt_rpc_response(rpc_string)
+                    .unwrap()
+            )
+            .map(|receipt_json|
+                 deserialize_receipt_json_to_receipt_struct(receipt_json.result)
+                    .unwrap()
+            )
+            .collect::<Vec<Receipt>>()
+    }
 
     #[test]
     fn should_get_empty_trie() {
