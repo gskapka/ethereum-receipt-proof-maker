@@ -1,7 +1,14 @@
 use rlp::RlpStream;
 use ethereum_types::H256;
 use crate::get_keccak_hash::keccak_hash_bytes;
-use crate::utils::convert_hex_to_h256;
+use crate::nibble_utils::{
+    Nibbles,
+    get_nibbles_from_bytes,
+};
+use crate::utils::{
+    convert_hex_to_h256,
+    convert_h256_to_bytes,
+};
 use crate::types::{
     Bytes,
     Result,
@@ -18,27 +25,31 @@ fn keccak_hash_rlp_encoded_receipt(rlp_encoded_receipt: &Bytes) -> Result<H256> 
     keccak_hash_bytes(rlp_encoded_receipt)
 }
 
-pub fn get_rlp_encoded_receipt_and_hash_tuple(
+pub fn get_rlp_encoded_receipt_and_nibble_tuple(
     receipt: &Receipt
-) -> Result<(H256, Bytes)> {
+) -> Result<(Nibbles, Bytes)> {
     rlp_encode_receipt(&receipt)
         .and_then(|rlp_encoded_receipt|
             Ok(
                 (
-                    keccak_hash_rlp_encoded_receipt(&rlp_encoded_receipt)?,
+                    get_nibbles_from_bytes(
+                        convert_h256_to_bytes(
+                            keccak_hash_rlp_encoded_receipt(&rlp_encoded_receipt)?,
+                        )
+                    ),
                     rlp_encoded_receipt,
                 )
             )
         )
 }
 
-fn get_rlp_encoded_receipts_and_hash_tuples(
+pub fn get_rlp_encoded_receipts_and_nibble_tuples(
     receipts: &Vec<Receipt>
-) -> Result<Vec<(H256, Bytes)>> {
+) -> Result<Vec<(Nibbles, Bytes)>> {
     receipts
         .iter()
-        .map(|receipt| get_rlp_encoded_receipt_and_hash_tuple(&receipt))
-        .collect::<Result<Vec<(H256, Bytes)>>>()
+        .map(|receipt| get_rlp_encoded_receipt_and_nibble_tuple(&receipt))
+        .collect::<Result<Vec<(Nibbles, Bytes)>>>()
 }
 
 #[cfg(test)]
@@ -48,10 +59,11 @@ mod tests {
         get_expected_receipt
     };
 
-    fn get_expected_receipt_hash() -> H256 {
+    fn get_expected_receipt_nibbles() -> Nibbles {
         let hash = "0x514201561c8302dca9beed96d1af3c02d4bfff1fc7f1593797dcf948126eee61";
-        convert_hex_to_h256(hash.to_string())
-            .unwrap()
+        get_nibbles_from_bytes(
+            convert_h256_to_bytes(convert_hex_to_h256(hash.to_string()).unwrap())
+        )
     }
 
     fn get_rlp_encoded_receipt() -> Bytes {
@@ -77,9 +89,9 @@ mod tests {
 
     #[test]
     fn should_get_encoded_receipt_and_hash_tuple() {
-        let result = get_rlp_encoded_receipt_and_hash_tuple(&get_expected_receipt())
+        let result = get_rlp_encoded_receipt_and_nibble_tuple(&get_expected_receipt())
             .unwrap();
-        assert!(result.0 == get_expected_receipt_hash());
+        assert!(result.0 == get_expected_receipt_nibbles());
         assert!(result.1 == get_rlp_encoded_receipt());
     }
 
@@ -89,12 +101,12 @@ mod tests {
             get_expected_receipt(),
             get_expected_receipt(),
         ];
-        let results = get_rlp_encoded_receipts_and_hash_tuples(&receipts)
+        let results = get_rlp_encoded_receipts_and_nibble_tuples(&receipts)
             .unwrap();
         results
             .iter()
             .map(|result| {
-                assert!(result.0 == get_expected_receipt_hash());
+                assert!(result.0 == get_expected_receipt_nibbles());
                 assert!(result.1 == get_rlp_encoded_receipt());
             })
             .for_each(drop);
