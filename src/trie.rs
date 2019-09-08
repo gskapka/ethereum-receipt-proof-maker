@@ -345,6 +345,7 @@ mod tests {
     use crate::get_receipt::get_receipt_from_tx_hash;
     use crate::get_database::get_thing_from_database;
     use crate::make_rpc_call::deserialize_to_receipt_rpc_response;
+    use crate::rlp_codec::get_rlp_encoded_receipts_and_hash_tuples;
     use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
     use crate::nibble_utils::{
         get_nibbles_from_bytes,
@@ -353,7 +354,7 @@ mod tests {
     use crate::test_utils::{
         get_sample_leaf_node,
         get_sample_branch_node,
-        SAMPLE_RECEIPT_JSON_PATH,
+        SAMPLE_RECEIPT_JSONS_PATH,
         SAMPLE_RECECIPT_TX_HASHES,
         get_sample_extension_node,
     };
@@ -362,7 +363,7 @@ mod tests {
         SAMPLE_RECECIPT_TX_HASHES
             .iter()
             .map(|hash_string|
-                 format!("{}{}", SAMPLE_RECEIPT_JSON_PATH, hash_string)
+                 format!("{}{}", SAMPLE_RECEIPT_JSONS_PATH, hash_string)
             )
             .map(|path| fs::read_to_string(path).unwrap())
             .map(|rpc_string|
@@ -374,6 +375,27 @@ mod tests {
                     .unwrap()
             )
             .collect::<Vec<Receipt>>()
+    }
+
+    fn put_in_trie_recursively(
+        trie: Trie,
+        mut keys: Vec<Nibbles>,
+        mut values: Vec<Bytes>,
+        i: usize
+    ) -> Result<Trie> {
+        match i == keys.len() - 1  {
+            true => Ok(trie),
+            false => trie
+                .put(keys[i].clone(), values[i].clone())
+                .and_then(|new_trie|
+                    put_in_trie_recursively(
+                        new_trie,
+                        keys,
+                        values,
+                        i + 1
+                    )
+                )
+        }
     }
 
     #[test]
