@@ -345,7 +345,7 @@ mod tests {
     use crate::get_receipt::get_receipt_from_tx_hash;
     use crate::get_database::get_thing_from_database;
     use crate::make_rpc_call::deserialize_to_receipt_rpc_response;
-    use crate::rlp_codec::get_rlp_encoded_receipts_and_hash_tuples;
+    use crate::rlp_codec::get_rlp_encoded_receipts_and_nibble_tuples;
     use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
     use crate::nibble_utils::{
         get_nibbles_from_bytes,
@@ -379,19 +379,17 @@ mod tests {
 
     fn put_in_trie_recursively(
         trie: Trie,
-        mut keys: Vec<Nibbles>,
-        mut values: Vec<Bytes>,
+        key_value_tuples: Vec<(Nibbles, Bytes)>,
         i: usize
     ) -> Result<Trie> {
-        match i == keys.len() - 1  {
+        match i == key_value_tuples.len()  {
             true => Ok(trie),
             false => trie
-                .put(keys[i].clone(), values[i].clone())
+                .put(key_value_tuples[i].0.clone(), key_value_tuples[i].1.clone())
                 .and_then(|new_trie|
                     put_in_trie_recursively(
                         new_trie,
-                        keys,
-                        values,
+                        key_value_tuples,
                         i + 1
                     )
                 )
