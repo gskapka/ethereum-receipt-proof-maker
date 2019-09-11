@@ -104,6 +104,24 @@ pub const SAMPLE_TX_HASH: &str = "0xd6f577a93332e015438fcca4e73f538b1829acbd7eb0
 
 pub const SAMPLE_BLOCK_HASH: &str = "0x1ddd540f36ea0ed23e732c1709a46c31ba047b98f1d99e623f1644154311fe10";
 
+pub fn get_sample_receipts() -> Vec<Receipt> {
+    SAMPLE_RECECIPT_TX_HASHES
+        .iter()
+        .map(|hash_string|
+             format!("{}{}", SAMPLE_RECEIPT_JSONS_PATH, hash_string)
+        )
+        .map(|path| fs::read_to_string(path).unwrap())
+        .map(|rpc_string|
+             deserialize_to_receipt_rpc_response(rpc_string)
+                .unwrap()
+        )
+        .map(|receipt_json|
+             deserialize_receipt_json_to_receipt_struct(receipt_json.result)
+                .unwrap()
+        )
+        .collect::<Vec<Receipt>>()
+}
+
 pub fn get_sample_leaf_node() -> Node {
     let path_bytes = vec![0x12, 0x34, 0x56];
     let path_nibbles = get_nibbles_from_bytes(path_bytes.clone());

@@ -39,6 +39,7 @@ use crate::types::{
     NodeStack,
 };
 
+#[derive(Clone)]
 pub struct Trie {
     pub root: H256,
     pub database: Database,
@@ -910,9 +911,7 @@ mod tests {
     use crate::types::Receipt;
     use crate::get_receipt::get_receipt_from_tx_hash;
     use crate::get_database::get_thing_from_database;
-    use crate::make_rpc_call::deserialize_to_receipt_rpc_response;
     use crate::rlp_codec::get_rlp_encoded_receipts_and_nibble_tuples;
-    use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
     use crate::utils::{
         convert_hex_to_h256,
         convert_h256_to_prefixed_hex,
@@ -923,30 +922,13 @@ mod tests {
     };
     use crate::test_utils::{
         RECEIPTS_ROOT,
+        get_sample_receipts,
         get_sample_leaf_node,
         get_sample_branch_node,
         SAMPLE_RECEIPT_JSONS_PATH,
         SAMPLE_RECECIPT_TX_HASHES,
         get_sample_extension_node,
     };
-
-    fn get_sample_receipts() -> Vec<Receipt> {
-        SAMPLE_RECECIPT_TX_HASHES
-            .iter()
-            .map(|hash_string|
-                 format!("{}{}", SAMPLE_RECEIPT_JSONS_PATH, hash_string)
-            )
-            .map(|path| fs::read_to_string(path).unwrap())
-            .map(|rpc_string|
-                 deserialize_to_receipt_rpc_response(rpc_string)
-                    .unwrap()
-            )
-            .map(|receipt_json|
-                 deserialize_receipt_json_to_receipt_struct(receipt_json.result)
-                    .unwrap()
-            )
-            .collect::<Vec<Receipt>>()
-    }
 
     fn put_in_trie_recursively(
         trie: Trie,
