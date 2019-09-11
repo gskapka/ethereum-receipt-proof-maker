@@ -32,11 +32,15 @@ pub fn get_response_text(mut res: reqwest::Response) -> Result<String> {
     }
 }
 
-pub fn deserialize_to_block_rpc_response(rpc_call_result: String) -> Result<BlockRpcResponse> {
+pub fn deserialize_to_block_rpc_response(
+    rpc_call_result: String
+) -> Result<BlockRpcResponse> {
     Ok(serde_json::from_str(&rpc_call_result)?)
 }
 
-pub fn deserialize_to_receipt_rpc_response(rpc_call_result: String) -> Result<ReceiptRpcResponse> {
+pub fn deserialize_to_receipt_rpc_response(
+    rpc_call_result: String
+) -> Result<ReceiptRpcResponse> {
     Ok(serde_json::from_str(&rpc_call_result)?)
 }
 
