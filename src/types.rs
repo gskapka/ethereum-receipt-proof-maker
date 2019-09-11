@@ -1,7 +1,8 @@
 use std::result;
 use serde::Deserialize;
-use std::collections::HashMap;
 use crate::errors::AppError;
+use crate::trie_nodes::Node;
+use std::collections::HashMap;
 use rlp::{
     RlpStream,
     Encodable
@@ -15,8 +16,9 @@ use ethereum_types::{
 
 pub type Byte = u8;
 pub type Bytes = Vec<u8>;
-pub type ChildNodes = [Option<Bytes>; 16];
+pub type NodeStack = Vec<Node>;
 pub type Database = HashMap<H256, Bytes>;
+pub type ChildNodes = [Option<Bytes>; 16];
 pub type Result<T> = result::Result<T, AppError>;
 
 #[derive(Debug, Deserialize)]
