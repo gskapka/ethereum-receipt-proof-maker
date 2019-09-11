@@ -1,3 +1,4 @@
+use crate::trie::Trie;
 use ethereum_types::H256;
 use crate::errors::AppError;
 use crate::utils::{
@@ -19,10 +20,10 @@ pub struct State {
     pub index: Option<usize>,
     pub tx_hash_string: String,
     pub endpoint: Option<String>,
+    pub receipts_trie: Option<Trie>,
     pub receipts: Option<Vec<Receipt>>,
 }
 
-// FIXME: Why use methods at all?
 impl State {
     pub fn init(
         tx_hash: H256,
@@ -38,6 +39,7 @@ impl State {
                 receipts: None,
                 tx_hash_string,
                 verbose: verbosity,
+                receipts_trie: None,
                 database: std::collections::HashMap::new(),
             }
         )
@@ -77,11 +79,22 @@ impl State {
     }
 
     pub fn set_receipts_in_state(mut self, receipts: Vec<Receipt>) -> Result<State> {
-        match self.receipts{
+        match self.receipts {
             Some(_) =>
                 Err(AppError::Custom(get_no_overwrite_state_err("receipts"))),
             None => {
                 self.receipts= Some(receipts);
+                Ok(self)
+            }
+        }
+    }
+
+    pub fn set_receipts_trie_in_state(mut self, receipts_trie: Trie) -> Result<State> {
+        match self.receipts_trie {
+            Some(_) =>
+                Err(AppError::Custom(get_no_overwrite_state_err("receipts_trie"))),
+            None => {
+                self.receipts_trie = Some(receipts_trie);
                 Ok(self)
             }
         }
@@ -115,6 +128,12 @@ impl State {
         }
     }
 
+    pub fn get_receipts_trie_from_state(&self) -> Result<&Trie> {
+        match &self.receipts_trie{
+            Some(receipts_trie) => Ok(receipts_trie),
+            None => Err(AppError::Custom(get_not_in_state_err("receipts_trie")))
+        }
+    }
 }
 
 pub fn update_database_in_state(
@@ -148,7 +167,7 @@ mod tests {
             .unwrap();
         let state = get_valid_initial_state()
             .unwrap();
-        assert!(state.tx_hash== expected_tx_hash);
+        assert!(state.tx_hash == expected_tx_hash);
         assert!(state.verbose == expected_verbosity);
     }
 
@@ -171,6 +190,17 @@ mod tests {
         match State::get_endpoint_from_state(&state) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Endpoint should not be initialised in state!"),
+        }
+    }
+
+    #[test]
+    fn initial_state_should_have_no_receipts_trie() {
+        let expected_err = get_not_in_state_err("receipts_trie");
+        let state = get_valid_initial_state()
+            .unwrap();
+        match State::get_receipts_trie_from_state(&state) {
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            _ => panic!("Receipts trie should not be initialised in state!"),
         }
     }
 
@@ -222,6 +252,43 @@ mod tests {
         match State::set_endpoint_in_state(
             state_with_endpoint,
             dummy_endpoint.clone()
+        ) {
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            _ => panic!("Overwriting state should not have succeeded!"),
+        }
+    }
+
+    #[test]
+    fn should_set_receipts_trie_to_state() {
+        let trie = Trie::get_new_trie().unwrap();
+        let expected_root = trie.root;
+        let state = get_valid_initial_state()
+            .unwrap();
+        let new_state = State::set_receipts_trie_in_state(state, trie)
+            .unwrap();
+        let result = State::get_receipts_trie_from_state(&new_state)
+            .unwrap();
+        assert!(result.root == expected_root);
+    }
+
+    #[test]
+    fn should_err_when_attempting_to_overwrite_receipts_trie_in_state() {
+        let expected_err = "✘ Cannot overwrite receipts_trie in state!";
+        let trie = Trie::get_new_trie().unwrap();
+        let expected_root = trie.root;
+        let initial_state = get_valid_initial_state()
+            .unwrap();
+        let state_with_trie = State::set_receipts_trie_in_state(
+            initial_state,
+            trie.clone()
+        ).unwrap();
+        let trie_from_state = State::get_receipts_trie_from_state(
+            &state_with_trie
+        ).unwrap();
+        assert!(trie_from_state.root == expected_root);
+        match State::set_receipts_trie_in_state(
+            state_with_trie,
+            trie.clone()
         ) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Overwriting state should not have succeeded!"),
