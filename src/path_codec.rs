@@ -86,14 +86,6 @@ fn is_path_to_extension_node(path: &Bytes) -> Result<bool> {
         .and_then(|is_leaf_bool| Ok(!is_leaf_bool))
 }
 
-fn trim_encoding_byte(path: Bytes) -> Result<Bytes> {
-    match path.len() > 1{
-        true => Ok(path[1..].to_vec()),
-        false => Err(AppError::Custom(
-            format!("✘ Path too short to slice off encoding byte: {:?}", path)
-        ))
-    }
-}
 fn decode_odd_length_nibbles(nibbles: Nibbles) -> Result<Nibbles> {
     replace_nibble_in_nibbles_at_nibble_index(nibbles, get_zero_nibble(), 0)
         .map(set_nibble_offset_to_one)
@@ -371,29 +363,6 @@ mod tests {
             Ok(_) => panic!("Should not decode a bad encoding!"),
             Err(AppError::Custom(e)) => assert!(e == expected_error),
             _ => panic!("Didn't get correct decoding error!"),
-        }
-    }
-
-    #[test]
-    fn should_trim_encoding_byte_correctly() {
-        let path = hex::decode("c0ffee".to_string()).unwrap();
-        let expected_result = hex::decode("ffee".to_string()).unwrap();
-        let result = trim_encoding_byte(path)
-            .unwrap();
-        assert!(result == expected_result);
-    }
-
-    #[test]
-    fn should_fail_to_trim_encoding_byte_if_path_too_short() {
-        let path = hex::decode("c0".to_string()).unwrap();
-        let expected_error = format!(
-            "✘ Path too short to slice off encoding byte: {:?}",
-            path
-        );
-        match trim_encoding_byte(path) {
-            Ok(_) => panic!("Should have failed to trim encoding byte!"),
-            Err(AppError::Custom(e)) => assert!(e == expected_error),
-            _ => panic!("Didn't get expected error!")
         }
     }
 
