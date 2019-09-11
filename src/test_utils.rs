@@ -104,6 +104,40 @@ pub const SAMPLE_TX_HASH: &str = "0xd6f577a93332e015438fcca4e73f538b1829acbd7eb0
 
 pub const SAMPLE_BLOCK_HASH: &str = "0x1ddd540f36ea0ed23e732c1709a46c31ba047b98f1d99e623f1644154311fe10";
 
+pub fn get_sample_leaf_node() -> Node {
+    let path_bytes = vec![0x12, 0x34, 0x56];
+    let path_nibbles = get_nibbles_from_bytes(path_bytes.clone());
+    let value = hex::decode("c0ffee".to_string()).unwrap();
+    Node::get_new_leaf_node(path_nibbles, value)
+        .unwrap()
+}
+
+pub fn get_sample_extension_node() -> Node {
+    let path_bytes = vec![0xc0, 0xff, 0xee];
+    let path_nibbles = get_nibbles_from_bytes(path_bytes);
+    let value = hex::decode(
+        "1d237c84432c78d82886cb7d6549c179ca51ebf3b324d2a3fa01af6a563a9377".to_string()
+    ).unwrap();
+    Node::get_new_extension_node(path_nibbles, value)
+        .unwrap()
+}
+
+pub fn get_sample_branch_node() -> Node {
+    let branch_value_1 = hex::decode(
+        "4f81663d4c7aeb115e49625430e3fa114445dc0a9ed73a7598a31cd60808a758"
+    ).unwrap();
+    let branch_value_2 = hex::decode(
+        "d55a192f93e0576f46019553e2b4c0ff4b8de57cd73020f751aed18958e9ecdb"
+    ).unwrap();
+    let index_1 = 1;
+    let index_2 = 2;
+    let value = None;
+    Node::get_new_branch_node(value)
+        .and_then(|node| node.update_branch_at_index(Some(branch_value_1), index_1))
+        .and_then(|node| node.update_branch_at_index(Some(branch_value_2), index_2))
+        .unwrap()
+}
+
 pub fn get_thing_to_put_in_database() -> Bytes {
     "Provable".as_bytes().to_owned()
 }
