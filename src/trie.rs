@@ -904,6 +904,28 @@ fn get_key_length_accounted_for_in_stack(node_stack: &NodeStack) -> usize {
         .sum()
 }
 
+pub fn put_in_trie_recursively(
+    trie: Trie,
+    key_value_tuples: Vec<(Nibbles, Bytes)>,
+    i: usize
+) -> Result<Trie> {
+    match i == key_value_tuples.len()  {
+        true => Ok(trie),
+        false => {
+            trace!("Putting item in trie recurisively...");
+            trie
+                .put(key_value_tuples[i].0.clone(), key_value_tuples[i].1.clone())
+                .and_then(|new_trie|
+                    put_in_trie_recursively(
+                        new_trie,
+                        key_value_tuples,
+                        i + 1
+                    )
+                )
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -929,28 +951,6 @@ mod tests {
         SAMPLE_RECECIPT_TX_HASHES,
         get_sample_extension_node,
     };
-
-    fn put_in_trie_recursively(
-        trie: Trie,
-        key_value_tuples: Vec<(Nibbles, Bytes)>,
-        i: usize
-    ) -> Result<Trie> {
-        match i == key_value_tuples.len()  {
-            true => Ok(trie),
-            false => {
-                trace!("Putting item in trie recurisively...");
-                trie
-                    .put(key_value_tuples[i].0.clone(), key_value_tuples[i].1.clone())
-                    .and_then(|new_trie|
-                        put_in_trie_recursively(
-                            new_trie,
-                            key_value_tuples,
-                            i + 1
-                        )
-                    )
-            }
-        }
-    }
 
     #[test]
     fn should_get_empty_trie() {
