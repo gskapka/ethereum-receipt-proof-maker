@@ -19,14 +19,16 @@ pub fn connect_to_node(state: State) -> Result<State> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::get_valid_initial_state;
+    use crate::test_utils::{
+        WORKING_ENDPOINT,
+        get_valid_initial_state,
+    };
 
     #[test]
     fn should_connect_to_node_and_return_state_when_endpoint_works() {
-        let working_endpoint = "https://rpc.slock.it/mainnet".to_string();
         let state = State::set_endpoint_in_state(
             get_valid_initial_state().unwrap(),
-            working_endpoint
+            WORKING_ENDPOINT.to_string()
         ).unwrap();
         match connect_to_node(state) {
             Ok(returned_state) => assert!(returned_state.verbose),
