@@ -4,6 +4,8 @@
 use std::fs;
 use crate::state::State;
 use ethereum_types::H256;
+use crate::trie_nodes::Node;
+use crate::nibble_utils::get_nibbles_from_bytes;
 use crate::get_block::deserialize_block_json_to_block_struct;
 use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
 use crate::utils::{
@@ -32,7 +34,7 @@ use crate::types::{
 
 pub const TX_INDEX: usize = 96;
 
-pub const WORKING_ENDPOINT: &str = "https://rpc.slock.it/mainnet";
+pub const WORKING_ENDPOINT: &str = "http://localhost:8545";
 
 pub const SAMPLE_BLOCK_JSON_PATH: &str = "./test_utils/sample_block_json";
 
