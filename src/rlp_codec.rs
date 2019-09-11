@@ -26,7 +26,7 @@ fn rlp_encode_receipt(receipt: &Receipt) -> Result<Bytes> {
 
 fn rlp_encode_transaction_index(index: &U256) -> Result<Bytes> {
     let mut rlp_stream = RlpStream::new();
-    rlp_stream.append(&index.bits());
+    rlp_stream.append(&index.as_usize());
     Ok(rlp_stream.out())
 }
 
