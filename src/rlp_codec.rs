@@ -67,7 +67,7 @@ mod tests {
     };
 
     fn get_expected_receipt_nibbles() -> Nibbles {
-        get_nibbles_from_bytes(vec![0x07])
+        get_nibbles_from_bytes(vec![0x60])
     }
 
     fn get_rlp_encoded_receipt() -> Bytes {
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn should_encode_tx_receipt() {
-        let index_u256 = U256::from_dec_str("5").unwrap();
+        let index_u256 = U256::from_dec_str("3").unwrap();
         let result = rlp_encode_transaction_index(&index_u256).unwrap();
         let expected_result = vec![0x03];
         assert!(result == expected_result);
