@@ -10,6 +10,7 @@ use crate::types::{
     Result,
     Receipt,
     Database,
+    NodeStack,
 };
 
 pub struct State {
@@ -20,6 +21,7 @@ pub struct State {
     pub index: Option<usize>,
     pub tx_hash_string: String,
     pub endpoint: Option<String>,
+    pub branch: Option<NodeStack>,
     pub receipts_trie: Option<Trie>,
     pub receipts: Option<Vec<Receipt>>,
 }
@@ -35,6 +37,7 @@ impl State {
                 tx_hash,
                 block: None,
                 index: None,
+                branch: None,
                 endpoint: None,
                 receipts: None,
                 tx_hash_string,
@@ -89,6 +92,17 @@ impl State {
         }
     }
 
+    pub fn set_branch_in_state(mut self, branch: NodeStack) -> Result<State> {
+        match self.branch {
+            Some(_) =>
+                Err(AppError::Custom(get_no_overwrite_state_err("branch"))),
+            None => {
+                self.branch = Some(branch);
+                Ok(self)
+            }
+        }
+    }
+
     pub fn set_receipts_trie_in_state(mut self, receipts_trie: Trie) -> Result<State> {
         match self.receipts_trie {
             Some(_) =>
@@ -104,6 +118,13 @@ impl State {
         match &self.block {
             Some(block) => Ok(&block),
             None => Err(AppError::Custom(get_not_in_state_err("block")))
+        }
+    }
+
+    pub fn get_branch_from_state(&self) -> Result<&NodeStack> {
+        match &self.branch {
+            Some(branch) => Ok(&branch),
+            None => Err(AppError::Custom(get_not_in_state_err("branch")))
         }
     }
 
@@ -201,6 +222,17 @@ mod tests {
         match State::get_receipts_trie_from_state(&state) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Receipts trie should not be initialised in state!"),
+        }
+    }
+
+    #[test]
+    fn initial_state_should_have_no_branch() {
+        let expected_err = get_not_in_state_err("branch");
+        let state = get_valid_initial_state()
+            .unwrap();
+        match State::get_branch_from_state(&state) {
+            Err(AppError::Custom(e)) => assert!(e == expected_err),
+            _ => panic!("Branch should not be initialised in state!"),
         }
     }
 
@@ -380,6 +412,20 @@ mod tests {
         let result = State::get_index_from_state(&new_state)
             .unwrap();
         assert!(result == &expected_index);
+    }
+
+    #[test]
+    fn should_set_branch_in_state() {
+        let expected_branch: NodeStack = Vec::new();
+        let state = get_valid_initial_state()
+            .unwrap();
+        let new_state = State::set_branch_in_state(
+            state,
+            expected_branch.clone()
+        ).unwrap();
+        let result = State::get_branch_from_state(&new_state)
+            .unwrap();
+        assert!(result == &expected_branch);
     }
 
     #[test]
