@@ -28,6 +28,7 @@ mod validate_tx_hash;
 mod validate_cli_args;
 mod get_receipts_trie;
 mod get_rpc_call_jsons;
+mod get_branch_from_trie;
 mod initialize_state_from_cli_args;
 
 extern crate simple_logger;
