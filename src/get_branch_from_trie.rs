@@ -35,7 +35,7 @@ fn get_branch_from_trie(
         })
 }
 
-fn get_branch_from_trie_and_put_in_state(state: State) -> Result<State> {
+pub fn get_branch_from_trie_and_put_in_state(state: State) -> Result<State> {
     get_branch_from_trie(
         state.get_receipts_trie_from_state()?.clone(),
         state.get_index_from_state()?.clone()
