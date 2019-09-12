@@ -112,6 +112,10 @@ pub fn convert_bytes_to_h256(bytes: &Bytes) -> Result<H256> {
     }
 }
 
+pub fn convert_bytes_to_hex(bytes: Bytes) -> String {
+    hex::encode(bytes)
+}
+
 pub fn convert_h256_to_bytes(hash: H256) -> Bytes {
     hash
         .as_bytes()
@@ -418,6 +422,14 @@ mod tests {
         let expected_result = "0x0000000000000000000000000000000000000000000000000000000000000000".to_string();
         let result = convert_h256_to_prefixed_hex(h256)
             .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_convert_bytes_to_hex() {
+        let bytes = vec![0xc0, 0xff, 0xee];
+        let expected_result: String = "c0ffee".to_string();
+        let result = convert_bytes_to_hex(bytes);
         assert!(result == expected_result);
     }
 }
