@@ -621,7 +621,7 @@ impl Trie {
         }
     }
 
-    fn find(
+    pub fn find(
         self,
         target_key: Nibbles
     ) -> Result<(Self, Nibbles, NodeStack, Nibbles)> {
@@ -632,7 +632,7 @@ impl Trie {
                     target_key.clone(),
                     vec![node],
                     target_key
-                    ),
+                ),
                 None => Err(AppError::Custom(
                     "✘ Find Error: Could not find root node in db!".to_string()
                 ))
