@@ -1,5 +1,6 @@
 use hex;
 use crate::trie::Trie;
+use crate::state::State;
 use crate::errors::AppError;
 use crate::nibble_utils::Nibbles;
 use crate::utils::convert_hex_to_u256;
@@ -34,12 +35,21 @@ fn get_branch_from_trie(
         })
 }
 
+fn get_branch_from_trie_and_put_in_state(state: State) -> Result<State> {
+    get_branch_from_trie(
+        state.get_receipts_trie_from_state()?.clone(),
+        state.get_index_from_state()?.clone()
+    )
+        .and_then(|branch| state.set_branch_in_state(branch))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::test_utils::{
         SAMPLE_RECECIPT_TX_HASHES,
         get_sample_trie_with_sample_receipts,
+        get_valid_state_with_receipts_trie_and_index
     };
 
     #[test]
@@ -71,5 +81,29 @@ mod tests {
             Err(AppError::Custom(e)) => assert!(e == expected_error),
             _ => panic!("Getting branch should not have succeeded!")
         }
+    }
+
+    #[test]
+    fn should_get_branch_and_put_in_state() {
+        let trie = get_sample_trie_with_sample_receipts();
+        let state_before = get_valid_state_with_receipts_trie_and_index()
+            .unwrap();
+        let index = state_before.get_index_from_state()
+            .unwrap();
+        let expected_branch = get_branch_from_trie(trie, *index)
+            .unwrap();
+        if let Ok(_) = state_before.get_branch_from_state() {
+            panic!("Should not have branch in state yet!")
+        };
+        let state_after = get_branch_from_trie_and_put_in_state(state_before)
+            .unwrap();
+        match state_after.get_branch_from_state() {
+            Err(_) => panic!("Should have branch in state now!"),
+            Ok(branch) => {
+                for i in 0..branch.len() {
+                    assert!(branch[i] == expected_branch[i]);
+                }
+            }
+        };
     }
 }
