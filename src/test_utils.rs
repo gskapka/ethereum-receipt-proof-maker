@@ -7,7 +7,12 @@ use ethereum_types::H256;
 use crate::trie_nodes::Node;
 use crate::nibble_utils::get_nibbles_from_bytes;
 use crate::get_block::deserialize_block_json_to_block_struct;
+use crate::rlp_codec::get_rlp_encoded_receipts_and_nibble_tuples;
 use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
+use crate::trie::{
+    Trie,
+    put_in_trie_recursively
+};
 use crate::utils::{
     convert_hex_to_h256,
     convert_h256_to_prefixed_hex,
@@ -21,7 +26,7 @@ use crate::constants::{
     DEFAULT_ENDPOINT,
 };
 use crate::get_database::{
-    put_thing_in_database
+    put_thing_in_database,
 };
 use crate::types::{
     Log,
@@ -120,6 +125,20 @@ pub fn get_sample_receipts() -> Vec<Receipt> {
                 .unwrap()
         )
         .collect::<Vec<Receipt>>()
+}
+
+pub fn get_sample_trie_with_sample_receipts() -> Trie {
+    let index = 0;
+    let receipts = get_sample_receipts();
+    let trie = Trie::get_new_trie().unwrap();
+    let key_value_tuples = get_rlp_encoded_receipts_and_nibble_tuples(
+        &receipts
+    ).unwrap();
+    put_in_trie_recursively(
+        trie,
+        key_value_tuples,
+        index
+    ).unwrap()
 }
 
 pub fn get_sample_leaf_node() -> Node {
