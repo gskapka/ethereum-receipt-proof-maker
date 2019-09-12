@@ -19,7 +19,7 @@ fn convert_usize_index_to_trie_key(index: usize) -> Result<Nibbles> {
         .map(get_nibbles_from_bytes)
 }
 
-fn get_branch_from_trie(
+pub fn get_branch_from_trie(
     receipts_trie: Trie,
     index: usize,
 ) -> Result<NodeStack> {
