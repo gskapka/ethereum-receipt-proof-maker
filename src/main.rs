@@ -46,6 +46,7 @@ use crate::get_endpoint::get_endpoint_and_set_in_state;
 use crate::get_tx_index::get_tx_index_and_add_to_state;
 use crate::get_receipts_trie::get_receipts_trie_and_set_in_state;
 use crate::get_block::get_block_from_tx_hash_in_state_and_set_in_state;
+use crate::get_branch_from_trie::get_branch_from_trie_and_put_in_state;
 use crate::initialize_state_from_cli_args::initialize_state_from_cli_args;
 use crate::get_receipt::get_all_receipts_from_block_in_state_and_set_in_state;
 
@@ -59,20 +60,7 @@ fn main() {
         .and_then(get_all_receipts_from_block_in_state_and_set_in_state)
         .and_then(get_tx_index_and_add_to_state)
         .and_then(get_receipts_trie_and_set_in_state)
-        //.and_then(extract_branch_from_trie_and_set_in_state)
-        //.and_then(create_hex_proof_from_branch_in_state)
-        //.and_then(check_proof)
-        .and_then(|state| {
-            let block = State::get_block_from_state(&state)?;
-            let receipts = State::get_receipts_from_state(&state)?;
-            let index = State::get_index_from_state(&state)?;
-            println!("✔ Tx hash is in block: {:?}", block.number);
-            println!("✔ Num txs in block: {:?}", block.transactions.len());
-            println!("✔ Receipts in state: {:?}", receipts.len());
-            println!("✔ Index in state: {:?}", index);
-            Ok(state)
-        })
-        {
+        .and_then(get_branch_from_trie_and_put_in_state) {
             Ok(_proof) => println!("\n✔ Fin!"),
             Err(e) => println!("{}", e)
         }
