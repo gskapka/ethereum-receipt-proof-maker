@@ -214,6 +214,16 @@ pub fn get_valid_state_with_endpoint() -> Result<State> {
         )
 }
 
+pub fn get_valid_state_with_receipts_trie_and_index() -> Result<State> {
+    get_valid_initial_state()
+        .and_then(|state| state.set_index_in_state(14))
+        .and_then(|state|
+            state.set_receipts_trie_in_state(
+                get_sample_trie_with_sample_receipts()
+            )
+        )
+}
+
 pub fn get_expected_block() -> Block {
     let string = fs::read_to_string(SAMPLE_BLOCK_JSON_PATH).unwrap();
     let res = deserialize_to_block_rpc_response(string).unwrap();
