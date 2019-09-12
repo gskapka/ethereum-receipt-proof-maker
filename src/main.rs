@@ -29,6 +29,7 @@ mod validate_cli_args;
 mod get_receipts_trie;
 mod get_rpc_call_jsons;
 mod get_branch_from_trie;
+mod get_hex_proof_from_branch;
 mod initialize_state_from_cli_args;
 
 extern crate simple_logger;
@@ -47,6 +48,7 @@ use crate::get_tx_index::get_tx_index_and_add_to_state;
 use crate::get_receipts_trie::get_receipts_trie_and_set_in_state;
 use crate::get_block::get_block_from_tx_hash_in_state_and_set_in_state;
 use crate::get_branch_from_trie::get_branch_from_trie_and_put_in_state;
+use crate::get_hex_proof_from_branch::get_hex_proof_from_branch_in_state;
 use crate::initialize_state_from_cli_args::initialize_state_from_cli_args;
 use crate::get_receipt::get_all_receipts_from_block_in_state_and_set_in_state;
 
@@ -60,7 +62,8 @@ fn main() {
         .and_then(get_all_receipts_from_block_in_state_and_set_in_state)
         .and_then(get_tx_index_and_add_to_state)
         .and_then(get_receipts_trie_and_set_in_state)
-        .and_then(get_branch_from_trie_and_put_in_state) {
+        .and_then(get_branch_from_trie_and_put_in_state)
+        .and_then(get_hex_proof_from_branch_in_state) {
             Ok(_proof) => println!("\n✔ Fin!"),
             Err(e) => println!("{}", e)
         }
