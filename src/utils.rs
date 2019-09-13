@@ -1,5 +1,6 @@
 use hex;
 use std::path::Path;
+use serde_json::Value;
 use crate::errors::AppError;
 use crate::constants::HASH_LENGTH;
 use crate::constants::DOT_ENV_PATH;
@@ -12,6 +13,10 @@ use crate::types::{
     Bytes,
     Result,
 };
+
+pub fn convert_json_value_to_string(value: Value) -> Result<String> { // TODO: Test!
+    Ok(value.as_str()?.to_string())
+}
 
 fn left_pad_with_zero(string: &str) -> Result<String> {
     Ok(format!("0{}", string))
@@ -270,7 +275,6 @@ mod tests {
             Err(AppError::Custom(e)) => assert!(
                 e == "✘ Too many bytes in hex to create H256 type!"
             ),
-            Err(e) => println!("weird err{:?}", e),
             _ => panic!("Should have errored ∵ of short hash!")
         }
     }
