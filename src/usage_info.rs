@@ -17,7 +17,7 @@ Options:
 
     -h, --help          ❍ Show this message.
 
-    -b, --verbose       ❍ Enable verbose mode for additional output.
+    -v, --verbose       ❍ Enable verbose mode for additional output.
 
     <txhash>            ❍ A transaction hash of an Ethereum transaction
                         ➔ Format: A 32-byte long, prefixed hex string.
