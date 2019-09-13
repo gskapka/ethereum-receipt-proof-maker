@@ -943,12 +943,11 @@ mod tests {
         convert_hex_string_to_nibbles,
     };
     use crate::test_utils::{
-        RECEIPTS_ROOT,
+        RECEIPTS_ROOT_1,
         get_sample_receipts,
         get_sample_leaf_node,
         get_sample_branch_node,
-        SAMPLE_RECEIPT_JSONS_PATH,
-        SAMPLE_RECECIPT_TX_HASHES,
+        get_sample_tx_hashes_1,
         get_sample_extension_node,
     };
 
@@ -1064,7 +1063,7 @@ mod tests {
     fn should_put_receipts_in_trie_correctly() {
         simple_logger::init().unwrap();
         let index = 0;
-        let receipts = get_sample_receipts();
+        let receipts = get_sample_receipts(get_sample_tx_hashes_1());
         let trie = Trie::get_new_trie().unwrap();
         let key_value_tuples = get_rlp_encoded_receipts_and_nibble_tuples(
             &receipts
@@ -1076,6 +1075,6 @@ mod tests {
         ).unwrap();
         let root_hex = convert_h256_to_prefixed_hex(updated_trie.root)
             .unwrap();
-        assert!(root_hex == RECEIPTS_ROOT);
+        assert!(root_hex == RECEIPTS_ROOT_1);
     }
 }

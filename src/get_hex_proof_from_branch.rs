@@ -39,6 +39,7 @@ mod tests {
     use crate::test_utils::{
         PROOF_INDEX,
         get_sample_proof,
+        get_sample_tx_hashes_1,
         get_sample_trie_with_sample_receipts,
         get_valid_state_with_receipts_trie_index_and_branch,
     };
@@ -46,7 +47,9 @@ mod tests {
     #[test]
     fn should_get_hex_proof_from_branch() {
         let expected_result = get_sample_proof();
-        let trie = get_sample_trie_with_sample_receipts();
+        let trie = get_sample_trie_with_sample_receipts(
+            get_sample_tx_hashes_1()
+        );
         let branch = get_branch_from_trie(trie, PROOF_INDEX)
             .unwrap();
         let result = get_hex_proof_from_branch(&branch)
@@ -57,8 +60,9 @@ mod tests {
     #[test]
     fn should_get_hex_proof_from_branch_in_state() {
         let expected_result = get_sample_proof();
-        let state = get_valid_state_with_receipts_trie_index_and_branch()
-            .unwrap();
+        let state = get_valid_state_with_receipts_trie_index_and_branch(
+            get_sample_tx_hashes_1()
+        ).unwrap();
         let result = get_hex_proof_from_branch_in_state(state)
             .unwrap();
         assert!(result == expected_result);

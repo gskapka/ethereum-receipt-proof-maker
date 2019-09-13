@@ -47,7 +47,7 @@ pub fn get_branch_from_trie_and_put_in_state(state: State) -> Result<State> {
 mod tests {
     use super::*;
     use crate::test_utils::{
-        SAMPLE_RECECIPT_TX_HASHES,
+        get_sample_tx_hashes_1,
         get_sample_trie_with_sample_receipts,
         get_valid_state_with_receipts_trie_and_index
     };
@@ -64,19 +64,23 @@ mod tests {
     #[test]
     fn should_get_branch_from_trie() {
         let index = 14;
-        let trie = get_sample_trie_with_sample_receipts();
+        let trie = get_sample_trie_with_sample_receipts(
+            get_sample_tx_hashes_1()
+        );
         let result = get_branch_from_trie(trie, index)
             .unwrap();
     }
 
     #[test]
     fn should_fail_to_get_non_existent_branch_from_trie_correctly() {
-        let non_existent_index = SAMPLE_RECECIPT_TX_HASHES.len() + 1;
+        let non_existent_index = get_sample_tx_hashes_1().len() + 1;
         let expected_error = format!(
             "✘ Error! No receipt in trie at given index: {}",
             non_existent_index
         );
-        let trie = get_sample_trie_with_sample_receipts();
+        let trie = get_sample_trie_with_sample_receipts(
+            get_sample_tx_hashes_1()
+        );
         match get_branch_from_trie(trie, non_existent_index) {
             Err(AppError::Custom(e)) => assert!(e == expected_error),
             _ => panic!("Getting branch should not have succeeded!")
@@ -85,9 +89,12 @@ mod tests {
 
     #[test]
     fn should_get_branch_and_put_in_state() {
-        let trie = get_sample_trie_with_sample_receipts();
-        let state_before = get_valid_state_with_receipts_trie_and_index()
-            .unwrap();
+        let trie = get_sample_trie_with_sample_receipts(
+            get_sample_tx_hashes_1()
+        );
+        let state_before = get_valid_state_with_receipts_trie_and_index(
+            get_sample_tx_hashes_1()
+        ).unwrap();
         let index = state_before.get_index_from_state()
             .unwrap();
         let expected_branch = get_branch_from_trie(trie, *index)

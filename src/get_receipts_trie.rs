@@ -26,26 +26,27 @@ mod tests {
     use super::*;
     use crate::utils::convert_h256_to_prefixed_hex;
     use crate::test_utils::{
-        RECEIPTS_ROOT,
+        RECEIPTS_ROOT_1,
         get_sample_receipts,
+        get_sample_tx_hashes_1,
         get_valid_initial_state,
     };
 
     #[test]
     fn should_get_receipts_trie_from_receipts() {
-        let receipts = get_sample_receipts();
+        let receipts = get_sample_receipts(get_sample_tx_hashes_1());
         let result = get_receipts_trie_from_receipts(&receipts)
             .unwrap();
         let root_hex = convert_h256_to_prefixed_hex(result.root)
             .unwrap();
-        assert!(root_hex == RECEIPTS_ROOT);
+        assert!(root_hex == RECEIPTS_ROOT_1);
     }
 
     #[test]
     fn should_get_receipts_trie_from_state() {
         let state = get_valid_initial_state()
             .unwrap();
-        let receipts = get_sample_receipts();
+        let receipts = get_sample_receipts(get_sample_tx_hashes_1());
         let state_with_receipts = state.set_receipts_in_state(receipts)
             .unwrap();
         let result = get_receipts_trie_and_set_in_state(state_with_receipts)
@@ -54,6 +55,6 @@ mod tests {
             .unwrap();
         let root_hex = convert_h256_to_prefixed_hex(trie_from_state.root)
             .unwrap();
-        assert!(root_hex == RECEIPTS_ROOT);
+        assert!(root_hex == RECEIPTS_ROOT_1);
     }
 }
