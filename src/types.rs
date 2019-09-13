@@ -138,7 +138,6 @@ pub struct BlockJson {
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize)]
 pub struct ReceiptJson {
-    pub to: String,
     pub from: String,
     pub status: String,
     pub gasUsed: String,
@@ -146,6 +145,7 @@ pub struct ReceiptJson {
     pub logsBloom: String,
     pub logs: Vec<LogJson>,
     pub blockNumber: String,
+    pub to: serde_json::Value,
     pub root: serde_json::Value,
     pub transactionHash: String,
     pub transactionIndex: String,

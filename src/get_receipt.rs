@@ -6,6 +6,7 @@ use crate::make_rpc_call::{
     deserialize_to_receipt_rpc_response,
 };
 use ethereum_types::{
+    H160,
     H256,
     Address,
 };
@@ -14,6 +15,7 @@ use crate::utils::{
     convert_hex_to_h256,
     convert_hex_to_address,
     convert_h256_to_prefixed_hex,
+    convert_json_value_to_string,
 };
 use crate::types::{
     Result,
@@ -31,7 +33,6 @@ pub fn deserialize_receipt_json_to_receipt_struct(
     let logs = get_logs_from_receipt_json(&receipt)?;
     Ok(
         Receipt {
-            to: convert_hex_to_address(receipt.to)?,
             from: convert_hex_to_address(receipt.from)?,
             logs_bloom: get_logs_bloom_from_logs(&logs)?,
             gas_used: convert_hex_to_u256(receipt.gasUsed)?,
@@ -45,13 +46,23 @@ pub fn deserialize_receipt_json_to_receipt_struct(
                 "0x0" => false,
                     _ => false
             },
-            root: match receipt.contractAddress {
+            to: match receipt.to {
+                serde_json::Value::Null => H160::zero(),
+                _ => convert_hex_to_address(
+                    convert_json_value_to_string(receipt.to)?
+                )?,
+            },
+            root: match receipt.root {
                 serde_json::Value::Null => H256::zero(),
-                _ => convert_hex_to_h256(receipt.root.to_string())?,
+                _ => convert_hex_to_h256(
+                    convert_json_value_to_string(receipt.root)?
+                )?,
             },
             contract_address: match receipt.contractAddress {
                 serde_json::Value::Null => Address::zero(),
-                _ => convert_hex_to_address(receipt.contractAddress.to_string())?,
+                _ => convert_hex_to_address(
+                    convert_json_value_to_string(receipt.contractAddress)?
+                )?,
             },
             logs,
         }
@@ -75,12 +86,12 @@ fn get_receipts_from_tx_hashes(
 ) -> Result<Vec<Receipt>> {
     tx_hashes
         .iter()
-        .map(|tx_hash|
+        .map(|tx_hash| {
              get_receipt_from_tx_hash(
                  endpoint,
                  &convert_h256_to_prefixed_hex(*tx_hash)?
              )
-         )
+        })
         .collect::<Result<Vec<Receipt>>>()
 }
 
