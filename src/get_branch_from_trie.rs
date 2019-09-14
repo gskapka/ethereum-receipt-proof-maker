@@ -36,6 +36,7 @@ pub fn get_branch_from_trie(
 }
 
 pub fn get_branch_from_trie_and_put_in_state(state: State) -> Result<State> {
+    println!("✔ Pulling proof from trie...");
     get_branch_from_trie(
         state.get_receipts_trie_from_state()?.clone(),
         state.get_index_from_state()?.clone()
@@ -48,6 +49,7 @@ mod tests {
     use super::*;
     use crate::test_utils::{
         get_sample_tx_hashes_1,
+        SAMPLE_RECEIPT_JSONS_1_PATH,
         get_sample_trie_with_sample_receipts,
         get_valid_state_with_receipts_trie_and_index
     };
@@ -65,6 +67,7 @@ mod tests {
     fn should_get_branch_from_trie() {
         let index = 14;
         let trie = get_sample_trie_with_sample_receipts(
+            SAMPLE_RECEIPT_JSONS_1_PATH.to_string(),
             get_sample_tx_hashes_1()
         );
         let result = get_branch_from_trie(trie, index)
@@ -79,6 +82,7 @@ mod tests {
             non_existent_index
         );
         let trie = get_sample_trie_with_sample_receipts(
+            SAMPLE_RECEIPT_JSONS_1_PATH.to_string(),
             get_sample_tx_hashes_1()
         );
         match get_branch_from_trie(trie, non_existent_index) {
@@ -90,9 +94,11 @@ mod tests {
     #[test]
     fn should_get_branch_and_put_in_state() {
         let trie = get_sample_trie_with_sample_receipts(
+            SAMPLE_RECEIPT_JSONS_1_PATH.to_string(),
             get_sample_tx_hashes_1()
         );
         let state_before = get_valid_state_with_receipts_trie_and_index(
+            SAMPLE_RECEIPT_JSONS_1_PATH.to_string(),
             get_sample_tx_hashes_1()
         ).unwrap();
         let index = state_before.get_index_from_state()
