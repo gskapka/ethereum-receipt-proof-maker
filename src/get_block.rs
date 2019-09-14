@@ -1,6 +1,6 @@
 use crate::state::State;
 use serde_json::Value as Json;
-use crate::get_receipt::get_receipt_from_tx_hash;
+use crate::get_receipts::get_receipt_from_tx_hash;
 use ethereum_types::{
     H256,
     Bloom,

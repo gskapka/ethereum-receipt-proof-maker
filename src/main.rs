@@ -15,7 +15,7 @@ mod trie_nodes;
 mod usage_info;
 mod test_utils;
 mod path_codec;
-mod get_receipt;
+mod get_receipts;
 mod nibble_utils;
 mod get_database;
 mod get_tx_index;
@@ -50,7 +50,7 @@ use crate::get_block::get_block_from_tx_hash_in_state_and_set_in_state;
 use crate::get_branch_from_trie::get_branch_from_trie_and_put_in_state;
 use crate::get_hex_proof_from_branch::get_hex_proof_from_branch_in_state;
 use crate::initialize_state_from_cli_args::initialize_state_from_cli_args;
-use crate::get_receipt::get_all_receipts_from_block_in_state_and_set_in_state;
+use crate::get_receipts::get_all_receipts_from_block_in_state_and_set_in_state;
 
 fn main() {
     match parse_cli_args()
