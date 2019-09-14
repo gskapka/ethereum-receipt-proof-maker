@@ -4,6 +4,7 @@ use crate::utils::convert_bytes_to_hex;
 use crate::types::{
     Bytes,
     Result,
+    HexProof,
     NodeStack,
 };
 
