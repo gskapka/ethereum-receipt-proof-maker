@@ -40,7 +40,6 @@ extern crate simple_logger;
 #[macro_use] extern crate serde_derive;
 #[cfg(test)] #[macro_use] extern crate serial_test_derive;
 
-use crate::state::State;
 use crate::start_logger::start_logger;
 use crate::parse_cli_args::parse_cli_args;
 use crate::connect_to_node::connect_to_node;

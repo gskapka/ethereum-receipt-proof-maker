@@ -1,6 +1,5 @@
 use ethereum_types::H256;
 use tiny_keccak::keccak256;
-use crate::utils::convert_hex_to_h256;
 use crate::types::{
     Bytes,
     Result,
@@ -13,6 +12,7 @@ pub fn keccak_hash_bytes(bytes: &Bytes) -> Result<H256> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::convert_hex_to_h256;
 
     fn get_expected_hash() -> H256 {
         let hash = "0x28a564315acde65743f71672cda538275f2118d98b485a30f2af6679bfc510c8";

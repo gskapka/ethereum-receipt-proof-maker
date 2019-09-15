@@ -1,4 +1,3 @@
-use crate::simple_logger;
 use ethereum_types::H256;
 use crate::errors::AppError;
 use crate::utils::{
@@ -7,13 +6,11 @@ use crate::utils::{
 };
 use crate::trie_nodes::{
     Node,
-    rlp_decode_node,
     get_node_from_database,
 };
 use crate::nibble_utils::{
     Nibbles,
     get_nibble_at_index,
-    get_length_in_nibbles,
     split_at_first_nibble,
     get_nibbles_from_bytes,
     convert_nibble_to_usize,
@@ -22,10 +19,6 @@ use crate::nibble_utils::{
 use crate::constants::{
     EMPTY_NIBBLES,
     HASHED_NULL_NODE,
-    LEAF_NODE_STRING,
-    EMPTY_NODE_STRING,
-    BRANCH_NODE_STRING,
-    EXTENSION_NODE_STRING,
 };
 use crate::get_database::{
     get_new_database,
@@ -87,7 +80,7 @@ impl Trie {
                             stack_to_delete,
                         )
                     )
-                    .and_then(|(self_, target_key, old_stack, new_stack, stack_to_delete)|
+                    .and_then(|(self_, _, _, new_stack, stack_to_delete)|
                         self_.update_trie_database(
                             new_stack,
                             stack_to_delete,
@@ -177,7 +170,7 @@ impl Trie {
         self,
         target_key: Nibbles,
         current_ext_node: Node,
-        mut found_stack: NodeStack,
+        found_stack: NodeStack,
         remaining_key: Nibbles,
         value: Bytes,
     ) -> Result<(Self, Nibbles, NodeStack, NodeStack, NodeStack)> {
@@ -346,7 +339,7 @@ impl Trie {
         self,
         target_key: Nibbles,
         current_leaf_node: Node,
-        mut found_stack: NodeStack,
+        found_stack: NodeStack,
         remaining_key: Nibbles,
         value: Bytes,
     ) -> Result<(Self, Nibbles, NodeStack, NodeStack, NodeStack)> {
@@ -475,7 +468,7 @@ impl Trie {
         self,
         target_key: Nibbles,
         current_branch_node: Node,
-        mut found_stack: NodeStack,
+        found_stack: NodeStack,
         remaining_key: Nibbles,
         value: Bytes,
     ) -> Result<(Self, Nibbles, NodeStack, NodeStack, NodeStack)> {
@@ -511,8 +504,8 @@ impl Trie {
         self,
         target_key: Nibbles,
         mut old_stack: NodeStack,
-        mut new_stack: NodeStack,
-        mut stack_to_delete: NodeStack,
+        new_stack: NodeStack,
+        stack_to_delete: NodeStack,
     ) -> Result<(Self, Nibbles, NodeStack, NodeStack, NodeStack)> {
         match old_stack.pop() {
             Some(current_node) => match current_node.get_type() {
@@ -551,7 +544,7 @@ impl Trie {
         self,
         target_key: Nibbles,
         current_node: Node,
-        mut old_stack: NodeStack,
+        old_stack: NodeStack,
         mut new_stack: NodeStack,
         mut stack_to_delete: NodeStack,
     ) -> Result<(Self, Nibbles, NodeStack, NodeStack, NodeStack)> {
@@ -588,7 +581,7 @@ impl Trie {
         self,
         target_key: Nibbles,
         current_node: Node,
-        mut old_stack: NodeStack,
+        old_stack: NodeStack,
         mut new_stack: NodeStack,
         mut stack_to_delete: NodeStack,
     ) -> Result<(Self, Nibbles, NodeStack, NodeStack, NodeStack)> {
@@ -990,19 +983,13 @@ pub fn put_in_trie_recursively(
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
     use super::*;
-    use crate::types::Receipt;
     use crate::get_database::get_thing_from_database;
-    use crate::get_receipts::get_receipt_from_tx_hash;
+    use crate::nibble_utils::convert_hex_string_to_nibbles;
     use crate::rlp_codec::get_rlp_encoded_receipts_and_nibble_tuples;
     use crate::utils::{
         convert_hex_to_h256,
         convert_h256_to_prefixed_hex,
-    };
-    use crate::nibble_utils::{
-        get_nibbles_from_bytes,
-        convert_hex_string_to_nibbles,
     };
     use crate::test_utils::{
         RECEIPTS_ROOT_1,
@@ -1095,8 +1082,6 @@ mod tests {
         let trie = Trie::get_new_trie()
             .unwrap();
         let node = Node::get_new_leaf_node(node_key.clone(), node_value.clone())
-            .unwrap();
-        let expected_result = node.get_rlp_encoding()
             .unwrap();
         let node_hash = node
             .get_hash()

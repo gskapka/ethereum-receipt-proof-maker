@@ -8,10 +8,6 @@ use crate::nibble_utils::{
     Nibbles,
     get_nibbles_from_bytes,
 };
-use crate::utils::{
-    convert_hex_to_h256,
-    convert_h256_to_bytes,
-};
 use crate::types::{
     Bytes,
     Result,

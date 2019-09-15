@@ -8,7 +8,6 @@ pub fn initialize_state_from_cli_args(cli_args: CliArgs) -> Result<State> {
     State::init(
         convert_hex_to_h256(cli_args.arg_txhash.clone())?,
         cli_args.arg_txhash,
-        cli_args.flag_verbose
     )
 }
 

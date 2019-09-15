@@ -2,7 +2,6 @@ use log;
 use docopt::Docopt;
 use log::LevelFilter;
 use crate::types::Result;
-use crate::simple_logger;
 use crate::errors::AppError;
 use crate::usage_info::USAGE_INFO;
 use crate::utils::convert_hex_to_h256;

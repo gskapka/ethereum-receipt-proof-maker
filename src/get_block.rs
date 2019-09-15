@@ -133,8 +133,10 @@ mod tests {
 
     #[test]
     fn should_deserialize_block_json_to_struct_correctly() {
-        let block_json = fs::read_to_string(SAMPLE_BLOCK_JSON_PATH).unwrap();
-        let block_rpc = deserialize_to_block_rpc_response(block_json).unwrap();
+        let block_json = fs::read_to_string(SAMPLE_BLOCK_JSON_PATH)
+            .unwrap();
+        let block_rpc = deserialize_to_block_rpc_response(block_json)
+            .unwrap();
         let result = deserialize_block_json_to_block_struct(
             block_rpc.result
         ).unwrap();

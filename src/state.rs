@@ -29,7 +29,6 @@ impl State {
     pub fn init(
         tx_hash: H256,
         tx_hash_string: String,
-        verbosity: bool
     ) -> Result<State> {
         Ok(
             State {

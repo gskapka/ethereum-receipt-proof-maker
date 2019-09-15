@@ -1,5 +1,6 @@
 use ethereum_types::H256;
 use crate::errors::AppError;
+use crate::nibble_utils::Nibbles;
 use crate::get_database::get_thing_from_database;
 use crate::get_keccak_hash::keccak_hash_bytes;
 use rlp::{
@@ -10,10 +11,6 @@ use crate::path_codec::{
     encode_leaf_path_from_nibbles,
     encode_extension_path_from_nibbles,
     decode_path_to_nibbles_and_node_type,
-};
-use crate::nibble_utils::{
-    Nibbles,
-    get_nibbles_from_bytes,
 };
 use crate::types::{
     Bytes,
@@ -217,7 +214,7 @@ impl Node {
         } else if let Some(extension_node) = &self.extension {
             // TODO/FIXME: Could be inline node!!
             extension_node.path_nibbles.clone().len()
-        } else if let Some(branch_node) = &self.branch {
+        } else if let Some(_) = &self.branch {
             1
         } else {
             0
@@ -338,8 +335,11 @@ pub fn get_node_from_database(
 mod tests {
     use hex;
     use super::*;
-    use crate::nibble_utils::get_length_in_nibbles;
     use crate::utils::convert_hex_to_h256;
+    use crate::nibble_utils::{
+        get_length_in_nibbles,
+        get_nibbles_from_bytes,
+    };
     use crate::get_database::{
         get_new_database,
         put_thing_in_database,

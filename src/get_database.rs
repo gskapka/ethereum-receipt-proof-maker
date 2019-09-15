@@ -1,13 +1,8 @@
 use ethereum_types::H256;
-use crate::errors::AppError;
 use crate::types::{
     Bytes,
     Result,
     Database,
-};
-use crate::state::{
-    State,
-    update_database_in_state,
 };
 
 pub fn get_new_database() -> Result<Database> {
@@ -42,15 +37,6 @@ pub fn get_thing_from_database(
         Some(thing) => Some(thing.to_vec()),
         None => None
     }
-}
-
-pub fn put_thing_in_database_in_state(
-    state: State,
-    key: H256,
-    thing: Bytes,
-) -> Result <State> {
-    put_thing_in_database(state.database.clone(), key, thing)
-        .and_then(|database| update_database_in_state(state, database))
 }
 
 #[cfg(test)]
@@ -91,27 +77,6 @@ mod tests {
         let result = get_thing_from_database(&database, &key)
             .unwrap();
         assert!(result == expected_thing);
-    }
-
-    #[test]
-    fn should_insert_thing_in_database_in_state() {
-        let expected_key = get_expected_key_of_thing_in_database();
-        let state = get_valid_initial_state()
-            .unwrap();
-        let expected_thing = get_thing_to_put_in_database();
-        match get_thing_from_database(&state.database, &expected_key) {
-            Some(_) => panic!("Thing should not be in database!"),
-            None => assert!(true)
-        }
-        let returned_state = put_thing_in_database_in_state(
-            state,
-            expected_key,
-            expected_thing.clone()
-        ).unwrap();
-        match get_thing_from_database(&returned_state.database, &expected_key) {
-            Some(thing) => assert!(thing == expected_thing),
-            None => panic!("Thing should be in database!")
-        }
     }
 
     #[test]

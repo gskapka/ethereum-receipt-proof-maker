@@ -594,7 +594,6 @@ pub fn get_valid_initial_state() -> Result<State> {
     State::init(
         get_valid_tx_hash_h256()?,
         get_valid_tx_hash_hex(),
-        true
     )
 }
 
