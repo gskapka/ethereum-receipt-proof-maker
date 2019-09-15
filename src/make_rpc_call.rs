@@ -23,12 +23,19 @@ pub fn make_rpc_call(endpoint: &str, json: Json) -> Result<reqwest::Response> {
 pub fn get_response_text(mut res: reqwest::Response) -> Result<String> {
     let res_text = res.text()?;
     match res_text.contains("error") {
-        false => Ok(res_text),
         true => Err(
             AppError::Custom(
                 format!("✘ RPC call failed!\n✘ {}", res_text)
             )
-        )
+        ),
+        false => match res_text.contains("\"result\":null") {
+            true => Err(
+                AppError::Custom(
+                    format!("✘ No receipt found for that transaction hash!")
+                )
+            ),
+            false => Ok(res_text),
+        }
     }
 }
 
