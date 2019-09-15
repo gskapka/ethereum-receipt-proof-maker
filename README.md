@@ -19,17 +19,26 @@ __`❍ rusty-receipt-proof-maker <your-tx-hash-here>`__
 
 ```
 
-rusty-receipt-proof-maker --verbose 0xd6f577a93332e015438fcca4e73f538b1829acbd7eb0cf9ee5a0a73ff2752cc6
+rusty-receipt-proof-maker -v 0x5d761b001c4d69bf14c94b8e8a604d97e008a8a7dfb74a6459823b2178ffc033`
 
-✔ CLI Args parsed successfully!
-✔ Verbose mode: true
-✔ Transaction hash: 0xd6f5…2cc6
+ ✔ CLI Args parsed successfully!
+ ✔ Verbose mode: true
+ ✔ Transaction hash: 0x5d76…c033
+ ✔ Validating CLI args...
+ ✔ Initializing state from CLI args...
+ ✔ Getting RPC endpoint from environment variables...
+ ✔ Endpoint retrieved: http://localhost:8545/
+ ✔ Connecting to node...
+ ✔ Connection successful! Latest block number: 8556245
+ ✔ Getting block from transaction hash: 0x5d76…c033
+ ✔ Getting all receipts from block...
+ ✔ Getting transaction index of hash: 0x5d76…c033
+ ✔ Building merkle-patricia trie from receipts...
+ ✔ Pulling branch from trie...
+ ✔ Hex encoding proof from nodes in branch...
+ ✔ Hex Proof:
 
-✔ Getting RPC endpoint from environment variables...
-✔ Endpoint retrieved: http://localhost:8545/
-
-✔ Connecting to node...
-✔ Connection successful! Latest block number: 8316169
+f90264f8b1a0dc1a1b7bc9f38fc6710af9abdf1da874fa708573431381908b8b6a25bd1f2b55a0701833ef4ede796d9c96b1ae7c66830b0126f106ea0bfe99864e679e8b0dfeafa00db067f1c8ee75d8a563038903eb5129ee1d73beeea9380ca58d1920c15fe84ba0a55d0852ba77dbcc2824337150c123ccde62699b0c6eaddf735c1b2638bb85ba80808080a04937e058ea19511f92f803c23f4e9a4eceaaf2246c86da0f1b2241316be8a34d8080808080808080f901ae30b901aaf901a701837ab31ab9010000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000002000000080000000000000000200000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000020000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000004000000000000010200000000000000000000000000000000000000000000000000000000000f89df89b94c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2f863a08c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925a0000000000000000000000000539efb706852838c51905d3d31966c296e034000a0000000000000000000000000a2881a90bf33f03e7a3f803765cd2ed5c8928dfba0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 ```
 
@@ -51,18 +60,46 @@ This tool generates a merkle receipt proof of the receipt pertaining to the give
 ***
 
 Usage:  rusty-receipt-proof-maker [-h | --help]
+        rusty-receipt-proof-maker <txhash> [-t | --trace]
         rusty-receipt-proof-maker <txhash> [-v | --verbose]
 
 Options:
 
     -h, --help          ❍ Show this message.
 
-    -b, --verbose       ❍ Enable verbose mode for additional output.
+    -v, --verbose       ❍ Enable verbose mode for additional output.
+
+    -t, --trace         ❍ Enable tracing for debugging/bug reporting.
 
     <txhash>            ❍ A transaction hash of an Ethereum transaction
                         ➔ Format: A 32-byte long, prefixed hex string.
 
-✔ Exiting, goodbye!
+❍ Rusty Receipt Proof Maker ❍
+
+    Copyright Provable 2019
+    Questions: greg@oraclize.it
+
+❍ Info ❍
+
+This tool generates a merkle receipt proof of the receipt pertaining to the given transaction hash.
+
+***
+
+Usage:  rusty-receipt-proof-maker [-h | --help]
+        rusty-receipt-proof-maker <txhash> [-t | --trace]
+        rusty-receipt-proof-maker <txhash> [-v | --verbose]
+
+Options:
+
+    -h, --help          ❍ Show this message.
+
+    -v, --verbose       ❍ Enable verbose mode for additional output.
+
+    -t, --trace         ❍ Enable tracing for debugging/bug reporting.
+
+    <txhash>            ❍ A transaction hash of an Ethereum transaction
+                        ➔ Format: A 32-byte long, prefixed hex string.
+
 
 ```
 
@@ -91,10 +128,10 @@ This allows you to use for example an __[Infura](https://infura.io/)__ endpoint 
 If you do not provide an endpoint, the tool will default to __`https://localhost:8545`__, and fail to run at all if it can't connect to a node at that location:
 
 ```
+rusty-receipt-proof-maker -v 0x5d761b001c4d69bf14c94b8e8a604d97e008a8a7dfb74a6459823b2178ffc033`
 
 ✔ Getting RPC endpoint from environment variables...
 ✔ Endpoint retrieved: http://localhost:8545/
-
 ✔ Connecting to node...
 ✘ HTTP Reqwest Error!
 ✘ http://localhost:8545/ timed out
@@ -137,8 +174,7 @@ __❍__ The current memory database usage is pure in that we clone the db and re
  - [x] Allow configurable endpoint.
  - [x] Have flag to suppress logging.
  - [x] Have timeout error on reqwests.
- - [ ] Spinners for when it's doing the bits that take a while...?
+ - [x] Have method to convert hex string of even/odd length to offset/non- nibbles.
+ - [x] Need a node rlp-decoder!
  - [ ] Benchmark it and maybe don't clone the db per above note?
- - [ ] Have method to convert hex string of even/odd length to offset/non- nibbles.
- - [ ] Need a node rlp-decoder!
- - [ ] passing self as an arg INSIDE a tuple causes weird compiler issue. (see trie, process_node_stack(...).
+ - [ ] Spinners for when it's doing the bits that take a while...?
