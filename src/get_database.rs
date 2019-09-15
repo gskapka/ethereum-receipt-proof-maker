@@ -43,7 +43,6 @@ pub fn get_thing_from_database(
 mod tests {
     use super::*;
     use crate::test_utils::{
-        get_valid_initial_state,
         get_thing_to_put_in_database,
         get_database_with_thing_in_it,
         get_expected_key_of_thing_in_database,

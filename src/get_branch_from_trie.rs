@@ -70,7 +70,7 @@ mod tests {
             SAMPLE_RECEIPT_JSONS_1_PATH.to_string(),
             get_sample_tx_hashes_1()
         );
-        let result = get_branch_from_trie(trie, index)
+        get_branch_from_trie(trie, index)
             .unwrap();
     }
 

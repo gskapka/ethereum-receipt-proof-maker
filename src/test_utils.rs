@@ -796,7 +796,6 @@ mod tests {
 
     #[test]
     fn should_get_valid_intial_state_correctly() {
-        let expected_verbosity = true;
         let expected_tx_hash = get_valid_tx_hash_h256()
             .unwrap();
         let result = get_valid_initial_state()
@@ -816,7 +815,6 @@ mod tests {
 
     #[test]
     fn should_get_valid_state_with_endpoint_correctly() {
-        let expected_verbosity = true;
         let expected_endpoint = WORKING_ENDPOINT;
         let expected_tx_hash = get_valid_tx_hash_h256()
             .unwrap();

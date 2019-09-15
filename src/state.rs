@@ -180,7 +180,6 @@ mod tests {
 
     #[test]
     fn should_get_initial_state_correctly() {
-        let expected_verbosity = true;
         let expected_tx_hash = get_valid_tx_hash_h256()
             .unwrap();
         let state = get_valid_initial_state()
