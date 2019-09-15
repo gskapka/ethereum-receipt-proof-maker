@@ -109,6 +109,7 @@ fn add_block_to_state(state: State, block: Block) -> Result<State> {
 pub fn get_block_from_tx_hash_in_state_and_set_in_state(
     state: State
 ) -> Result<State> {
+    info!("✔ Getting block from transaction hash: {}", state.tx_hash);
     let endpoint = &State::get_endpoint_from_state(&state)?;
     let tx_hash = &convert_h256_to_prefixed_hex(state.tx_hash)?;
     get_receipt_from_tx_hash(endpoint, tx_hash)

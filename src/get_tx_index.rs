@@ -21,6 +21,7 @@ fn get_tx_index_from_transactions(
 }
 
 pub fn get_tx_index_and_add_to_state(state: State) -> Result<State> {
+    info!("✔ Getting transaction index of hash: {}", state.tx_hash);
     State::get_block_from_state(&state)
         .and_then(|block|
             get_tx_index_from_transactions(

@@ -36,7 +36,7 @@ pub fn get_branch_from_trie(
 }
 
 pub fn get_branch_from_trie_and_put_in_state(state: State) -> Result<State> {
-    println!("✔ Pulling proof from trie...");
+    info!("✔ Pulling branch from trie...");
     get_branch_from_trie(
         state.get_receipts_trie_from_state()?.clone(),
         state.get_index_from_state()?.clone()

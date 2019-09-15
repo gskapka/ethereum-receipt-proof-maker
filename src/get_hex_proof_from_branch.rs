@@ -26,6 +26,7 @@ fn get_hex_proof_from_branch(branch: &NodeStack) -> Result<HexProof> {
 }
 
 pub fn get_hex_proof_from_branch_in_state(state: State) -> Result<HexProof> {
+    info!("✔ Hex encoding proof from nodes in branch...");
     state
         .get_branch_from_state()
         .and_then(get_hex_proof_from_branch)

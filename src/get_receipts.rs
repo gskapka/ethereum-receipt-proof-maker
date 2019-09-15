@@ -98,7 +98,7 @@ fn get_receipts_from_tx_hashes(
 pub fn get_all_receipts_from_block_in_state_and_set_in_state(
     state: State
 ) -> Result<State> {
-    println!("\n✔ Getting receipts from node..."); // TODO: Enabled tracing!
+    info!("✔ Getting all receipts from block...");
     get_receipts_from_tx_hashes(
         &State::get_endpoint_from_state(&state)?,
         &State::get_block_from_state(&state)?.transactions,

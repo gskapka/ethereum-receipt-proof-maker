@@ -17,7 +17,7 @@ fn get_receipts_trie_from_receipts(receipts: &Vec<Receipt>) -> Result<Trie> {
 }
 
 pub fn get_receipts_trie_and_set_in_state(state: State) -> Result<State> {
-    println!("✔ Creating trie from receipts...");
+    info!("✔ Building merkle-patricia trie from receipts...");
     get_receipts_trie_from_receipts(state.get_receipts_from_state()?)
         .and_then(|trie| state.set_receipts_trie_in_state(trie))
 }

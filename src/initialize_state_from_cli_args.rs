@@ -4,6 +4,7 @@ use crate::parse_cli_args::CliArgs;
 use crate::utils::convert_hex_to_h256;
 
 pub fn initialize_state_from_cli_args(cli_args: CliArgs) -> Result<State> {
+    info!("✔ Initializing state from CLI args...");
     State::init(
         convert_hex_to_h256(cli_args.arg_txhash.clone())?,
         cli_args.arg_txhash,
