@@ -55,7 +55,7 @@ pub fn deserialize_to_receipt_rpc_response(
 mod tests {
     use super::*;
     use crate::get_block::deserialize_block_json_to_block_struct;
-    use crate::get_receipt::deserialize_receipt_json_to_receipt_struct;
+    use crate::get_receipts::deserialize_receipt_json_to_receipt_struct;
     use crate::get_rpc_call_jsons::{
         get_block_by_block_hash_json,
         get_transaction_receipt_json,

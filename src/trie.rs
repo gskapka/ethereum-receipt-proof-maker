@@ -993,8 +993,8 @@ mod tests {
     use std::fs;
     use super::*;
     use crate::types::Receipt;
-    use crate::get_receipt::get_receipt_from_tx_hash;
     use crate::get_database::get_thing_from_database;
+    use crate::get_receipts::get_receipt_from_tx_hash;
     use crate::rlp_codec::get_rlp_encoded_receipts_and_nibble_tuples;
     use crate::utils::{
         convert_hex_to_h256,
