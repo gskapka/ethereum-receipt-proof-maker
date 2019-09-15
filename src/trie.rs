@@ -148,12 +148,29 @@ impl Trie {
      * In the first case we split the nodes at the first nibbles and create a
      * branch to point at the original extension - which is first updated with
      * a path one nibble shorter - and a leaf which is created from the
-     * remaining key minus its first nibble and the value to be sorted.
+     * remaining key minus its first nibble and the value to be stored.
      *
      * In the second, much the same as above occurs except the split happens
      * somewhere other than the first nibble. In this case, a new extension is
      * created to consume the common prefix, which then points at the branch
      * and it's children per case 1).
+     *
+     * The first case also has a sub-case for when the extention node key is
+     * exactly two nibbles long. In this case, no new extention node is created.
+     * Instead, the new branch that is created gets the new leaf's hash in it
+     * as usual, as well as the hash that was the value of the original
+     * extension node, in the position governed by the last nibble of the
+     * two-nibble-long extention node. The extention node now fully depleted
+     * is condemned to the delete stack.
+     *
+     * FIXME: TODO:
+     * Case two has a similar sub-case as above, when the common-prefix consumes
+     * all but the LAST nibble of the extention. Here again we don't need a new
+     * extention creating, because the new branch will inherit the hash the
+     * extention was pointing to in the position governed by the last nibble of
+     * the extention. The original extention is thus shortened by one nibble
+     * from the end of the key, and it's pointer updated to point at the new
+     * branch we've created.
      *
      */
     fn process_from_extension_node(
@@ -168,48 +185,89 @@ impl Trie {
         let mut new_stack: NodeStack = Vec::new();
         get_common_prefix_nibbles(remaining_key, current_ext_node.get_key())
             .and_then(|(common_prefix, key_remainder, node_key_remainder)| {
+                trace!(
+                    "Extension node key remaining length: {}",
+                    node_key_remainder.len()
+                );
                 match common_prefix.len() {
-                    0 => split_at_first_nibble(&node_key_remainder)
-                        .and_then(|(ext_first_nibble, ext_nibbles)| {
-                            trace!(
-                                "No common prefix ∴ augmenting existing {}",
-                                "ext to: branch -> ext & leaf"
-                            );
-                            let (
-                                key_remainder_first_nibble,
-                                key_remainder_nibbles
-                            ) = split_at_first_nibble(&key_remainder)?;
-                            let new_leaf = Node::get_new_leaf_node(
-                                key_remainder_nibbles,
-                                value
-                            )?;
-                            let new_ext = Node::get_new_extension_node(
-                                ext_nibbles,
-                                current_ext_node.get_value()?
-                            )?;
-                            let branch = Node::get_new_branch_node(None)?;
-                            let updated_branch_1 = branch.update_branch_at_index(
-                                Some(convert_h256_to_bytes(new_ext.get_hash()?)),
-                                convert_nibble_to_usize(ext_first_nibble)
-                            )?;
-                            let new_branch = updated_branch_1.update_branch_at_index(
-                                Some(convert_h256_to_bytes(new_leaf.get_hash()?)),
-                                convert_nibble_to_usize(key_remainder_first_nibble)
-                            )?;
-                            new_stack.push(new_leaf);
-                            new_stack.push(new_ext);
-                            new_stack.push(new_branch);
-                            Ok((
-                                self,
-                                target_key,
-                                found_stack,
-                                new_stack,
-                                Vec::new()
-                            ))
-                        }),
+                    0 => match node_key_remainder.len() {
+                        1 => split_at_first_nibble(&node_key_remainder)
+                            .and_then(|(ext_first_nibble, _)| {
+                                trace!(
+                                    "No common prefix ∴ transmuting existing {}",
+                                    "ext to: branch -> leaf"
+                                );
+                                let (
+                                    key_remainder_first_nibble,
+                                    key_remainder_nibbles
+                                ) = split_at_first_nibble(&key_remainder)?;
+                                let new_leaf = Node::get_new_leaf_node(
+                                    key_remainder_nibbles,
+                                    value
+                                )?;
+                                let branch = Node::get_new_branch_node(None)?;
+                                let updated_branch_1 = branch.update_branch_at_index(
+                                    Some(current_ext_node.get_value()?),
+                                    convert_nibble_to_usize(ext_first_nibble)
+                                )?;
+                                let new_branch = updated_branch_1.update_branch_at_index(
+                                    Some(convert_h256_to_bytes(new_leaf.get_hash()?)),
+                                    convert_nibble_to_usize(key_remainder_first_nibble)
+                                )?;
+                                new_stack.push(new_branch);
+                                new_stack.push(new_leaf);
+                                let mut stack_to_delete = Vec::new();
+                                stack_to_delete.push(current_ext_node);
+                                Ok((
+                                    self,
+                                    target_key,
+                                    found_stack,
+                                    new_stack,
+                                    stack_to_delete
+                                ))
+                            }),
+                        _ => split_at_first_nibble(&node_key_remainder)
+                            .and_then(|(ext_first_nibble, ext_nibbles)| {
+                                trace!(
+                                    "No common prefix ∴ transmuting existing {}",
+                                    "ext to: branch -> ext & leaf"
+                                );
+                                let (
+                                    key_remainder_first_nibble,
+                                    key_remainder_nibbles
+                                ) = split_at_first_nibble(&key_remainder)?;
+                                let new_leaf = Node::get_new_leaf_node(
+                                    key_remainder_nibbles,
+                                    value
+                                )?;
+                                let new_ext = Node::get_new_extension_node(
+                                    ext_nibbles,
+                                    current_ext_node.get_value()?
+                                )?;
+                                let branch = Node::get_new_branch_node(None)?;
+                                let updated_branch_1 = branch.update_branch_at_index(
+                                    Some(convert_h256_to_bytes(new_ext.get_hash()?)),
+                                    convert_nibble_to_usize(ext_first_nibble)
+                                )?;
+                                let new_branch = updated_branch_1.update_branch_at_index(
+                                    Some(convert_h256_to_bytes(new_leaf.get_hash()?)),
+                                    convert_nibble_to_usize(key_remainder_first_nibble)
+                                )?;
+                                new_stack.push(new_branch);
+                                new_stack.push(new_ext);
+                                new_stack.push(new_leaf);
+                                Ok((
+                                    self,
+                                    target_key,
+                                    found_stack,
+                                    new_stack,
+                                    Vec::new()
+                                ))
+                            }),
+                        }
                     _ => {
                         trace!(
-                            "Common prefix ∴ augmenting existing ext to: {}",
+                            "Common prefix ∴ transmuting existing ext to: {}",
                             "ext -> branch -> ext & leaf"
                         );
                         let (
@@ -310,7 +368,7 @@ impl Trie {
                             Vec::new()
                         ))
                     }),
-            _ => get_common_prefix_nibbles(remaining_key, current_leaf_node.get_key())
+            _ => get_common_prefix_nibbles(remaining_key.clone(), current_leaf_node.clone().get_key()) // FIXME: rm clones
                 .and_then(|(common_prefix, key_remainder, node_key_remainder)| {
                     match common_prefix.len() {
                         0 => split_at_first_nibble(&node_key_remainder)
@@ -357,6 +415,8 @@ impl Trie {
                                     "Common prefix ∴ creating: ext -> branch{}",
                                     " -> 2 leaves"
                                 );
+                                trace!("CP = {:?}", common_prefix);
+                                trace!("Between keys {:?} & {:?}", remaining_key, current_leaf_node.get_key());
                                 let (
                                     key_remainder_first_nibble,
                                     key_remainder_nibbles
@@ -370,9 +430,6 @@ impl Trie {
                                     value
                                 )?;
                                 let new_branch = Node::get_new_branch_node(None)?;
-                                let new_branch_hash = convert_h256_to_bytes(
-                                    new_branch.get_hash()?
-                                );
                                 let updated_branch_1 = new_branch.update_branch_at_index(
                                     Some(convert_h256_to_bytes(new_leaf_1.get_hash()?)),
                                     convert_nibble_to_usize(leaf_first_nibble)
@@ -382,11 +439,14 @@ impl Trie {
                                     Some(convert_h256_to_bytes(new_leaf_2.get_hash()?)),
                                     convert_nibble_to_usize(key_remainder_first_nibble)
                                 )?;
-                                let new_extension = Node::get_new_extension_node(
+                                let updated_branch_hash = convert_h256_to_bytes(
+                                    updated_branch.get_hash()?
+                                );
+                                let new_extention = Node::get_new_extension_node(
                                     common_prefix,
-                                    new_branch_hash
+                                    updated_branch_hash
                                 )?;
-                                new_stack.push(new_extension);
+                                new_stack.push(new_extention);
                                 new_stack.push(updated_branch);
                                 new_stack.push(new_leaf_1);
                                 new_stack.push(new_leaf_2);
