@@ -1,4 +1,5 @@
 use hex;
+use log;
 use reqwest;
 use std::fmt;
 use serde_json;
@@ -10,6 +11,7 @@ pub enum AppError {
     IOError(std::io::Error),
     HexError(hex::FromHexError),
     ReqwestError(reqwest::Error),
+    LoggerError(log::SetLoggerError),
     SerdeJsonError(serde_json::Error),
     NoneError(std::option::NoneError),
 }
@@ -24,6 +26,8 @@ impl fmt::Display for AppError {
                 format!("\n✘ Hex Error!\n✘ {}\n{}", e, sign_off),
             AppError::IOError(ref e) =>
                 format!("\n✘ I/O Error!\n✘ {}\n{}", e, sign_off),
+            AppError::LoggerError(ref e) =>
+                format!("✘ Logger Error!\n✘ {:?}", e),
             AppError::SerdeJsonError(ref e) =>
                 format!("\n✘ Serde-Json Error!\n✘ {}\n{}", e, sign_off),
             AppError::NoneError(ref e) =>
@@ -69,8 +73,15 @@ impl From<reqwest::Error> for AppError {
         AppError::ReqwestError(e)
     }
 }
+
 impl From<serde_json::Error> for AppError {
     fn from(e: serde_json::Error) -> AppError {
         AppError::SerdeJsonError(e)
+    }
+}
+
+impl From<log::SetLoggerError> for AppError {
+    fn from(e: log::SetLoggerError) -> AppError {
+        AppError::LoggerError(e)
     }
 }
