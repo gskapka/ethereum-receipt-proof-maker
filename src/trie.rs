@@ -563,13 +563,12 @@ impl Trie {
         )?;
         new_stack.insert(0, updated_extension_node);
         stack_to_delete.push(current_node);
-        Ok((
-            self,
+        self.update_stale_nodes(
             target_key,
             old_stack,
             new_stack,
             stack_to_delete,
-        ))
+        )
     }
     /**
      * Updating Nodes from a Branch Node
@@ -613,13 +612,12 @@ impl Trie {
             )?;
         new_stack.insert(0, updated_node);
         stack_to_delete.push(current_node);
-        Ok((
-            self,
+        self.update_stale_nodes(
             target_key,
             old_stack,
             new_stack,
             stack_to_delete,
-        ))
+        )
     }
     /**
      * Updating the Trie in the Database
