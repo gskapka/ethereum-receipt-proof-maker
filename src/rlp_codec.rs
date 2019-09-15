@@ -34,7 +34,7 @@ fn keccak_hash_rlp_encoded_receipt(rlp_encoded_receipt: &Bytes) -> Result<H256> 
     keccak_hash_bytes(rlp_encoded_receipt)
 }
 
-pub fn get_rlp_encoded_receipt_and_encoded_path_tuple(
+pub fn get_rlp_encoded_receipt_and_encoded_key_tuple(
     receipt: &Receipt,
 ) -> Result<(Nibbles, Bytes)> {
     rlp_encode_receipt(&receipt)
@@ -55,7 +55,7 @@ pub fn get_rlp_encoded_receipts_and_nibble_tuples(
 ) -> Result<Vec<(Nibbles, Bytes)>> {
     receipts
         .iter()
-        .map(|receipt| get_rlp_encoded_receipt_and_encoded_path_tuple(&receipt))
+        .map(|receipt| get_rlp_encoded_receipt_and_encoded_key_tuple(&receipt))
         .collect::<Result<Vec<(Nibbles, Bytes)>>>()
 }
 
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn should_get_encoded_receipt_and_hash_tuple() {
-        let result = get_rlp_encoded_receipt_and_encoded_path_tuple(&get_expected_receipt())
+        let result = get_rlp_encoded_receipt_and_encoded_key_tuple(&get_expected_receipt())
             .unwrap();
         assert!(result.0 == get_expected_receipt_nibbles());
         assert!(result.1 == get_rlp_encoded_receipt());
