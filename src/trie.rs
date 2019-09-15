@@ -155,20 +155,20 @@ impl Trie {
      * created to consume the common prefix, which then points at the branch
      * and it's children per case 1).
      *
-     * The first case also has a sub-case for when the extention node key is
-     * exactly two nibbles long. In this case, no new extention node is created.
+     * The first case also has a sub-case for when the extension node key is
+     * exactly two nibbles long. In this case, no new extension node is created.
      * Instead, the new branch that is created gets the new leaf's hash in it
      * as usual, as well as the hash that was the value of the original
      * extension node, in the position governed by the last nibble of the
-     * two-nibble-long extention node. The extention node now fully depleted
+     * two-nibble-long extension node. The extension node now fully depleted
      * is condemned to the delete stack.
      *
      * FIXME: TODO:
      * Case two has a similar sub-case as above, when the common-prefix consumes
-     * all but the LAST nibble of the extention. Here again we don't need a new
-     * extention creating, because the new branch will inherit the hash the
-     * extention was pointing to in the position governed by the last nibble of
-     * the extention. The original extention is thus shortened by one nibble
+     * all but the LAST nibble of the extension. Here again we don't need a new
+     * extension creating, because the new branch will inherit the hash the
+     * extension was pointing to in the position governed by the last nibble of
+     * the extension. The original extension is thus shortened by one nibble
      * from the end of the key, and it's pointer updated to point at the new
      * branch we've created.
      *
@@ -442,11 +442,11 @@ impl Trie {
                                 let updated_branch_hash = convert_h256_to_bytes(
                                     updated_branch.get_hash()?
                                 );
-                                let new_extention = Node::get_new_extension_node(
+                                let new_extension = Node::get_new_extension_node(
                                     common_prefix,
                                     updated_branch_hash
                                 )?;
-                                new_stack.push(new_extention);
+                                new_stack.push(new_extension);
                                 new_stack.push(updated_branch);
                                 new_stack.push(new_leaf_1);
                                 new_stack.push(new_leaf_2);
@@ -807,17 +807,17 @@ impl Trie {
     fn continue_finding_from_extension(
         self,
         target_key: Nibbles,
-        extention_node: Node,
+        extension_node: Node,
         mut found_stack: NodeStack,
         key: Nibbles
     ) -> Result<(Self, Nibbles, NodeStack, Nibbles)> {
         trace!("Extension node found");
-        get_common_prefix_nibbles(key.clone(), extention_node.get_key())
+        get_common_prefix_nibbles(key.clone(), extension_node.get_key())
             .and_then(|(common_prefix, remaining_key, remaining_node_key)| {
                 let next_node_hash = &convert_bytes_to_h256(
-                    &extention_node.get_value()?
+                    &extension_node.get_value()?
                 )?;
-                found_stack.push(extention_node);
+                found_stack.push(extension_node);
                 match common_prefix.len() {
                     0 => {
                         trace!("Extension & key have no common prefix");
