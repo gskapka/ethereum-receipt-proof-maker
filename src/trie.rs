@@ -1006,11 +1006,15 @@ mod tests {
     };
     use crate::test_utils::{
         RECEIPTS_ROOT_1,
+        RECEIPTS_ROOT_2,
         get_sample_receipts,
         get_sample_leaf_node,
         get_sample_branch_node,
         get_sample_tx_hashes_1,
+        get_sample_tx_hashes_2,
         get_sample_extension_node,
+        SAMPLE_RECEIPT_JSONS_1_PATH,
+        SAMPLE_RECEIPT_JSONS_2_PATH
     };
 
     #[test]
@@ -1122,10 +1126,13 @@ mod tests {
 
 
     #[test]
-    fn should_put_receipts_in_trie_correctly() {
-        simple_logger::init().unwrap();
+    fn should_put_sample_receipts_1_in_trie_correctly() {
+        //simple_logger::init().unwrap();
         let index = 0;
-        let receipts = get_sample_receipts(get_sample_tx_hashes_1());
+        let receipts = get_sample_receipts(
+            SAMPLE_RECEIPT_JSONS_1_PATH.to_string(),
+            get_sample_tx_hashes_1()
+        );
         let trie = Trie::get_new_trie().unwrap();
         let key_value_tuples = get_rlp_encoded_receipts_and_nibble_tuples(
             &receipts
@@ -1138,5 +1145,27 @@ mod tests {
         let root_hex = convert_h256_to_prefixed_hex(updated_trie.root)
             .unwrap();
         assert!(root_hex == RECEIPTS_ROOT_1);
+    }
+
+    #[test]
+    fn should_put_sample_receipts_2_in_trie_correctly() {
+        //simple_logger::init().unwrap();
+        let index = 0;
+        let receipts = get_sample_receipts(
+            SAMPLE_RECEIPT_JSONS_2_PATH.to_string(),
+            get_sample_tx_hashes_2()
+        );
+        let trie = Trie::get_new_trie().unwrap();
+        let key_value_tuples = get_rlp_encoded_receipts_and_nibble_tuples(
+            &receipts
+        ).unwrap();
+        let updated_trie = put_in_trie_recursively(
+            trie,
+            key_value_tuples,
+            index
+        ).unwrap();
+        let root_hex = convert_h256_to_prefixed_hex(updated_trie.root)
+            .unwrap();
+        assert!(root_hex == RECEIPTS_ROOT_2);
     }
 }
