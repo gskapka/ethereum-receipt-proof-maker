@@ -803,7 +803,6 @@ mod tests {
         let result = get_valid_initial_state()
             .unwrap();
         assert!(result.tx_hash == expected_tx_hash);
-        assert!(result.verbose == expected_verbosity);
         match State::get_endpoint_from_state(&result) {
             Err(AppError::Custom(e)) =>
                 assert!(e == get_not_in_state_err("endpoint")),
@@ -825,7 +824,6 @@ mod tests {
         let result = get_valid_state_with_endpoint()
             .unwrap();
         assert!(result.tx_hash == expected_tx_hash);
-        assert!(result.verbose == expected_verbosity);
         match State::get_endpoint_from_state(&result) {
             Ok(endpoint) => assert!(endpoint == expected_endpoint),
             _ => panic!("Intial w/ endpoint should have endpoint set!")

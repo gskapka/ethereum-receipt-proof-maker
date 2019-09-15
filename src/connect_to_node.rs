@@ -19,6 +19,7 @@ mod tests {
     use super::*;
     use crate::test_utils::{
         WORKING_ENDPOINT,
+        get_valid_tx_hash_h256,
         get_valid_initial_state,
     };
 
@@ -28,8 +29,11 @@ mod tests {
             get_valid_initial_state().unwrap(),
             WORKING_ENDPOINT.to_string()
         ).unwrap();
+        let expected_tx_hash = get_valid_tx_hash_h256()
+            .unwrap();
         match connect_to_node(state) {
-            Ok(returned_state) => assert!(returned_state.verbose),
+            Ok(returned_state) =>
+                assert!(returned_state.tx_hash == expected_tx_hash),
             Err(_) => panic!("Should connect to node w/ working endpoint!")
         }
     }

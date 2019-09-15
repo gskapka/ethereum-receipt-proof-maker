@@ -14,7 +14,6 @@ use crate::types::{
 };
 
 pub struct State {
-    pub verbose: bool,
     pub tx_hash: H256,
     pub database: Database,
     pub block: Option<Block>,
@@ -41,7 +40,6 @@ impl State {
                 endpoint: None,
                 receipts: None,
                 tx_hash_string,
-                verbose: verbosity,
                 receipts_trie: None,
                 database: std::collections::HashMap::new(),
             }
@@ -189,7 +187,6 @@ mod tests {
         let state = get_valid_initial_state()
             .unwrap();
         assert!(state.tx_hash == expected_tx_hash);
-        assert!(state.verbose == expected_verbosity);
     }
 
     #[test]
@@ -243,14 +240,6 @@ mod tests {
         let state = get_valid_initial_state()
             .unwrap();
         assert!(state.tx_hash == expected_tx_hash);
-    }
-
-    #[test]
-    fn initial_state_should_have_verbosity_set_correctly() {
-        let expected_verbosity = true;
-        let state = get_valid_initial_state()
-            .unwrap();
-        assert!(state.verbose == expected_verbosity);
     }
 
     #[test]
