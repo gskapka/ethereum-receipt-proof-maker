@@ -463,9 +463,10 @@ impl Trie {
         }
     }
     /**
+     * Processing from Branch Node:
      *
      * Here we create a new leaf node from the remaining key minus its first
-     * nibble. Next we get that nodes hash and add it to the current branch
+     * nibble. Next we get that node's hash and add it to the current branch
      * node, at the index the first nibble we chopped off the remaining key
      * points to.
      *
@@ -537,6 +538,7 @@ impl Trie {
         }
     }
     /**
+     * Updating Old Nodes from an Extension Node
      *
      * Here we take the old extension node and update the hash it contains to
      * the hash of the next node in the trie, which lives at the start of the
@@ -570,6 +572,7 @@ impl Trie {
         ))
     }
     /**
+     * Updating Nodes from a Branch Node
      *
      * Here we take the old branch node and update it to contain the next node
      * in line's hash, placed at the correct index in the branches. Which
@@ -605,9 +608,9 @@ impl Trie {
         let updated_node = current_node
             .clone()
             .update_branch_at_index(
-            Some(convert_h256_to_bytes(target_node_hash)),
-            branch_index
-        )?;
+                Some(convert_h256_to_bytes(target_node_hash)),
+                branch_index
+            )?;
         new_stack.insert(0, updated_node);
         stack_to_delete.push(current_node);
         Ok((
@@ -619,6 +622,7 @@ impl Trie {
         ))
     }
     /**
+     * Updating the Trie in the Database
      *
      * Here we recurse over the new_stack and the to_delete_stack, saving the
      * former in to the database and removing the latter. Before putting the
@@ -658,7 +662,7 @@ impl Trie {
                     );
                     self.put_node_in_database(node)
                         .and_then(|new_self| {
-                            trace!("Updating root hash to {}", next_root_hash);
+                            trace!("Updating root hash to {}\n", next_root_hash);
                             new_self.update_root_hash(next_root_hash)
                         })
                 }
@@ -742,7 +746,7 @@ impl Trie {
     }
     /**
      *
-     * Finding onwards from a leaf node:
+     * Finding Onwards from a Leaf Node:
      *
      * Once at a leaf node we first check for any common prefix between our
      * target key and the leaf key. Once determined, we consider the two cases
@@ -762,14 +766,14 @@ impl Trie {
     fn continue_finding_from_leaf(
         self,
         target_key: Nibbles,
-        current_node: Node,
+        leaf_node: Node,
         mut found_stack: NodeStack,
         key: Nibbles
     ) -> Result<(Self, Nibbles, NodeStack, Nibbles)> {
         trace!("Leaf node found");
-        get_common_prefix_nibbles(key.clone(), current_node.get_key())
+        get_common_prefix_nibbles(key.clone(), leaf_node.get_key())
             .and_then(|(_, remaining_key, _)| {
-                found_stack.push(current_node);
+                found_stack.push(leaf_node);
                 match remaining_key.len() {
                     0 => {
                         trace!("Wohoo! Leaf node matches fully!");
@@ -784,7 +788,7 @@ impl Trie {
     }
     /**
      *
-     * Finding onwards from an extension node:
+     * Finding Onwards from an Extension Node:
      *
      * Once at an extension either we have three cases to consider:
      *
@@ -805,25 +809,25 @@ impl Trie {
     fn continue_finding_from_extension(
         self,
         target_key: Nibbles,
-        current_node: Node,
+        extention_node: Node,
         mut found_stack: NodeStack,
         key: Nibbles
     ) -> Result<(Self, Nibbles, NodeStack, Nibbles)> {
         trace!("Extension node found");
-        get_common_prefix_nibbles(key.clone(), current_node.get_key())
+        get_common_prefix_nibbles(key.clone(), extention_node.get_key())
             .and_then(|(common_prefix, remaining_key, remaining_node_key)| {
                 let next_node_hash = &convert_bytes_to_h256(
-                    &current_node.get_value()?
+                    &extention_node.get_value()?
                 )?;
-                found_stack.push(current_node);
+                found_stack.push(extention_node);
                 match common_prefix.len() {
                     0 => {
-                        trace!("Extension & key have no common prefix.");
+                        trace!("Extension & key have no common prefix");
                         Ok((self, target_key, found_stack, key))
                     },
                     _ => match remaining_node_key.len() > 0 {
                         true => {
-                            trace!("Extension partial match.");
+                            trace!("Extension partial match");
                             Ok((self, target_key, found_stack, key))
                         },
                         false => {
@@ -853,7 +857,7 @@ impl Trie {
     }
     /**
      *
-     * Finding onwards from a branch node:
+     * Finding Onwards from a Branch Node:
      *
      * When arriving at a branch node, we take our target key and slice off the
      * first nibble. This is then used as the index for inspecting the branches
@@ -882,15 +886,15 @@ impl Trie {
     fn continue_finding_from_branch(
         self,
         target_key: Nibbles,
-        current_node: Node,
+        branch_node: Node,
         mut found_stack: NodeStack,
         key: Nibbles
     ) -> Result<(Self, Nibbles, NodeStack, Nibbles)> {
         trace!("Branch node found");
-        found_stack.push(current_node.clone());
+        found_stack.push(branch_node.clone());
         split_at_first_nibble(&key)
             .and_then(|(first_nibble, remaining_nibbles)| {
-                match &current_node
+                match &branch_node
                     .branch?
                     .branches[convert_nibble_to_usize(first_nibble)] {
                     None => {
@@ -972,7 +976,7 @@ pub fn put_in_trie_recursively(
     match i == key_value_tuples.len()  {
         true => Ok(trie),
         false => {
-            trace!("Putting item in trie recurisively...");
+            trace!("Putting item #{} in trie recursively...", i + 1);
             trie
                 .put(key_value_tuples[i].0.clone(), key_value_tuples[i].1.clone())
                 .and_then(|new_trie|
