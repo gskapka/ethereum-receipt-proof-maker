@@ -20,6 +20,7 @@ mod nibble_utils;
 mod get_database;
 mod get_tx_index;
 mod get_endpoint;
+mod start_logger;
 mod make_rpc_call;
 mod parse_cli_args;
 mod get_keccak_hash;
@@ -40,6 +41,7 @@ extern crate simple_logger;
 #[cfg(test)] #[macro_use] extern crate serial_test_derive;
 
 use crate::state::State;
+use crate::start_logger::start_logger;
 use crate::parse_cli_args::parse_cli_args;
 use crate::connect_to_node::connect_to_node;
 use crate::validate_cli_args::validate_cli_args;
@@ -53,7 +55,8 @@ use crate::initialize_state_from_cli_args::initialize_state_from_cli_args;
 use crate::get_receipts::get_all_receipts_from_block_in_state_and_set_in_state;
 
 fn main() {
-    match parse_cli_args()
+    match start_logger()
+        .and_then(|_| parse_cli_args())
         .and_then(validate_cli_args)
         .and_then(initialize_state_from_cli_args)
         .and_then(get_endpoint_and_set_in_state)
@@ -64,7 +67,10 @@ fn main() {
         .and_then(get_receipts_trie_and_set_in_state)
         .and_then(get_branch_from_trie_and_put_in_state)
         .and_then(get_hex_proof_from_branch_in_state) {
-            Ok(_proof) => println!("\n✔ Fin!"),
-            Err(e) => println!("{}", e)
+            Err(e) => error!("{}", e),
+            Ok(hex_proof) => {
+                info!("✔ Hex Proof:\n");
+                println!("{}", hex_proof);
+            }
         }
 }
