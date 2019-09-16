@@ -439,10 +439,6 @@ pub fn slice_nibbles_at_nibble_index(
     }
 }
 
-pub fn drop_first_nibble(nibbles: Nibbles) -> Result<Nibbles> {
-    slice_nibbles_at_nibble_index(nibbles, 1)
-}
-
 pub fn convert_hex_string_to_nibbles(hex_string: String) -> Result<Nibbles> {
     match hex_string.len() % 2 == 0 {
         true => Ok(get_nibbles_from_bytes(hex::decode(hex_string)?)),
@@ -1669,26 +1665,6 @@ mod tests {
         assert!(res_1 == expected_longer_result);
         assert!(res_2 == expected_shorter_result);
         assert!(res_prefix == expected_common_prefix_result);
-    }
-
-    #[test]
-    fn should_convert_hex_string_to_nibbles() {
-        let bytes = vec![0xc0, 0xff, 0xee];
-        let hex_string = "c0ffee".to_string();
-        let expected_result = get_nibbles_from_bytes(bytes);
-        let result = convert_hex_string_to_nibbles(hex_string)
-            .unwrap();
-        assert!(result == expected_result);
-    }
-
-    #[test]
-    fn should_convert_offset_hex_string_to_nibbles() {
-        let bytes = vec![0xdu8, 0xec, 0xaf];
-        let hex_string = "decaf".to_string();
-        let expected_result = get_nibbles_from_offset_bytes(bytes);
-        let result = convert_hex_string_to_nibbles(hex_string)
-            .unwrap();
-        assert!(result == expected_result);
     }
 
     #[test]

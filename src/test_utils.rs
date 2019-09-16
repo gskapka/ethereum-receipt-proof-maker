@@ -676,6 +676,15 @@ pub fn assert_block_is_correct(block: Block) {
     assert!(block.uncles.len() == sample_block.uncles.len());
 }
 
+pub fn convert_hex_string_to_nibbles(hex_string: String) -> Result<Nibbles> {
+    match hex_string.len() % 2 == 0 {
+        true => Ok(get_nibbles_from_bytes(hex::decode(hex_string)?)),
+        false => Ok(get_nibbles_from_offset_bytes(
+            hex::decode(format!("0{}", hex_string))?
+        )),
+    }
+}
+
 pub fn assert_receipt_is_correct(receipt: Receipt) {
     // TODO: Implement == for receipts
     let sample_receipt = get_expected_receipt();
@@ -930,4 +939,25 @@ mod tests {
             assert!(!dot_env_file_exists());
         }
     }
+
+    #[test]
+    fn should_convert_hex_string_to_nibbles() {
+        let bytes = vec![0xc0, 0xff, 0xee];
+        let hex_string = "c0ffee".to_string();
+        let expected_result = get_nibbles_from_bytes(bytes);
+        let result = convert_hex_string_to_nibbles(hex_string)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
+    #[test]
+    fn should_convert_offset_hex_string_to_nibbles() {
+        let bytes = vec![0xdu8, 0xec, 0xaf];
+        let hex_string = "decaf".to_string();
+        let expected_result = get_nibbles_from_offset_bytes(bytes);
+        let result = convert_hex_string_to_nibbles(hex_string)
+            .unwrap();
+        assert!(result == expected_result);
+    }
+
 }

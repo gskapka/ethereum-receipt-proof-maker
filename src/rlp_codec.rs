@@ -1,9 +1,5 @@
 use rlp::RlpStream;
-use crate::get_keccak_hash::keccak_hash_bytes;
-use ethereum_types::{
-    H256,
-    U256,
-};
+use ethereum_types::U256;
 use crate::nibble_utils::{
     Nibbles,
     get_nibbles_from_bytes,
@@ -24,10 +20,6 @@ pub fn rlp_encode_transaction_index(index: &U256) -> Result<Bytes> {
     let mut rlp_stream = RlpStream::new();
     rlp_stream.append(&index.as_usize());
     Ok(rlp_stream.out())
-}
-
-fn keccak_hash_rlp_encoded_receipt(rlp_encoded_receipt: &Bytes) -> Result<H256> {
-    keccak_hash_bytes(rlp_encoded_receipt)
 }
 
 pub fn get_rlp_encoded_receipt_and_encoded_key_tuple(
@@ -75,16 +67,6 @@ mod tests {
         let result = rlp_encode_receipt(&get_expected_receipt())
             .unwrap();
         assert!(result == get_rlp_encoded_receipt())
-    }
-
-    #[test]
-    fn should_hash_receipt_correctly() {
-        let expected_result = keccak_hash_bytes(&get_rlp_encoded_receipt())
-            .unwrap();
-        let result = rlp_encode_receipt(&get_expected_receipt())
-            .and_then(|rlp_encoded_receipt| keccak_hash_rlp_encoded_receipt(&rlp_encoded_receipt))
-            .unwrap();
-        assert!(expected_result == result);
     }
 
     #[test]

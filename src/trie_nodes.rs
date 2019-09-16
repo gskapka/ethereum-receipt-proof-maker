@@ -21,7 +21,6 @@ use crate::types::{
 use crate::constants::{
     EMPTY_NIBBLES,
     LEAF_NODE_STRING,
-    EMPTY_NODE_STRING,
     BRANCH_NODE_STRING,
     EXTENSION_NODE_STRING,
 };
@@ -58,16 +57,6 @@ pub struct BranchNode {
 }
 
 impl Node {
-    pub fn get_new_empty_node() -> Result<Node> {
-        Ok(
-            Node {
-                leaf: None,
-                branch: None,
-                extension: None
-            }
-        )
-    }
-
     pub fn get_new_leaf_node(
         path_nibbles: Nibbles,
         value: Bytes
@@ -238,10 +227,8 @@ impl Node {
             LEAF_NODE_STRING
         } else if let Some(_) = self.branch {
             BRANCH_NODE_STRING
-        } else if let Some(_) = self.extension {
-            EXTENSION_NODE_STRING
         } else {
-            EMPTY_NODE_STRING
+            EXTENSION_NODE_STRING
         }
     }
 }
@@ -608,13 +595,6 @@ mod tests {
     }
 
     #[test]
-    fn should_get_new_empty_node() {
-        let empty = Node::get_new_empty_node().unwrap();
-        let result = empty.get_type();
-        assert!(result == EMPTY_NODE_STRING);
-    }
-
-    #[test]
     fn should_get_key_from_leaf_node() {
         let path_bytes = vec![0x12, 0x34, 0x56];
         let expected_result = get_nibbles_from_bytes(path_bytes.clone());
@@ -780,15 +760,6 @@ mod tests {
     fn should_get_key_length_of_branch_node() {
         let node = get_sample_branch_node();
         let expected_result = 1;
-        let result = node.get_key_length();
-        assert!(result == expected_result);
-    }
-
-    #[test]
-    fn should_get_key_length_of_empty_node() {
-        let node = Node::get_new_empty_node()
-            .unwrap();
-        let expected_result = 0;
         let result = node.get_key_length();
         assert!(result == expected_result);
     }

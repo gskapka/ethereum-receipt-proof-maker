@@ -10,10 +10,8 @@ pub const NUM_BITS_IN_NIBBLE: usize = 4;
 pub const REQWEST_TIMEOUT_TIME: u64 = 5;
 pub const NUM_NIBBLES_IN_BYTE: usize = 2;
 pub const HIGH_NIBBLE_MASK: Byte = 15u8; // NOTE: 15u8 == [0,0,0,0,1,1,1,1]
-pub const ADDRESS_LENGTH_CHARS: usize = 40;
 pub static DOT_ENV_PATH: &'static str = "./.env";
 pub static LEAF_NODE_STRING: &'static str = "leaf";
-pub static EMPTY_NODE_STRING: &'static str = "empty";
 pub static BRANCH_NODE_STRING: &'static str = "branch";
 pub static EXTENSION_NODE_STRING: &'static str = "extension";
 pub const HASHED_NULL_NODE: H256 = H256(HASHED_NULL_NODE_BYTES);

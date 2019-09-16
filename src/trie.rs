@@ -985,7 +985,6 @@ pub fn put_in_trie_recursively(
 mod tests {
     use super::*;
     use crate::get_database::get_thing_from_database;
-    use crate::nibble_utils::convert_hex_string_to_nibbles;
     use crate::rlp_codec::get_rlp_encoded_receipts_and_nibble_tuples;
     use crate::utils::{
         convert_hex_to_h256,
@@ -1001,7 +1000,8 @@ mod tests {
         get_sample_tx_hashes_2,
         get_sample_extension_node,
         SAMPLE_RECEIPT_JSONS_1_PATH,
-        SAMPLE_RECEIPT_JSONS_2_PATH
+        SAMPLE_RECEIPT_JSONS_2_PATH,
+        convert_hex_string_to_nibbles,
     };
 
     #[test]

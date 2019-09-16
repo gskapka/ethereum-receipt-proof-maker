@@ -154,14 +154,6 @@ impl State {
     }
 }
 
-pub fn update_database_in_state(
-    mut state: State,
-    updated_database: Database
-) -> Result<State> {
-    state.database = updated_database;
-    Ok(state)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -435,28 +427,6 @@ mod tests {
         ) {
             Err(AppError::Custom(e)) => assert!(e == expected_err),
             _ => panic!("Overwriting state should not have succeeded!"),
-        }
-    }
-
-    #[test]
-    fn should_update_database_in_state() {
-        let expected_thing = get_thing_to_put_in_database();
-        let expected_key = get_expected_key_of_thing_in_database();
-        let state = get_valid_initial_state()
-            .unwrap();
-        match get_thing_from_database(&state.database, &expected_key) {
-            Some(_) => panic!("Thing should not be in database!"),
-            None => assert!(true)
-        }
-        let database_with_thing_in_it = get_database_with_thing_in_it()
-            .unwrap();
-        let updated_state = update_database_in_state(
-            state,
-            database_with_thing_in_it
-        ).unwrap();
-        match get_thing_from_database(&updated_state.database, &expected_key) {
-            Some(thing) => assert!(thing == expected_thing),
-            None => panic!("Thing should be in database!")
         }
     }
 }

@@ -81,14 +81,6 @@ pub fn get_block_by_blockhash(
         .and_then(|json| get_block(endpoint, json))
 }
 
-pub fn get_block_by_transaction_hash(
-    endpoint: &str,
-    tx_hash: &str
-) -> Result<Block> {
-    get_receipt_from_tx_hash(endpoint, tx_hash)
-        .and_then(|receipt| get_block_by_blockhash(endpoint, receipt.block_hash))
-}
-
 pub fn get_block_by_number(endpoint: &str, block_num: &str) -> Result<Block> {
     let num_hex: String;
     if block_num == "latest" {
@@ -175,19 +167,11 @@ mod tests {
     }
 
     #[test]
-    fn should_get_block_by_transaction_hash() {
-        let result = get_block_by_transaction_hash(
-            WORKING_ENDPOINT,
-            SAMPLE_TX_HASH
-        ).unwrap();
-        assert_block_is_correct(result);
-    }
-
-    #[test]
     fn should_add_block_to_state() {
-        let block = get_block_by_transaction_hash(
+        let num_str = "8233333";
+        let block = get_block_by_number(
             WORKING_ENDPOINT,
-            SAMPLE_TX_HASH
+            num_str
         ).unwrap();
         let initial_state = get_valid_state_with_endpoint().unwrap();
         let resultant_state = add_block_to_state(initial_state, block).unwrap();
