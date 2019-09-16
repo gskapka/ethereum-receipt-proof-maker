@@ -66,10 +66,13 @@ fn main() {
         .and_then(get_receipts_trie_and_set_in_state)
         .and_then(get_branch_from_trie_and_put_in_state)
         .and_then(get_hex_proof_from_branch_in_state) {
-            Err(e) => error!("{}", e),
             Ok(hex_proof) => {
                 info!("✔ Hex Proof:\n");
                 println!("{}", hex_proof);
+            },
+            Err(e) => {
+                error!("{}", e);
+                std::process::exit(1);
             }
         }
 }
