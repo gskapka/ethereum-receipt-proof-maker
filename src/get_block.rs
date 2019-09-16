@@ -114,7 +114,6 @@ mod tests {
     use std::fs;
     use super::*;
     use crate::test_utils::{
-        SAMPLE_TX_HASH,
         WORKING_ENDPOINT,
         SAMPLE_BLOCK_HASH,
         SAMPLE_BLOCK_JSON_PATH,

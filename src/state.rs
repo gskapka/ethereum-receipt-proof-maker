@@ -157,7 +157,6 @@ impl State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::get_database::get_thing_from_database;
     use crate::test_utils::{
         get_expected_block,
         get_expected_receipt,
@@ -165,9 +164,6 @@ mod tests {
         get_valid_initial_state,
         assert_block_is_correct,
         assert_receipt_is_correct,
-        get_thing_to_put_in_database,
-        get_database_with_thing_in_it,
-        get_expected_key_of_thing_in_database,
     };
 
     #[test]

@@ -439,15 +439,6 @@ pub fn slice_nibbles_at_nibble_index(
     }
 }
 
-pub fn convert_hex_string_to_nibbles(hex_string: String) -> Result<Nibbles> {
-    match hex_string.len() % 2 == 0 {
-        true => Ok(get_nibbles_from_bytes(hex::decode(hex_string)?)),
-        false => Ok(get_nibbles_from_offset_bytes(
-            hex::decode(format!("0{}", hex_string))?
-        )),
-    }
-}
-
 pub fn convert_nibble_to_usize(nibbles: Nibbles) -> usize {
     match nibbles.len() == 0 {
         true => 0,

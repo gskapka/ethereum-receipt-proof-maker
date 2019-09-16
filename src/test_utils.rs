@@ -5,11 +5,15 @@ use std::fs;
 use crate::state::State;
 use ethereum_types::H256;
 use crate::trie_nodes::Node;
-use crate::nibble_utils::get_nibbles_from_bytes;
 use crate::get_block::deserialize_block_json_to_block_struct;
 use crate::rlp_codec::get_rlp_encoded_receipts_and_nibble_tuples;
 use crate::get_receipts::deserialize_receipt_json_to_receipt_struct;
 use crate::get_branch_from_trie::get_branch_from_trie_and_put_in_state;
+use crate::nibble_utils::{
+    Nibbles,
+    get_nibbles_from_bytes,
+    get_nibbles_from_offset_bytes,
+};
 use crate::trie::{
     Trie,
     put_in_trie_recursively
