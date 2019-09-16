@@ -176,7 +176,7 @@ __❍__ The current memory database usage is pure in that we clone the db and re
  - [x] Have timeout error on reqwests.
  - [x] Have method to convert hex string of even/odd length to offset/non- nibbles.
  - [x] Need a node rlp-decoder!
+ - [x] Remove unused fxns
  - [ ] Benchmark it and maybe don't clone the db per above note?
  - [ ] Spinners for when it's doing the bits that take a while...?
  - [ ] Factor out log level stuff into own module (from cli arg parser!)
- - [ ] Remove unused fxns
