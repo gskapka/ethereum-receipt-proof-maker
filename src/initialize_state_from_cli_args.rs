@@ -18,15 +18,15 @@ mod tests {
 
     #[test]
     fn should_create_state_from_cli_args() {
-        let expected_tracing = false;
+        let disable_logging = true;
         let expected_verbosity = true;
         let tx_hash = get_valid_tx_hash_hex();
         let expected_tx_hash = convert_hex_to_h256(tx_hash.clone())
             .unwrap();
         let cli_args = CliArgs {
             arg_txhash: tx_hash,
-            flag_trace: expected_tracing,
             flag_verbose: expected_verbosity,
+            flag_disableLogs: disable_logging,
         };
         let state = initialize_state_from_cli_args(cli_args)
             .unwrap();
