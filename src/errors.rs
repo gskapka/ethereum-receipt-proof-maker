@@ -11,9 +11,9 @@ pub enum AppError {
     IOError(std::io::Error),
     HexError(hex::FromHexError),
     ReqwestError(reqwest::Error),
-    LoggerError(log::SetLoggerError),
     SerdeJsonError(serde_json::Error),
     NoneError(std::option::NoneError),
+    SetLoggerError(log::SetLoggerError),
 }
 
 impl fmt::Display for AppError {
@@ -25,12 +25,12 @@ impl fmt::Display for AppError {
                 format!("✘ Hex Error!\n✘ {}", e),
             AppError::IOError(ref e) =>
                 format!("✘ I/O Error!\n✘ {}", e),
-            AppError::LoggerError(ref e) =>
-                format!("✘ Logger Error!\n✘ {:?}", e),
             AppError::SerdeJsonError(ref e) =>
                 format!("✘ Serde-Json Error!\n✘ {}", e),
             AppError::NoneError(ref e) =>
                 format!("✘ Nothing to unwrap!\n✘ {:?}", e),
+            AppError::SetLoggerError(ref e) =>
+                format!("✘ Error setting up logger!\n✘ {}", e),
             AppError::ReqwestError(ref e) =>
                 format!(
                     "\n✘ HTTP Reqwest Error!\n✘ {}\n{}",
@@ -80,6 +80,6 @@ impl From<serde_json::Error> for AppError {
 
 impl From<log::SetLoggerError> for AppError {
     fn from(e: log::SetLoggerError) -> AppError {
-        AppError::LoggerError(e)
+        AppError::SetLoggerError(e)
     }
 }
