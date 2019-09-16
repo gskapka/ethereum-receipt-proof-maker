@@ -1,4 +1,5 @@
 .env
+*.log
 *.sw*
 /target
 **/*.rs.bk
