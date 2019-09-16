@@ -11,6 +11,7 @@ pub const REQWEST_TIMEOUT_TIME: u64 = 5;
 pub const NUM_NIBBLES_IN_BYTE: usize = 2;
 pub const HIGH_NIBBLE_MASK: Byte = 15u8; // NOTE: 15u8 == [0,0,0,0,1,1,1,1]
 pub static DOT_ENV_PATH: &'static str = "./.env";
+pub static LOG_FILE_PATH: &'static str = "logs/";
 pub static LEAF_NODE_STRING: &'static str = "leaf";
 pub static BRANCH_NODE_STRING: &'static str = "branch";
 pub static EXTENSION_NODE_STRING: &'static str = "extension";

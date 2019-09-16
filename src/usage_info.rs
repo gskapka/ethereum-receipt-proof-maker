@@ -10,17 +10,16 @@ This tool generates a merkle receipt proof of the receipt pertaining to the give
 
 ***
 
-Usage:  rusty-receipt-proof-maker [-h | --help]
-        rusty-receipt-proof-maker <txhash> [-t | --trace]
-        rusty-receipt-proof-maker <txhash> [-v | --verbose]
+Usage:  rusty-receipt-proof-maker [--help]
+        rusty-receipt-proof-maker <txhash> [--verbose | -v] [--disableLogs | -d]
 
 Options:
 
-    -h, --help          ❍ Show this message.
+    --help              ❍ Show this message.
+
+    -d, --disableLogs   ❍  Disable logging to file.
 
     -v, --verbose       ❍ Enable verbose mode for additional output.
-
-    -t, --trace         ❍ Enable tracing for debugging/bug reporting.
 
     <txhash>            ❍ A transaction hash of an Ethereum transaction
                         ➔ Format: A 32-byte long, prefixed hex string.
