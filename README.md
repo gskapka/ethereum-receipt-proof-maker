@@ -155,7 +155,7 @@ __`❍ cargo +nightly test`__
 
 __Note:__ Some expensive tests are ignored by default. To run all test, including those ignored, add the __`--ignored`__ flag.
 
-__:radioactive: CAUTION:__ Some tests rely on access to a full node at __`http://localhost:8545`__. If one can't be reached at that endpoint, many of the tests will fail.
+__:radioactive: CAUTION:__ Some tests rely on access to a full __MAINNET__ node existing at __`http://localhost:8545`__. If one can't be reached at that endpoint, many of the tests will fail.
 
 &nbsp;
 
