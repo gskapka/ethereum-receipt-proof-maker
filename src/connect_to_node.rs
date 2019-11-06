@@ -34,7 +34,7 @@ mod tests {
         match connect_to_node(state) {
             Ok(returned_state) =>
                 assert!(returned_state.tx_hash == expected_tx_hash),
-            Err(_) => panic!("Should connect to node w/ working endpoint!")
+            Err(e) => panic!("Error connecting to node: {}", e)
         }
     }
 

@@ -74,9 +74,12 @@ pub struct Receipt {
 
 impl Encodable for Receipt {
     fn rlp_append(&self, rlp_stream: &mut RlpStream) {
-        rlp_stream
-            .begin_list(4)
-            .append(&self.status)
+        let rlp = rlp_stream.begin_list(4);
+        match &self.status {
+            true => rlp.append(&self.status),
+            false => rlp.append_empty_data()
+        };
+        rlp
             .append(&self.cumulative_gas_used)
             .append(&self.logs_bloom)
             .append_list(&self.logs);
