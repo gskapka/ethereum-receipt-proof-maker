@@ -38,13 +38,13 @@ mod tests {
     use crate::get_branch_from_trie::get_branch_from_trie;
     use crate::test_utils::{
         PROOF_1_INDEX,
-        PROOF_2_INDEX,
+        PROOF_3_INDEX,
         get_sample_proof_1,
-        get_sample_proof_2,
+        get_sample_proof_3,
         get_sample_tx_hashes_1,
-        get_sample_tx_hashes_2,
+        get_sample_tx_hashes_3,
         SAMPLE_RECEIPT_JSONS_1_PATH,
-        SAMPLE_RECEIPT_JSONS_2_PATH,
+        SAMPLE_RECEIPT_JSONS_3_PATH,
         get_sample_trie_with_sample_receipts,
         get_valid_state_with_receipts_trie_index_and_branch,
     };
@@ -64,13 +64,13 @@ mod tests {
     }
 
     #[test]
-    fn should_get_hex_proof_2_from_branch() {
-        let expected_result = get_sample_proof_2();
+    fn should_get_hex_proof_3_from_branch() {
+        let expected_result = get_sample_proof_3();
         let trie = get_sample_trie_with_sample_receipts(
-            SAMPLE_RECEIPT_JSONS_2_PATH.to_string(),
-            get_sample_tx_hashes_2()
+            SAMPLE_RECEIPT_JSONS_3_PATH.to_string(),
+            get_sample_tx_hashes_3()
         );
-        let branch = get_branch_from_trie(trie, PROOF_2_INDEX)
+        let branch = get_branch_from_trie(trie, PROOF_3_INDEX)
             .unwrap();
         let result = get_hex_proof_from_branch(&branch)
             .unwrap();
