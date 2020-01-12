@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn should_decode_none_fixed_hex_correctly() {
+    fn should_decode_none_prefixed_hex_correctly() {
         let none_prefixed_hex = "c0ffee";
         assert!(!none_prefixed_hex.contains("x"));
         let expected_result = [192, 255, 238];

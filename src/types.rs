@@ -15,7 +15,7 @@ use ethereum_types::{
 };
 
 pub type Byte = u8;
-pub type Bytes = Vec<u8>;
+pub type Bytes = Vec<Byte>;
 pub type HexProof = String;
 pub type NodeStack = Vec<Node>;
 pub type Database = HashMap<H256, Bytes>;
