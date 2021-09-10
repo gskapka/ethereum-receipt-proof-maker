@@ -1,18 +1,10 @@
-use std::result;
-use serde::Deserialize;
 use crate::errors::AppError;
 use crate::trie_nodes::Node;
+use ethereum_types::{Address, Bloom, H256, U256};
+use rlp::{Encodable, RlpStream};
+use serde::Deserialize;
 use std::collections::HashMap;
-use rlp::{
-    RlpStream,
-    Encodable
-};
-use ethereum_types::{
-    U256,
-    H256,
-    Bloom,
-    Address,
-};
+use std::result;
 
 pub type Byte = u8;
 pub type Bytes = Vec<Byte>;
@@ -21,12 +13,17 @@ pub type NodeStack = Vec<Node>;
 pub type Database = HashMap<H256, Bytes>;
 pub type ChildNodes = [Option<Bytes>; 16];
 pub type Result<T> = result::Result<T, AppError>;
+pub(crate) use crate::errors::AppError::NoneError;
 
 #[derive(Debug, Deserialize)]
-pub struct BlockRpcResponse { pub result: BlockJson }
+pub struct BlockRpcResponse {
+    pub result: BlockJson,
+}
 
 #[derive(Debug, Deserialize)]
-pub struct ReceiptRpcResponse { pub result: ReceiptJson }
+pub struct ReceiptRpcResponse {
+    pub result: ReceiptJson,
+}
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Block {
@@ -54,7 +51,6 @@ pub struct Block {
     pub uncles: Vec<H256>,
 }
 
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct Receipt {
     pub to: Address,
@@ -68,7 +64,7 @@ pub struct Receipt {
     pub transaction_index: U256,
     pub contract_address: Address,
     pub logs: Vec<Log>,
-    pub root: H256,
+    //pub root: H256,
     pub logs_bloom: Bloom,
 }
 
@@ -77,10 +73,9 @@ impl Encodable for Receipt {
         let rlp = rlp_stream.begin_list(4);
         match &self.status {
             true => rlp.append(&self.status),
-            false => rlp.append_empty_data()
+            false => rlp.append_empty_data(),
         };
-        rlp
-            .append(&self.cumulative_gas_used)
+        rlp.append(&self.cumulative_gas_used)
             .append(&self.logs_bloom)
             .append_list(&self.logs);
     }
@@ -91,15 +86,6 @@ pub struct Log {
     pub address: Address,
     pub topics: Vec<H256>,
     pub data: Bytes,
-    /*
-    removed: bool,
-    r#type: String,
-    logIndex: String,
-    blockHash: String,
-    blockNumber: String,
-    transactionHash: String,
-    transactionIndex: String,
-    */
 }
 
 impl Encodable for Log {
@@ -150,7 +136,6 @@ pub struct ReceiptJson {
     pub logs: Vec<LogJson>,
     pub blockNumber: String,
     pub to: serde_json::Value,
-    pub root: serde_json::Value,
     pub transactionHash: String,
     pub transactionIndex: String,
     pub cumulativeGasUsed: String,
@@ -171,4 +156,3 @@ pub struct LogJson {
     pub transactionHash: String,
     pub transactionIndex: String,
 }
-

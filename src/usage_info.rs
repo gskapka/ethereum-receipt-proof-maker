@@ -1,4 +1,4 @@
-pub static USAGE_INFO: &'static str = "
+pub static USAGE_INFO: &str = "
 ❍ Rusty Receipt Proof Maker ❍
 
     Copyright Provable 2019
@@ -11,13 +11,11 @@ This tool generates a merkle receipt proof of the receipt pertaining to the give
 ***
 
 Usage:  rusty-receipt-proof-maker [--help]
-        rusty-receipt-proof-maker <txhash> [--verbose | -v] [--disableLogs | -d]
+        rusty-receipt-proof-maker <txhash> [--verbose | -v]
 
 Options:
 
     --help              ❍ Show this message.
-
-    -d, --disableLogs   ❍  Disable logging to file.
 
     -v, --verbose       ❍ Enable verbose mode for additional output.
 
