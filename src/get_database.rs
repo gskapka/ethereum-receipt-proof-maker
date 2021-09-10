@@ -11,17 +11,14 @@ pub fn put_thing_in_database(mut database: Database, key: H256, value: Bytes) ->
 }
 
 pub fn remove_thing_from_database(mut database: Database, key: &H256) -> Result<Database> {
-    match database.remove(&key) {
+    match database.remove(key) {
         Some(_) => Ok(database),
         None => Ok(database),
     }
 }
 
 pub fn get_thing_from_database(database: &Database, key: &H256) -> Option<Bytes> {
-    match database.get(&key) {
-        Some(thing) => Some(thing.to_vec()),
-        None => None,
-    }
+    database.get(key).map(|thing| thing.to_vec())
 }
 
 #[cfg(test)]

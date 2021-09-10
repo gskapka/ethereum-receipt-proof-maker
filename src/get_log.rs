@@ -28,7 +28,7 @@ pub fn get_logs_from_receipt_json(receipt_json: &ReceiptJson) -> Result<Vec<Log>
         .collect())
 }
 
-pub fn get_logs_bloom_from_logs(logs: &Vec<Log>) -> Result<Bloom> {
+pub fn get_logs_bloom_from_logs(logs: &[Log]) -> Result<Bloom> {
     Ok(logs.iter().fold(Bloom::default(), |mut bloom, log| {
         bloom.accrue_bloom(&calculate_bloom_from_log(log));
         bloom

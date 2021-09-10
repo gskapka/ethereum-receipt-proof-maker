@@ -4,12 +4,12 @@ use crate::types::Result;
 
 pub fn connect_to_node(state: State) -> Result<State> {
     info!("✔ Connecting to node...");
-    get_block_by_number(State::get_endpoint_from_state(&state)?, "latest").and_then(|block| {
+    get_block_by_number(State::get_endpoint_from_state(&state)?, "latest").map(|block| {
         info!(
             "✔ Connection successful! Latest block number: {:?}",
             block.number
         );
-        Ok(state)
+        state
     })
 }
 

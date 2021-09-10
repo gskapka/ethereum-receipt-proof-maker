@@ -1,4 +1,4 @@
-pub static USAGE_INFO: &'static str = "
+pub static USAGE_INFO: &str = "
 ❍ Rusty Receipt Proof Maker ❍
 
     Copyright Provable 2019

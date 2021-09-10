@@ -29,7 +29,7 @@ impl Trie {
         match self.root == HASHED_NULL_NODE {
             true => {
                 trace!("Trie empty ∴ creating new leaf node...");
-                Node::get_new_leaf_node(key.clone(), value)
+                Node::get_new_leaf_node(key, value)
                     .and_then(|leaf| self.update_trie_database(vec![leaf], Vec::new()))
             }
             false => {
@@ -158,9 +158,9 @@ impl Trie {
                                     Node::get_new_leaf_node(key_remainder_nibbles, value)?;
                                 let branch = Node::get_new_branch_node(None)?;
                                 let updated_branch_1 = branch.update_branch_at_index(
-                                    Some(current_ext_node.get_value().ok_or(NoneError(
-                                        "Could not get extension node value!".into(),
-                                    ))?),
+                                    Some(current_ext_node.get_value().ok_or_else(|| {
+                                        NoneError("Could not get extension node value!".into())
+                                    })?),
                                     convert_nibble_to_usize(ext_first_nibble),
                                 )?;
                                 let new_branch = updated_branch_1.update_branch_at_index(
@@ -169,8 +169,7 @@ impl Trie {
                                 )?;
                                 new_stack.push(new_branch);
                                 new_stack.push(new_leaf);
-                                let mut stack_to_delete = Vec::new();
-                                stack_to_delete.push(current_ext_node);
+                                let stack_to_delete = vec![current_ext_node];
                                 Ok((self, target_key, found_stack, new_stack, stack_to_delete))
                             },
                         ),
@@ -186,9 +185,9 @@ impl Trie {
                                     Node::get_new_leaf_node(key_remainder_nibbles, value)?;
                                 let new_ext = Node::get_new_extension_node(
                                     ext_nibbles,
-                                    current_ext_node.get_value().ok_or(NoneError(
-                                        "Could not get extension node value!".into(),
-                                    ))?,
+                                    current_ext_node.get_value().ok_or_else(|| {
+                                        NoneError("Could not get extension node value!".into())
+                                    })?,
                                 )?;
                                 let branch = Node::get_new_branch_node(None)?;
                                 let updated_branch_1 = branch.update_branch_at_index(
@@ -217,9 +216,9 @@ impl Trie {
                             split_at_first_nibble(&node_key_remainder)?;
                         let ext_below_branch = Node::get_new_extension_node(
                             node_key_remainder_nibbles,
-                            current_ext_node
-                                .get_value()
-                                .ok_or(NoneError("Could not get extension node value!".into()))?,
+                            current_ext_node.get_value().ok_or_else(|| {
+                                NoneError("Could not get extension node value!".into())
+                            })?,
                         )?;
                         let new_leaf = Node::get_new_leaf_node(key_remainder_nibbles, value)?;
                         let empty_branch = Node::get_new_branch_node(None)?;
@@ -280,84 +279,90 @@ impl Trie {
         trace!("Processing from leaf node...");
         let mut new_stack: NodeStack = Vec::new();
         match remaining_key.len() {
-            0 => Node::get_new_leaf_node(current_leaf_node.get_key(), value).and_then(|new_leaf| {
+            0 => Node::get_new_leaf_node(current_leaf_node.get_key(), value).map(|new_leaf| {
                 trace!("No key remaining ∴ creating new leaf node");
                 new_stack.push(new_leaf);
-                Ok((self, target_key, found_stack, new_stack, Vec::new()))
+                (self, target_key, found_stack, new_stack, Vec::new())
             }),
-            _ => get_common_prefix_nibbles(
-                remaining_key.clone(),
-                current_leaf_node.clone().get_key(),
-            ) // FIXME: rm clones
-            .and_then(|(common_prefix, key_remainder, node_key_remainder)| {
-                match common_prefix.len() {
-                    0 => split_at_first_nibble(&node_key_remainder).and_then(
-                        |(leaf_first_nibble, leaf_nibbles)| {
-                            trace!("No common prefix ∴ creating: {}", "branch -> 2 leaves");
-                            let (key_remainder_first_nibble, key_remainder_nibbles) =
-                                split_at_first_nibble(&key_remainder)?;
-                            let new_leaf_1 = Node::get_new_leaf_node(
-                                leaf_nibbles,
-                                current_leaf_node
-                                    .get_value()
-                                    .ok_or(NoneError("Could not get lead node value!".into()))?,
-                            )?;
-                            let new_leaf_2 = Node::get_new_leaf_node(key_remainder_nibbles, value)?;
-                            let new_branch = Node::get_new_branch_node(None)?;
-                            let updated_branch_1 = new_branch.update_branch_at_index(
-                                Some(convert_h256_to_bytes(new_leaf_1.get_hash()?)),
-                                convert_nibble_to_usize(leaf_first_nibble),
-                            )?;
-                            let updated_branch = updated_branch_1.update_branch_at_index(
-                                Some(convert_h256_to_bytes(new_leaf_2.get_hash()?)),
-                                convert_nibble_to_usize(key_remainder_first_nibble),
-                            )?;
-                            new_stack.push(updated_branch);
-                            new_stack.push(new_leaf_1);
-                            new_stack.push(new_leaf_2);
-                            Ok((self, target_key, found_stack, new_stack, Vec::new()))
-                        },
-                    ),
-                    _ => split_at_first_nibble(&node_key_remainder).and_then(
-                        |(leaf_first_nibble, leaf_nibbles)| {
-                            trace!("Common prefix ∴ creating: ext -> branch{}", " -> 2 leaves");
-                            trace!("CP = {:?}", common_prefix);
-                            trace!(
-                                "Between keys {:?} & {:?}",
-                                remaining_key,
-                                current_leaf_node.get_key()
-                            );
-                            let (key_remainder_first_nibble, key_remainder_nibbles) =
-                                split_at_first_nibble(&key_remainder)?;
-                            let new_leaf_1 = Node::get_new_leaf_node(
-                                leaf_nibbles,
-                                current_leaf_node
-                                    .get_value()
-                                    .ok_or(NoneError("Could not get leaf node value!".into()))?,
-                            )?;
-                            let new_leaf_2 = Node::get_new_leaf_node(key_remainder_nibbles, value)?;
-                            let new_branch = Node::get_new_branch_node(None)?;
-                            let updated_branch_1 = new_branch.update_branch_at_index(
-                                Some(convert_h256_to_bytes(new_leaf_1.get_hash()?)),
-                                convert_nibble_to_usize(leaf_first_nibble),
-                            )?;
-                            let updated_branch = updated_branch_1.update_branch_at_index(
-                                Some(convert_h256_to_bytes(new_leaf_2.get_hash()?)),
-                                convert_nibble_to_usize(key_remainder_first_nibble),
-                            )?;
-                            let updated_branch_hash =
-                                convert_h256_to_bytes(updated_branch.get_hash()?);
-                            let new_extension =
-                                Node::get_new_extension_node(common_prefix, updated_branch_hash)?;
-                            new_stack.push(new_extension);
-                            new_stack.push(updated_branch);
-                            new_stack.push(new_leaf_1);
-                            new_stack.push(new_leaf_2);
-                            Ok((self, target_key, found_stack, new_stack, Vec::new()))
-                        },
-                    ),
-                }
-            }),
+            _ => {
+                get_common_prefix_nibbles(remaining_key.clone(), current_leaf_node.get_key()) // FIXME: rm clones
+                    .and_then(|(common_prefix, key_remainder, node_key_remainder)| {
+                        match common_prefix.len() {
+                            0 => split_at_first_nibble(&node_key_remainder).and_then(
+                                |(leaf_first_nibble, leaf_nibbles)| {
+                                    trace!("No common prefix ∴ creating: {}", "branch -> 2 leaves");
+                                    let (key_remainder_first_nibble, key_remainder_nibbles) =
+                                        split_at_first_nibble(&key_remainder)?;
+                                    let new_leaf_1 = Node::get_new_leaf_node(
+                                        leaf_nibbles,
+                                        current_leaf_node.get_value().ok_or_else(|| {
+                                            NoneError("Could not get lead node value!".into())
+                                        })?,
+                                    )?;
+                                    let new_leaf_2 =
+                                        Node::get_new_leaf_node(key_remainder_nibbles, value)?;
+                                    let new_branch = Node::get_new_branch_node(None)?;
+                                    let updated_branch_1 = new_branch.update_branch_at_index(
+                                        Some(convert_h256_to_bytes(new_leaf_1.get_hash()?)),
+                                        convert_nibble_to_usize(leaf_first_nibble),
+                                    )?;
+                                    let updated_branch = updated_branch_1.update_branch_at_index(
+                                        Some(convert_h256_to_bytes(new_leaf_2.get_hash()?)),
+                                        convert_nibble_to_usize(key_remainder_first_nibble),
+                                    )?;
+                                    new_stack.push(updated_branch);
+                                    new_stack.push(new_leaf_1);
+                                    new_stack.push(new_leaf_2);
+                                    Ok((self, target_key, found_stack, new_stack, Vec::new()))
+                                },
+                            ),
+                            _ => split_at_first_nibble(&node_key_remainder).and_then(
+                                |(leaf_first_nibble, leaf_nibbles)| {
+                                    trace!(
+                                        "Common prefix ∴ creating: ext -> branch{}",
+                                        " -> 2 leaves"
+                                    );
+                                    trace!("CP = {:?}", common_prefix);
+                                    trace!(
+                                        "Between keys {:?} & {:?}",
+                                        remaining_key,
+                                        current_leaf_node.get_key()
+                                    );
+                                    let (key_remainder_first_nibble, key_remainder_nibbles) =
+                                        split_at_first_nibble(&key_remainder)?;
+                                    let new_leaf_1 = Node::get_new_leaf_node(
+                                        leaf_nibbles,
+                                        current_leaf_node.get_value().ok_or_else(|| {
+                                            NoneError("Could not get leaf node value!".into())
+                                        })?,
+                                    )?;
+                                    let new_leaf_2 =
+                                        Node::get_new_leaf_node(key_remainder_nibbles, value)?;
+                                    let new_branch = Node::get_new_branch_node(None)?;
+                                    let updated_branch_1 = new_branch.update_branch_at_index(
+                                        Some(convert_h256_to_bytes(new_leaf_1.get_hash()?)),
+                                        convert_nibble_to_usize(leaf_first_nibble),
+                                    )?;
+                                    let updated_branch = updated_branch_1.update_branch_at_index(
+                                        Some(convert_h256_to_bytes(new_leaf_2.get_hash()?)),
+                                        convert_nibble_to_usize(key_remainder_first_nibble),
+                                    )?;
+                                    let updated_branch_hash =
+                                        convert_h256_to_bytes(updated_branch.get_hash()?);
+                                    let new_extension = Node::get_new_extension_node(
+                                        common_prefix,
+                                        updated_branch_hash,
+                                    )?;
+                                    new_stack.push(new_extension);
+                                    new_stack.push(updated_branch);
+                                    new_stack.push(new_leaf_1);
+                                    new_stack.push(new_leaf_2);
+                                    Ok((self, target_key, found_stack, new_stack, Vec::new()))
+                                },
+                            ),
+                        }
+                    })
+            }
         }
     }
     /**
@@ -387,12 +392,10 @@ impl Trie {
                     Some(new_leaf_hash),
                     convert_nibble_to_usize(first_nibble),
                 )?;
-                let mut new_stack: NodeStack = Vec::new();
-                new_stack.push(updated_branch);
-                new_stack.push(new_leaf);
+                let new_stack: NodeStack = vec![updated_branch, new_leaf];
                 Ok(new_stack)
             })
-            .and_then(|new_stack| Ok((self, target_key, found_stack, new_stack, Vec::new())))
+            .map(|new_stack| (self, target_key, found_stack, new_stack, Vec::new()))
     }
 
     fn update_stale_nodes(
@@ -502,11 +505,11 @@ impl Trie {
         mut new_stack: NodeStack,
         mut stack_to_delete: NodeStack,
     ) -> Result<Self> {
-        match stack_to_delete.len() > 0 {
+        match !stack_to_delete.is_empty() {
             true => {
                 let node = stack_to_delete
                     .pop()
-                    .ok_or(NoneError("Could not pop stack!".into()))?;
+                    .ok_or_else(|| NoneError("Could not pop stack!".into()))?;
                 trace!(
                     "Removing {} from database w/ hash: {}",
                     node.get_type(),
@@ -520,7 +523,7 @@ impl Trie {
                 1 => {
                     let node = new_stack
                         .pop()
-                        .ok_or(NoneError("Could not pop stack!".into()))?;
+                        .ok_or_else(|| NoneError("Could not pop stack!".into()))?;
                     let next_root_hash = node.get_hash()?;
                     trace!(
                         "Putting new {} in database w/ hash: {}",
@@ -535,7 +538,7 @@ impl Trie {
                 _ => {
                     let node = new_stack
                         .pop()
-                        .ok_or(NoneError("Could not pop stack!".into()))?;
+                        .ok_or_else(|| NoneError("Could not pop stack!".into()))?;
                     trace!(
                         "Putting new {} in database w/ hash: {}",
                         node.get_type(),
@@ -624,21 +627,19 @@ impl Trie {
         key: Nibbles,
     ) -> Result<(Self, Nibbles, NodeStack, Nibbles)> {
         trace!("Leaf node found");
-        get_common_prefix_nibbles(key.clone(), leaf_node.get_key()).and_then(
-            |(_, remaining_key, _)| {
-                found_stack.push(leaf_node);
-                match remaining_key.len() {
-                    0 => {
-                        trace!("Wohoo! Leaf node matches fully!");
-                        Ok((self, target_key, found_stack, EMPTY_NIBBLES))
-                    }
-                    _ => {
-                        trace!("Leaf node has some | no match");
-                        Ok((self, target_key, found_stack, key))
-                    }
+        get_common_prefix_nibbles(key.clone(), leaf_node.get_key()).map(|(_, remaining_key, _)| {
+            found_stack.push(leaf_node);
+            match remaining_key.len() {
+                0 => {
+                    trace!("Wohoo! Leaf node matches fully!");
+                    (self, target_key, found_stack, EMPTY_NIBBLES)
                 }
-            },
-        )
+                _ => {
+                    trace!("Leaf node has some | no match");
+                    (self, target_key, found_stack, key)
+                }
+            }
+        })
     }
     /**
      *
@@ -673,7 +674,7 @@ impl Trie {
                 let next_node_hash = &convert_bytes_to_h256(
                     &extension_node
                         .get_value()
-                        .ok_or(NoneError("Could not unwrap extension node!".into()))?,
+                        .ok_or_else(|| NoneError("Could not unwrap extension node!".into()))?,
                 )?;
                 found_stack.push(extension_node);
                 match common_prefix.len() {
@@ -742,7 +743,7 @@ impl Trie {
         found_stack.push(branch_node.clone());
         split_at_first_nibble(&key).and_then(|(first_nibble, remaining_nibbles)| match &branch_node
             .branch
-            .ok_or(NoneError("Could not unwrap branch!".into()))?
+            .ok_or_else(|| NoneError("Could not unwrap branch!".into()))?
             .branches[convert_nibble_to_usize(first_nibble)]
         {
             None => {
@@ -750,7 +751,7 @@ impl Trie {
                 Ok((self, target_key, found_stack, key))
             }
             Some(bytes) => {
-                match get_node_from_database(&self.database, &convert_bytes_to_h256(&bytes)?)? {
+                match get_node_from_database(&self.database, &convert_bytes_to_h256(bytes)?)? {
                     Some(next_node) => {
                         trace!(
                             "Next node retrieved from hash in {}",
@@ -791,7 +792,7 @@ impl Trie {
     }
 }
 
-fn get_key_length_accounted_for_in_stack(node_stack: &NodeStack) -> usize {
+fn get_key_length_accounted_for_in_stack(node_stack: &[Node]) -> usize {
     node_stack.iter().map(|node| node.get_key_length()).sum()
 }
 

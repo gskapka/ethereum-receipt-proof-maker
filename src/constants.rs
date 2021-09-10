@@ -10,12 +10,12 @@ pub const NUM_BITS_IN_NIBBLE: usize = 4;
 pub const REQWEST_TIMEOUT_TIME: u64 = 5;
 pub const NUM_NIBBLES_IN_BYTE: usize = 2;
 pub const HIGH_NIBBLE_MASK: Byte = 15u8; // NOTE: 15u8 == [0,0,0,0,1,1,1,1]
-pub static DOT_ENV_PATH: &'static str = "./.env";
-pub static LEAF_NODE_STRING: &'static str = "leaf";
-pub static BRANCH_NODE_STRING: &'static str = "branch";
-pub static EXTENSION_NODE_STRING: &'static str = "extension";
+pub static DOT_ENV_PATH: &str = "./.env";
+pub static LEAF_NODE_STRING: &str = "leaf";
+pub static BRANCH_NODE_STRING: &str = "branch";
+pub static EXTENSION_NODE_STRING: &str = "extension";
 pub const HASHED_NULL_NODE: H256 = H256(HASHED_NULL_NODE_BYTES);
-pub static DEFAULT_ENDPOINT: &'static str = "http://localhost:8545/";
+pub static DEFAULT_ENDPOINT: &str = "http://localhost:8545/";
 pub const EMPTY_NIBBLES: Nibbles = Nibbles {
     data: Vec::new(),
     offset: 0,

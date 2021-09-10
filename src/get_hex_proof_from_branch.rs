@@ -1,18 +1,26 @@
-use crate::state::State;
-use crate::types::{Bytes, HexProof, NodeStack, Result};
-use crate::utils::convert_bytes_to_hex;
+use crate::{
+    state::State,
+    trie_nodes::Node,
+    types::{Bytes, HexProof, Result},
+    utils::convert_bytes_to_hex,
+};
 use rlp::RlpStream;
 
-fn rlp_encode_node_stack(node_stack: &NodeStack) -> Result<Bytes> {
+fn rlp_encode_node_stack(node_stack: &[Node]) -> Result<Bytes> {
     let mut rlp_stream = RlpStream::new();
     rlp_stream.begin_list(node_stack.len());
-    for i in 0..node_stack.len() {
-        rlp_stream.append_raw(&node_stack[i].get_rlp_encoding()?, 1);
-    }
+    node_stack
+        .iter()
+        .map(|node| node.get_rlp_encoding())
+        .collect::<Result<Vec<_>>>()?
+        .iter()
+        .for_each(|rlp_encoded_node| {
+            rlp_stream.append_raw(rlp_encoded_node, 1);
+        });
     Ok(rlp_stream.out())
 }
 
-fn get_hex_proof_from_branch(branch: &NodeStack) -> Result<HexProof> {
+fn get_hex_proof_from_branch(branch: &[Node]) -> Result<HexProof> {
     rlp_encode_node_stack(branch).map(convert_bytes_to_hex)
 }
 
@@ -20,7 +28,7 @@ pub fn get_hex_proof_from_branch_in_state(state: State) -> Result<HexProof> {
     info!("✔ Hex encoding proof from nodes in branch...");
     state
         .get_branch_from_state()
-        .and_then(get_hex_proof_from_branch)
+        .and_then(|node_stack| get_hex_proof_from_branch(node_stack))
 }
 
 #[cfg(test)]

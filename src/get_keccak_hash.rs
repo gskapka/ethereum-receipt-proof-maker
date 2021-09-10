@@ -1,8 +1,8 @@
-use crate::types::{Bytes, Result};
+use crate::types::{Byte, Result};
 use ethereum_types::H256;
 use tiny_keccak::keccak256;
 
-pub fn keccak_hash_bytes(bytes: &Bytes) -> Result<H256> {
+pub fn keccak_hash_bytes(bytes: &[Byte]) -> Result<H256> {
     Ok(keccak256(bytes).into())
 }
 

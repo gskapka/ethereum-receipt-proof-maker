@@ -25,7 +25,7 @@ fn check_tx_hash_length(tx_hash: String) -> Result<String> {
 pub fn validate_tx_hash(tx_hash: String) -> Result<()> {
     check_tx_hash_prefix(tx_hash)
         .and_then(check_tx_hash_length)
-        .and_then(|_| Ok(()))
+        .and(Ok(()))
 }
 
 #[cfg(test)]

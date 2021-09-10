@@ -1,12 +1,13 @@
-use crate::errors::AppError;
-use crate::nibble_utils::get_nibbles_from_bytes;
-use crate::nibble_utils::Nibbles;
-use crate::rlp_codec::rlp_encode_transaction_index;
-use crate::state::State;
-use crate::trie::Trie;
-use crate::types::{NodeStack, Result};
-use crate::utils::convert_hex_to_u256;
-use hex;
+use crate::{
+    errors::AppError,
+    nibble_utils::get_nibbles_from_bytes,
+    nibble_utils::Nibbles,
+    rlp_codec::rlp_encode_transaction_index,
+    state::State,
+    trie::Trie,
+    types::{NodeStack, Result},
+    utils::convert_hex_to_u256,
+};
 
 fn convert_usize_index_to_trie_key(index: usize) -> Result<Nibbles> {
     convert_hex_to_u256(hex::encode(index.to_be_bytes()))
@@ -32,7 +33,7 @@ pub fn get_branch_from_trie_and_put_in_state(state: State) -> Result<State> {
     info!("✔ Pulling branch from trie...");
     get_branch_from_trie(
         state.get_receipts_trie_from_state()?.clone(),
-        state.get_index_from_state()?.clone(),
+        *state.get_index_from_state()?,
     )
     .and_then(|branch| state.set_branch_in_state(branch))
 }

@@ -22,8 +22,8 @@ impl fmt::Debug for Nibbles {
         match self == &EMPTY_NIBBLES {
             true => write!(f, "Nibble array is empty!")?,
             false => {
-                for i in 0..get_length_in_nibbles(&self) {
-                    write!(f, "0x{:01x} ", get_nibble_at_index(&self, i).unwrap())?;
+                for i in 0..get_length_in_nibbles(self) {
+                    write!(f, "0x{:01x} ", get_nibble_at_index(self, i).unwrap())?;
                 }
             }
         };
@@ -33,7 +33,7 @@ impl fmt::Debug for Nibbles {
 
 impl Nibbles {
     pub fn len(&self) -> usize {
-        get_length_in_nibbles(&self)
+        get_length_in_nibbles(self)
     }
 }
 
@@ -251,14 +251,14 @@ fn convert_nibble_index_to_byte_index(nibbles: &Nibbles, nibble_index: &usize) -
 }
 
 fn replace_byte_in_nibbles_at_byte_index(index: usize, nibbles: Nibbles, byte: Byte) -> Nibbles {
-    let byte_length = nibbles.data.len();
     let mut vec = nibbles.data.clone();
-    for i in 0..byte_length {
-        match i == index {
-            false => vec[i] = nibbles.data[i],
-            _ => vec[i] = byte,
-        }
-    }
+    nibbles.data.iter().enumerate().for_each(|(i, e)| {
+        if i == index {
+            vec[i] = byte
+        } else {
+            vec[i] = *e
+        };
+    });
     match nibbles.offset {
         0 => get_nibbles_from_bytes(vec),
         _ => get_nibbles_from_offset_bytes(vec),
@@ -288,9 +288,9 @@ pub fn get_length_in_nibbles(nibbles: &Nibbles) -> usize {
 }
 
 pub fn split_at_first_nibble(nibbles: &Nibbles) -> Result<(Nibbles, Nibbles)> {
-    match get_length_in_nibbles(&nibbles) > 0 {
+    match get_length_in_nibbles(nibbles) > 0 {
         false => Ok((EMPTY_NIBBLES, EMPTY_NIBBLES)),
-        true => get_nibble_at_index(&nibbles, 0).and_then(|first_nibble| {
+        true => get_nibble_at_index(nibbles, 0).and_then(|first_nibble| {
             Ok((
                 get_nibbles_from_offset_bytes(vec![first_nibble]),
                 slice_nibbles_at_nibble_index(nibbles.clone(), 1)?,
@@ -300,19 +300,19 @@ pub fn split_at_first_nibble(nibbles: &Nibbles) -> Result<(Nibbles, Nibbles)> {
 }
 
 pub fn get_nibble_at_index(nibbles: &Nibbles, nibble_index: usize) -> Result<Byte> {
-    match nibble_index > get_length_in_nibbles(&nibbles) {
+    match nibble_index > get_length_in_nibbles(nibbles) {
         true => Err(AppError::Custom(format!(
             "✘ Index {} is out-of-bounds in nibble vector!",
             nibble_index
         ))),
         _ => match nibbles.offset {
             0 => match nibble_index % 2 {
-                0 => get_high_nibble_from_byte(&nibbles, &nibble_index),
-                _ => get_low_nibble_from_byte(&nibbles, &nibble_index),
+                0 => get_high_nibble_from_byte(nibbles, &nibble_index),
+                _ => get_low_nibble_from_byte(nibbles, &nibble_index),
             },
             _ => match nibble_index % 2 {
-                0 => get_low_nibble_from_byte(&nibbles, &nibble_index),
-                _ => get_high_nibble_from_byte(&nibbles, &(nibble_index + 1)),
+                0 => get_low_nibble_from_byte(nibbles, &nibble_index),
+                _ => get_high_nibble_from_byte(nibbles, &(nibble_index + 1)),
             },
         },
     }
@@ -349,9 +349,9 @@ pub fn prefix_nibbles_with_byte(
     nibbles: Nibbles,
     mut vec_including_prefix_byte: Vec<u8>,
 ) -> Result<Bytes> {
-    convert_nibble_to_bytes(nibbles).and_then(|bytes| {
-        vec_including_prefix_byte.append(&mut bytes.clone());
-        Ok(vec_including_prefix_byte)
+    convert_nibble_to_bytes(nibbles).map(|mut bytes| {
+        vec_including_prefix_byte.append(&mut bytes);
+        vec_including_prefix_byte
     })
 }
 

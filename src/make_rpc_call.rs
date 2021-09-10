@@ -1,7 +1,8 @@
-use crate::constants::REQWEST_TIMEOUT_TIME;
-use crate::errors::AppError;
-use crate::types::{BlockRpcResponse, ReceiptRpcResponse, Result};
-use reqwest;
+use crate::{
+    constants::REQWEST_TIMEOUT_TIME,
+    errors::AppError,
+    types::{BlockRpcResponse, ReceiptRpcResponse, Result},
+};
 use serde_json::Value as Json;
 use std::time::Duration;
 
@@ -20,9 +21,9 @@ pub fn get_response_text(mut res: reqwest::Response) -> Result<String> {
             res_text
         ))),
         false => match res_text.contains("\"result\":null") {
-            true => Err(AppError::Custom(format!(
-                "✘ No receipt found for that transaction hash!"
-            ))),
+            true => Err(AppError::Custom(
+                "✘ No receipt found for that transaction hash!".into(),
+            )),
             false => Ok(res_text),
         },
     }

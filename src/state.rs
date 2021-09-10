@@ -95,14 +95,14 @@ impl State {
 
     pub fn get_block_from_state(&self) -> Result<&Block> {
         match &self.block {
-            Some(block) => Ok(&block),
+            Some(block) => Ok(block),
             None => Err(AppError::Custom(get_not_in_state_err("block"))),
         }
     }
 
     pub fn get_branch_from_state(&self) -> Result<&NodeStack> {
         match &self.branch {
-            Some(branch) => Ok(&branch),
+            Some(branch) => Ok(branch),
             None => Err(AppError::Custom(get_not_in_state_err("branch"))),
         }
     }

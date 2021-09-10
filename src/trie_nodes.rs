@@ -13,7 +13,7 @@ use crate::types::{Bytes, ChildNodes, Database, Result};
 use ethereum_types::H256;
 use rlp::{Rlp, RlpStream};
 
-static NO_NODE_IN_STRUCT_ERR: &'static str = "✘ No node present in struct to rlp-encode!";
+static NO_NODE_IN_STRUCT_ERR: &str = "✘ No node present in struct to rlp-encode!";
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Node {
@@ -157,7 +157,7 @@ impl Node {
         } else if let Some(extension_node) = &self.extension {
             // TODO/FIXME: Could be inline node!!
             extension_node.path_nibbles.clone().len()
-        } else if let Some(_) = &self.branch {
+        } else if self.branch.is_some() {
             1
         } else {
             0
@@ -177,9 +177,9 @@ impl Node {
     }
 
     pub fn get_type(&self) -> &'static str {
-        if let Some(_) = self.leaf {
+        if self.leaf.is_some() {
             LEAF_NODE_STRING
-        } else if let Some(_) = self.branch {
+        } else if self.branch.is_some() {
             BRANCH_NODE_STRING
         } else {
             EXTENSION_NODE_STRING
@@ -204,7 +204,7 @@ pub fn rlp_decode_node(rlp_data: Bytes) -> Result<Node> {
                 let value: &Bytes = &list[16];
                 let mut branches = get_empty_child_nodes();
                 for i in 0..16 {
-                    if list[i].len() > 0 {
+                    if !list[i].is_empty() {
                         let value: &Bytes = &list[i];
                         branches[i] = Some(value.to_vec())
                     }
@@ -214,7 +214,7 @@ pub fn rlp_decode_node(rlp_data: Bytes) -> Result<Node> {
                     extension: None,
                     branch: Some(BranchNode {
                         branches,
-                        value: if value.len() > 0 {
+                        value: if !value.is_empty() {
                             Some(value.to_vec())
                         } else {
                             None
@@ -427,7 +427,7 @@ mod tests {
         let node_type = result.clone().get_type();
         assert!(node_type == "branch".to_string());
         match result.branch {
-            None => panic!(panic_str),
+            None => panic!("{}", panic_str),
             Some(branch) => {
                 match branch.value {
                     Some(_value) => assert!(_value == value),

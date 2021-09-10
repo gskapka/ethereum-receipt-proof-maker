@@ -3,7 +3,7 @@ use crate::state::State;
 use crate::types::Result;
 use ethereum_types::H256;
 
-fn get_tx_index_from_transactions(tx_hash: &H256, transactions: &Vec<H256>) -> Result<usize> {
+fn get_tx_index_from_transactions(tx_hash: &H256, transactions: &[H256]) -> Result<usize> {
     match transactions.iter().position(|hash| tx_hash == hash) {
         Some(index) => Ok(index),
         None => Err(AppError::Custom(

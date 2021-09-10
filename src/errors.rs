@@ -1,10 +1,4 @@
-use hex;
-use log;
-use reqwest;
-use serde_json;
-use simplelog;
-use std::error::Error;
-use std::fmt;
+use std::{error::Error, fmt};
 
 #[derive(Debug)]
 pub enum AppError {
@@ -21,7 +15,7 @@ pub enum AppError {
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = match *self {
-            AppError::Custom(ref msg) => format!("{}", msg),
+            AppError::Custom(ref msg) => msg.to_string(),
             AppError::HexError(ref e) => format!("✘ Hex Error!\n✘ {}", e),
             AppError::IOError(ref e) => format!("✘ I/O Error!\n✘ {}", e),
             AppError::NoneError(ref e) => format!("✘ Nothing to unwrap!\n✘ {:?}", e),

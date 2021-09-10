@@ -1,9 +1,7 @@
-use crate::constants::DEFAULT_ENDPOINT;
-use crate::errors::AppError;
-use crate::state::State;
-use crate::types::Result;
-use crate::utils::dot_env_file_exists;
-use dotenv;
+use crate::{
+    constants::DEFAULT_ENDPOINT, errors::AppError, state::State, types::Result,
+    utils::dot_env_file_exists,
+};
 
 fn maybe_run_dot_env() -> Result<()> {
     match dot_env_file_exists() {
@@ -16,9 +14,9 @@ fn maybe_run_dot_env() -> Result<()> {
 }
 
 fn get_endpoint_from_env_vars() -> Result<String> {
-    maybe_run_dot_env().and_then(|_| match std::env::var("ENDPOINT") {
-        Ok(endpoint) => Ok(endpoint),
-        Err(_) => Ok(DEFAULT_ENDPOINT.to_string()),
+    maybe_run_dot_env().map(|_| match std::env::var("ENDPOINT") {
+        Ok(endpoint) => endpoint,
+        Err(_) => DEFAULT_ENDPOINT.to_string(),
     })
 }
 

@@ -64,7 +64,7 @@ pub fn get_block_by_number(endpoint: &str, block_num: &str) -> Result<Block> {
 }
 
 fn add_block_to_state(state: State, block: Block) -> Result<State> {
-    Ok(State::set_block_in_state(state, block)?)
+    State::set_block_in_state(state, block)
 }
 
 pub fn get_block_from_tx_hash_in_state_and_set_in_state(state: State) -> Result<State> {

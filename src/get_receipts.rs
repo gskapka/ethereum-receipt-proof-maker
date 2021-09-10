@@ -38,14 +38,14 @@ pub fn deserialize_receipt_json_to_receipt_struct(receipt: ReceiptJson) -> Resul
 }
 
 pub fn get_receipt_from_tx_hash(endpoint: &str, tx_hash: &str) -> Result<Receipt> {
-    get_transaction_receipt_json(&tx_hash)
+    get_transaction_receipt_json(tx_hash)
         .and_then(|rpc_json| make_rpc_call(endpoint, rpc_json))
         .and_then(get_response_text)
         .and_then(deserialize_to_receipt_rpc_response)
         .and_then(|res| deserialize_receipt_json_to_receipt_struct(res.result))
 }
 
-fn get_receipts_from_tx_hashes(endpoint: &str, tx_hashes: &Vec<H256>) -> Result<Vec<Receipt>> {
+fn get_receipts_from_tx_hashes(endpoint: &str, tx_hashes: &[H256]) -> Result<Vec<Receipt>> {
     tx_hashes
         .iter()
         .map(|tx_hash| get_receipt_from_tx_hash(endpoint, &convert_h256_to_prefixed_hex(*tx_hash)?))
@@ -55,7 +55,7 @@ fn get_receipts_from_tx_hashes(endpoint: &str, tx_hashes: &Vec<H256>) -> Result<
 pub fn get_all_receipts_from_block_in_state_and_set_in_state(state: State) -> Result<State> {
     info!("✔ Getting all receipts from block...");
     get_receipts_from_tx_hashes(
-        &State::get_endpoint_from_state(&state)?,
+        State::get_endpoint_from_state(&state)?,
         &State::get_block_from_state(&state)?.transactions,
     )
     .and_then(|receipts| State::set_receipts_in_state(state, receipts))

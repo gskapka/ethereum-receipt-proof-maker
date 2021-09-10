@@ -1,5 +1,4 @@
 use docopt::Docopt;
-use log;
 use log::LevelFilter;
 use simplelog::*;
 

@@ -3,7 +3,7 @@ use crate::state::State;
 use crate::trie::{put_in_trie_recursively, Trie};
 use crate::types::{Receipt, Result};
 
-fn get_receipts_trie_from_receipts(receipts: &Vec<Receipt>) -> Result<Trie> {
+fn get_receipts_trie_from_receipts(receipts: &[Receipt]) -> Result<Trie> {
     get_rlp_encoded_receipts_and_nibble_tuples(receipts).and_then(|key_value_tuples| {
         put_in_trie_recursively(Trie::get_new_trie()?, key_value_tuples, 0)
     })

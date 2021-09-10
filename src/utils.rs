@@ -1,9 +1,10 @@
-use crate::constants::DOT_ENV_PATH;
-use crate::constants::HASH_LENGTH;
-use crate::errors::AppError;
-use crate::types::{Bytes, NoneError, Result};
+use crate::{
+    constants::DOT_ENV_PATH,
+    constants::HASH_LENGTH,
+    errors::AppError,
+    types::{Byte, Bytes, NoneError, Result},
+};
 use ethereum_types::{Address, H256, U256};
-use hex;
 use serde_json::Value;
 use std::path::Path;
 
@@ -11,10 +12,7 @@ pub fn convert_json_value_to_string(value: Value) -> Result<String> {
     // TODO: Test!
     Ok(value
         .as_str()
-        .ok_or(NoneError(format!(
-            "Could not unwrap {} as a string!",
-            value
-        )))?
+        .ok_or_else(|| NoneError(format!("Could not unwrap {} as a string!", value)))?
         .to_string())
 }
 
@@ -41,7 +39,7 @@ pub fn convert_num_to_prefixed_hex(num: usize) -> Result<String> {
 }
 
 pub fn convert_hex_to_bytes(hex: String) -> Result<Bytes> {
-    Ok(hex::decode(strip_hex_prefix(&hex.to_string())?)?)
+    Ok(hex::decode(strip_hex_prefix(&hex)?)?)
 }
 
 pub fn strip_hex_prefix(prefixed_hex: &str) -> Result<String> {
@@ -53,11 +51,11 @@ pub fn strip_hex_prefix(prefixed_hex: &str) -> Result<String> {
 }
 
 pub fn convert_hex_to_address(hex: String) -> Result<Address> {
-    decode_prefixed_hex(hex).and_then(|x| Ok(Address::from_slice(&x)))
+    decode_prefixed_hex(hex).map(|bytes| Address::from_slice(&bytes))
 }
 
 pub fn convert_hex_to_u256(hex: String) -> Result<U256> {
-    decode_prefixed_hex(hex).and_then(|x| Ok(U256::from_big_endian(&x)))
+    decode_prefixed_hex(hex).map(|ref bytes| U256::from_big_endian(bytes))
 }
 
 pub fn convert_hex_to_h256(hex: String) -> Result<H256> {
@@ -70,11 +68,7 @@ pub fn convert_hex_to_h256(hex: String) -> Result<H256> {
 }
 
 pub fn convert_hex_strings_to_h256s(hex_strings: Vec<String>) -> Result<Vec<H256>> {
-    let hashes: Result<Vec<H256>> = hex_strings
-        .into_iter()
-        .map(|hex_string| convert_hex_to_h256(hex_string.to_string()))
-        .collect();
-    Ok(hashes?)
+    hex_strings.into_iter().map(convert_hex_to_h256).collect()
 }
 
 pub fn decode_hex(hex_to_decode: String) -> Result<Vec<u8>> {
@@ -97,9 +91,9 @@ pub fn get_no_overwrite_state_err(substring: &str) -> String {
     format!("✘ Cannot overwrite {} in state!", substring)
 }
 
-pub fn convert_bytes_to_h256(bytes: &Bytes) -> Result<H256> {
+pub fn convert_bytes_to_h256(bytes: &[Byte]) -> Result<H256> {
     match bytes.len() {
-        32 => Ok(H256::from_slice(&bytes[..])),
+        32 => Ok(H256::from_slice(bytes)),
         _ => Err(AppError::Custom(
             "✘ Wrong number of bytes for hash!".to_string(),
         )),

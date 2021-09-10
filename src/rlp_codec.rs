@@ -18,7 +18,7 @@ pub fn rlp_encode_transaction_index(index: &U256) -> Result<Bytes> {
 pub fn get_rlp_encoded_receipt_and_encoded_key_tuple(
     receipt: &Receipt,
 ) -> Result<(Nibbles, Bytes)> {
-    rlp_encode_receipt(&receipt).and_then(|rlp_encoded_receipt| {
+    rlp_encode_receipt(receipt).and_then(|rlp_encoded_receipt| {
         Ok((
             get_nibbles_from_bytes(rlp_encode_transaction_index(&receipt.transaction_index)?),
             rlp_encoded_receipt,
@@ -27,11 +27,11 @@ pub fn get_rlp_encoded_receipt_and_encoded_key_tuple(
 }
 
 pub fn get_rlp_encoded_receipts_and_nibble_tuples(
-    receipts: &Vec<Receipt>,
+    receipts: &[Receipt],
 ) -> Result<Vec<(Nibbles, Bytes)>> {
     receipts
         .iter()
-        .map(|receipt| get_rlp_encoded_receipt_and_encoded_key_tuple(&receipt))
+        .map(|receipt| get_rlp_encoded_receipt_and_encoded_key_tuple(receipt))
         .collect::<Result<Vec<(Nibbles, Bytes)>>>()
 }
 
