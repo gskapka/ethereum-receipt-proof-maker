@@ -64,7 +64,7 @@ pub struct Receipt {
     pub transaction_index: U256,
     pub contract_address: Address,
     pub logs: Vec<Log>,
-    pub root: H256,
+    //pub root: H256,
     pub logs_bloom: Bloom,
 }
 
@@ -86,15 +86,6 @@ pub struct Log {
     pub address: Address,
     pub topics: Vec<H256>,
     pub data: Bytes,
-    /*
-    removed: bool,
-    r#type: String,
-    logIndex: String,
-    blockHash: String,
-    blockNumber: String,
-    transactionHash: String,
-    transactionIndex: String,
-    */
 }
 
 impl Encodable for Log {
@@ -145,7 +136,6 @@ pub struct ReceiptJson {
     pub logs: Vec<LogJson>,
     pub blockNumber: String,
     pub to: serde_json::Value,
-    pub root: serde_json::Value,
     pub transactionHash: String,
     pub transactionIndex: String,
     pub cumulativeGasUsed: String,

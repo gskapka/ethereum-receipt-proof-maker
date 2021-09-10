@@ -51,8 +51,12 @@ use crate::parse_cli_args::parse_cli_args;
 use crate::validate_cli_args::validate_cli_args;
 
 fn main() {
+    println!("x");
     match parse_cli_args()
-        .and_then(validate_cli_args)
+        .and_then(|state| {
+            println!("poop");
+            validate_cli_args(state)
+        })
         .and_then(initialize_state_from_cli_args)
         .and_then(get_endpoint_and_set_in_state)
         .and_then(connect_to_node)

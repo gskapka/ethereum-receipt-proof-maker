@@ -2,6 +2,7 @@ use hex;
 use log;
 use reqwest;
 use serde_json;
+use simplelog;
 use std::error::Error;
 use std::fmt;
 
@@ -14,6 +15,7 @@ pub enum AppError {
     ReqwestError(reqwest::Error),
     SerdeJsonError(serde_json::Error),
     SetLoggerError(log::SetLoggerError),
+    TermLogError(simplelog::TermLogError),
 }
 
 impl fmt::Display for AppError {
@@ -22,8 +24,9 @@ impl fmt::Display for AppError {
             AppError::Custom(ref msg) => format!("{}", msg),
             AppError::HexError(ref e) => format!("✘ Hex Error!\n✘ {}", e),
             AppError::IOError(ref e) => format!("✘ I/O Error!\n✘ {}", e),
-            AppError::SerdeJsonError(ref e) => format!("✘ Serde-Json Error!\n✘ {}", e),
             AppError::NoneError(ref e) => format!("✘ Nothing to unwrap!\n✘ {:?}", e),
+            AppError::SerdeJsonError(ref e) => format!("✘ Serde-Json Error!\n✘ {}", e),
+            AppError::TermLogError(ref e) => format!("✘ Terminal logger error: {}", e),
             AppError::SetLoggerError(ref e) => format!("✘ Error setting up logger!\n✘ {}", e),
             AppError::ReqwestError(ref e) => format!(
                 "\n✘ HTTP Reqwest Error!\n✘ {}\n{}",
@@ -67,5 +70,11 @@ impl From<serde_json::Error> for AppError {
 impl From<log::SetLoggerError> for AppError {
     fn from(e: log::SetLoggerError) -> AppError {
         AppError::SetLoggerError(e)
+    }
+}
+
+impl From<simplelog::TermLogError> for AppError {
+    fn from(e: simplelog::TermLogError) -> AppError {
+        AppError::TermLogError(e)
     }
 }

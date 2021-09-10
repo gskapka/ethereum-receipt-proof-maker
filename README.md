@@ -12,14 +12,14 @@ A Maker of Merkle-Proofs for Transaction Receipts in Ethereum using Rust.
 
 ### :point_right: Usage:
 
-__>__ To generate a proof for a given transaction hash:
+__>__ To generate a proof for a given transaction hash, first you'll need RPC access to an ETH node on the network your transaction exists on. Once you have that, set it as an environment variable and run the tool thusly::
 
-__`❍ rusty-receipt-proof-maker <your-tx-hash-here>`__
+__`❍ ENDPOINT=<ETH-mainnet-rpc-endpoint> rusty-receipt-proof-maker <your-tx-hash-here>`__
 
 
 ```
 
-rusty-receipt-proof-maker 0x5d761b001c4d69bf14c94b8e8a604d97e008a8a7dfb74a6459823b2178ffc033 -v`
+ENDPOINT=<redacted> rusty-receipt-proof-maker 0x5d761b001c4d69bf14c94b8e8a604d97e008a8a7dfb74a6459823b2178ffc033 -v`
 12:02:21 [ INFO] ✔ CLI Args parsed successfully!
 12:02:21 [ INFO] ✔ Verbose mode: true
 12:02:21 [ INFO] ✔ Transaction hash: 0x5d76…c033
@@ -38,7 +38,6 @@ rusty-receipt-proof-maker 0x5d761b001c4d69bf14c94b8e8a604d97e008a8a7dfb74a645982
 12:02:24 [ INFO] ✔ Hex Proof:
 
 f90264f8b1a0dc1a1b7bc9f38fc6710af9abdf1da874fa708573431381908b8b6a25bd1f2b55a0701833ef4ede796d9c96b1ae7c66830b0126f106ea0bfe99864e679e8b0dfeafa00db067f1c8ee75d8a563038903eb5129ee1d73beeea9380ca58d1920c15fe84ba0a55d0852ba77dbcc2824337150c123ccde62699b0c6eaddf735c1b2638bb85ba80808080a04937e058ea19511f92f803c23f4e9a4eceaaf2246c86da0f1b2241316be8a34d8080808080808080f901ae30b901aaf901a701837ab31ab9010000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000002000000080000000000000000200000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000020000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000004000000000000010200000000000000000000000000000000000000000000000000000000000f89df89b94c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2f863a08c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925a0000000000000000000000000539efb706852838c51905d3d31966c296e034000a0000000000000000000000000a2881a90bf33f03e7a3f803765cd2ed5c8928dfba0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
 
 ```
 
@@ -75,33 +74,6 @@ Options:
 
     <txhash>            ❍ A transaction hash of an Ethereum transaction
                         ➔ Format: A 32-byte long, prefixed hex string.
-
-❍ Rusty Receipt Proof Maker ❍
-
-    Copyright Provable 2019
-    Questions: greg@oraclize.it
-
-❍ Info ❍
-
-This tool generates a merkle receipt proof of the receipt pertaining to the given transaction hash.
-
-***
-
-Usage:  rusty-receipt-proof-maker [-h | --help]
-        rusty-receipt-proof-maker <txhash> [-t | --trace]
-        rusty-receipt-proof-maker <txhash> [-v | --verbose]
-
-Options:
-
-    -h, --help          ❍ Show this message.
-
-    -v, --verbose       ❍ Enable verbose mode for additional output.
-
-    -t, --trace         ❍ Enable tracing for debugging/bug reporting.
-
-    <txhash>            ❍ A transaction hash of an Ethereum transaction
-                        ➔ Format: A 32-byte long, prefixed hex string.
-
 
 ```
 
@@ -151,7 +123,7 @@ rusty-receipt-proof-maker -v 0x5d761b001c4d69bf14c94b8e8a604d97e008a8a7dfb74a645
 
 To run the tests:
 
-__`❍ cargo +nightly test`__
+__`❍ cargo test`__
 
 __Note:__ Some expensive tests are ignored by default. To run all test, including those ignored, add the __`--ignored`__ flag.
 

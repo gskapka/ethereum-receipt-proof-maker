@@ -24,6 +24,7 @@ fn get_endpoint_from_env_vars() -> Result<String> {
 
 pub fn get_endpoint_and_set_in_state(state: State) -> Result<State> {
     info!("✔ Getting RPC endpoint from environment variables...");
+    println!("✔ Getting RPC endpoint from environment variables...");
     get_endpoint_from_env_vars().and_then(|endpoint| {
         info!("✔ Endpoint retrieved: {}", endpoint);
         State::set_endpoint_in_state(state, endpoint)

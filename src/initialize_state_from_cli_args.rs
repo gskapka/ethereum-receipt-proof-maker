@@ -25,7 +25,6 @@ mod tests {
         let cli_args = CliArgs {
             arg_txhash: tx_hash,
             flag_verbose: expected_verbosity,
-            flag_disableLogs: disable_logging,
         };
         let state = initialize_state_from_cli_args(cli_args).unwrap();
         assert!(state.tx_hash == expected_tx_hash);

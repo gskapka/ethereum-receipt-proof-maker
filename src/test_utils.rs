@@ -594,7 +594,6 @@ pub fn assert_receipt_is_correct(receipt: Receipt) {
     assert!(receipt.block_number == sample_receipt.block_number);
     assert!(receipt.transaction_index == sample_receipt.transaction_index);
     assert!(receipt.contract_address == sample_receipt.contract_address);
-    assert!(receipt.root == sample_receipt.root);
     assert!(receipt.logs.len() == sample_receipt.logs.len());
 }
 
