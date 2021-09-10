@@ -1,6 +1,6 @@
+use crate::parse_cli_args::CliArgs;
 use crate::state::State;
 use crate::types::Result;
-use crate::parse_cli_args::CliArgs;
 use crate::utils::convert_hex_to_h256;
 
 pub fn initialize_state_from_cli_args(cli_args: CliArgs) -> Result<State> {
@@ -21,15 +21,13 @@ mod tests {
         let disable_logging = true;
         let expected_verbosity = true;
         let tx_hash = get_valid_tx_hash_hex();
-        let expected_tx_hash = convert_hex_to_h256(tx_hash.clone())
-            .unwrap();
+        let expected_tx_hash = convert_hex_to_h256(tx_hash.clone()).unwrap();
         let cli_args = CliArgs {
             arg_txhash: tx_hash,
             flag_verbose: expected_verbosity,
             flag_disableLogs: disable_logging,
         };
-        let state = initialize_state_from_cli_args(cli_args)
-            .unwrap();
+        let state = initialize_state_from_cli_args(cli_args).unwrap();
         assert!(state.tx_hash == expected_tx_hash);
     }
 }
