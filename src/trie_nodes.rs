@@ -308,12 +308,12 @@ mod tests {
         let node_type = result.clone().get_type();
         assert!(node_type == LEAF_NODE_STRING);
         if let Some(_) = result.extension {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         } else if let Some(_) = result.branch {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         }
         match result.leaf {
-            None => panic!(panic_str),
+            None => panic!("{}", panic_str),
             Some(leaf) => {
                 let nibble_length = get_length_in_nibbles(&leaf.path_nibbles.clone());
                 assert!(leaf.value == value);
@@ -359,12 +359,12 @@ mod tests {
         let mut expected_raw = expected_encoded_path.clone();
         expected_raw.append(&mut value.clone());
         if let Some(_) = result.leaf {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         } else if let Some(_) = result.branch {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         }
         match result.extension {
-            None => panic!(panic_str),
+            None => panic!("{}", panic_str),
             Some(extension) => {
                 let nibble_length = get_length_in_nibbles(&extension.path_nibbles.clone());
                 assert!(extension.value == value);
@@ -397,14 +397,14 @@ mod tests {
         let panic_str = "Node should be a branch node";
         let result = Node::get_new_branch_node(None).unwrap();
         if let Some(_) = result.extension {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         } else if let Some(_) = result.leaf {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         }
         let node_type = result.clone().get_type();
         assert!(node_type == BRANCH_NODE_STRING);
         match result.branch {
-            None => panic!(panic_str),
+            None => panic!("{}", panic_str),
             Some(branch) => {
                 if let Some(_) = branch.value {
                     panic!("Branch should not have a value!")
@@ -420,9 +420,9 @@ mod tests {
         let value = hex::decode("c0ffee").unwrap();
         let result = Node::get_new_branch_node(Some(value.clone())).unwrap();
         if let Some(_) = result.extension {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         } else if let Some(_) = result.leaf {
-            panic!(panic_str)
+            panic!("{}", panic_str)
         }
         let node_type = result.clone().get_type();
         assert!(node_type == "branch".to_string());

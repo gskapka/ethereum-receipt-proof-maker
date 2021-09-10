@@ -86,7 +86,7 @@ mod tests {
                 Err(AppError::Custom(e)) => {
                     assert!(e.contains(expected_err))
                 }
-                Err(e) => panic!(format!("Expected: {}\nBut got: {}", expected_err, e)),
+                Err(e) => panic!("Expected: {}\nBut got: {}", expected_err, e),
                 Ok(_) => panic!("Should fail w/ malformed file!"),
             }
             delete_env_file().unwrap();
@@ -105,7 +105,7 @@ mod tests {
                 Err(AppError::Custom(e)) => {
                     assert!(e.contains(expected_err))
                 }
-                Err(e) => panic!(format!("Expected: {}\nBut got: {}", expected_err, e)),
+                Err(e) => panic!("Expected: {}\nBut got: {}", expected_err, e),
                 Ok(_) => panic!("Should fail w/ malformed file!"),
             }
             delete_env_file().unwrap();

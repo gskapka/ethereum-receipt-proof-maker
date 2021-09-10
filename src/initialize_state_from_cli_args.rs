@@ -18,7 +18,6 @@ mod tests {
 
     #[test]
     fn should_create_state_from_cli_args() {
-        let disable_logging = true;
         let expected_verbosity = true;
         let tx_hash = get_valid_tx_hash_hex();
         let expected_tx_hash = convert_hex_to_h256(tx_hash.clone()).unwrap();
